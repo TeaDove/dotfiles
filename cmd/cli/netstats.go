@@ -121,8 +121,9 @@ func (r *CLI) pprintOpenPorts(ctx context.Context) (string, error) {
 		}
 
 		text.WriteString(
-			fmt.Sprintf("%s: %s\n",
+			fmt.Sprintf("%s (%d): %s\n",
 				color.New(color.FgBlue, color.Faint).Sprintf(name),
+				pid,
 				strings.Join(ports, ","),
 			),
 		)
