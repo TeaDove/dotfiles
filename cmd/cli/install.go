@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v3"
 	"io/fs"
@@ -15,7 +16,7 @@ var (
 )
 
 const (
-	dest = ".temp"
+	dest = "~"
 )
 
 func (r *CLI) commandInstall(ctx context.Context, command *cli.Command) error {
@@ -32,7 +33,12 @@ func (r *CLI) commandInstall(ctx context.Context, command *cli.Command) error {
 		return errors.Errorf("no dotfiles-configs dir found")
 	}
 
-	err := filepath.Walk(dofilesPath, func(path string, info fs.FileInfo, err error) error {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return errors.Wrap(err, "failed to get user home dir")
+	}
+
+	err = filepath.Walk(dofilesPath, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to walk")
 		}
@@ -40,22 +46,24 @@ func (r *CLI) commandInstall(ctx context.Context, command *cli.Command) error {
 			return nil
 		}
 
-		err = os.Remove(filepath.Join(dest, strings.TrimPrefix(path, "dotfiles-configs/")))
+		err = os.Remove(filepath.Join(homeDir, strings.TrimPrefix(path, "dotfiles-configs/")))
 		if err != nil && !errors.Is(err, fs.ErrNotExist) {
 			return errors.Wrap(err, "failed to remove file")
 		}
 
 		return nil
 	})
+
 	if err != nil {
 		return errors.Wrap(err, "failed to remove old files")
 	}
 
-	err = os.CopyFS(dest, os.DirFS(dofilesPath))
+	err = os.CopyFS(homeDir, os.DirFS(dofilesPath))
 	if err != nil {
-
 		return errors.Wrap(err, "failed to copy temp files")
 	}
+
+	color.Green("Dotfiles installed from %s to %s", dofilesPath, homeDir)
 
 	return nil
 }

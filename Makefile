@@ -13,10 +13,10 @@ lint:
 	golangci-lint run --fix
 
 run:
-	go run main.go
+	go run u
 
 install:
-	go install
+	go install u
 
 crosscompile:
 	@echo ">> CROSSCOMPILE linux/amd64"
@@ -25,16 +25,10 @@ crosscompile:
 	@echo ">> CROSSCOMPILE darwin/amd64"
 	@GOOS=darwin GOARCH=amd64 $(GO) build -o $(PKG_OUTPUT)-$(PKG_VERSION)-darwin-amd64
 	@echo ">> OK"
-	@echo ">> CROSSCOMPILE windows/amd64"
-	@GOOS=windows GOARCH=amd64 $(GO) build -o $(PKG_OUTPUT)-$(PKG_VERSION)-windows-amd64
-	@echo ">> OK"
 
 	@echo ">> CROSSCOMPILE linux/arm64"
 	@GOOS=linux GOARCH=arm64 $(GO) build -o $(PKG_OUTPUT)-$(PKG_VERSION)-linux-arm64
 	@echo ">> OK"
 	@echo ">> CROSSCOMPILE darwin/arm64"
 	@GOOS=darwin GOARCH=arm64 $(GO) build -o $(PKG_OUTPUT)-$(PKG_VERSION)-darwin-arm64
-	@echo ">> OK"
-	@echo ">> CROSSCOMPILE windows/arm64"
-	@GOOS=windows GOARCH=arm64 $(GO) build -o $(PKG_OUTPUT)-$(PKG_VERSION)-windows-arm64
 	@echo ">> OK"
