@@ -16,7 +16,7 @@ run:
 	go run u
 
 install:
-	go install u
+	go install u.go
 
 crosscompile:
 	@echo ">> CROSSCOMPILE linux/amd64"
