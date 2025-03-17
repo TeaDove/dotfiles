@@ -2,16 +2,19 @@ package cli
 
 import (
 	"context"
+	"dotfiles/cmd/http_supplier"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v3"
 	"os"
 	"runtime"
 )
 
-type CLI struct{}
+type CLI struct {
+	httpSupplier *http_supplier.Supplier
+}
 
 func NewCLI() *CLI {
-	return &CLI{}
+	return &CLI{httpSupplier: http_supplier.New()}
 }
 
 func (r *CLI) Run(ctx context.Context) error {
@@ -37,6 +40,16 @@ func (r *CLI) Run(ctx context.Context) error {
 				Name:        "l",
 				Description: "locates service by ip or domain from http://ip-api.com/json/",
 				Action:      r.commandLocateByIP,
+			},
+			{
+				Name:        "my-ip",
+				Description: "get my public IP address from https://api.ipify.org/",
+				Action:      r.commandMyIP,
+			},
+			{
+				Name:        "net",
+				Description: "Displays all network stats",
+				Action:      r.commandNet,
 			},
 		},
 	}

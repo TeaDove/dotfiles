@@ -10,15 +10,9 @@ set fish_color_param D6DAE4
 # Aliases
 alias l="lsd -lh --blocks=permission,user,size,date,name"
 alias ll="lsd -lha --blocks=permission,user,size,date,name"
-alias g="get-loc-by-ip.py"
-alias tb="nc termbin.com 9999"
 alias i="ipython"
 alias b="bpython"
 
-alias weather='curl "http://wttr.in/Moscow?0" '
-
-alias key='openssl rand -hex 32'
-alias key2='pwgen -1 30'
 alias speed='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -B'
 alias d='dust -X=.git'
 
