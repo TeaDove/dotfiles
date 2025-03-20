@@ -13,6 +13,6 @@ func (r *CLI) commandMyIP(ctx context.Context, command *cli.Command) error {
 		return errors.Wrap(err, "failed to fetch ip")
 	}
 
-	fmt.Print(ip)
+	fmt.Print(ip.String())
 	return nil
 }

@@ -14,32 +14,24 @@ import (
 	"strings"
 )
 
+func printOrNone(ctx context.Context, run func(ctx context.Context) (string, error)) {
+	text, err := run(ctx)
+	if err != nil {
+		color.Red("Failed to get: %v\n", err)
+	}
+	if text != "" {
+		fmt.Println(text)
+	}
+}
+
 func (r *CLI) commandNet(ctx context.Context, command *cli.Command) error {
-	text, err := r.pprintMyIP(ctx)
-	if err != nil {
-		color.Red("Failed to print my ip: %v\n", err)
-	} else if text != "" {
-		fmt.Println(text)
-	}
+	printOrNone(ctx, r.pprintNetInterfaces)
 
-	fmt.Println(r.pprintDNS())
-	fmt.Println()
+	printOrNone(ctx, r.pprintOpenPorts)
 
-	text, err = r.pprintNetInterfaces(ctx)
-	if err != nil {
-		color.Red("Failed to print net interfaces: %v\n", err)
-	} else if text != "" {
-		fmt.Println(text)
-		fmt.Println()
-	}
+	printOrNone(ctx, r.pprintMyIP)
 
-	text, err = r.pprintOpenPorts(ctx)
-	if err != nil {
-		color.Red("Failed to print open ports: %v\n", err)
-	} else if text != "" {
-		fmt.Println(text)
-
-	}
+	printOrNone(ctx, r.pprintDNS)
 
 	return nil
 }
@@ -64,7 +56,7 @@ func (r *CLI) pprintNetInterfaces(ctx context.Context) (string, error) {
 	}
 
 	var text strings.Builder
-	text.WriteString("Interfaces with addresses:")
+	text.WriteString(color.GreenString("Interfaces with addresses:"))
 	for _, i := range interfacesWithAddressess {
 		addresses := make([]string, 0, len(i.Addrs))
 		for _, a := range i.Addrs {
@@ -107,9 +99,13 @@ func (r *CLI) pprintOpenPorts(ctx context.Context) (string, error) {
 		return "", errors.New("no open ports")
 	}
 
-	text.WriteString("Open ports\n")
+	text.WriteString(color.GreenString("Open ports\n"))
 
 	for pid, ports := range pidToPorts {
+		if pid == 0 {
+			continue
+		}
+
 		connProcess, err := process.NewProcess(pid)
 		if err != nil {
 			return "", errors.Wrap(err, "failed to get process")
@@ -138,17 +134,20 @@ func (r *CLI) pprintMyIP(ctx context.Context) (string, error) {
 		return "", errors.Wrap(err, "failed to get MyIP")
 	}
 
-	return fmt.Sprintf("My IP: %s (%s)", color.YellowString(myIp), r.shortLocationOrErr(ctx, myIp)), nil
+	return fmt.Sprintf("%s: %s (%s)", color.GreenString("My IP"), color.YellowString(myIp.String()), r.shortLocationOrErr(ctx, myIp.String())), nil
 }
 
-func (r *CLI) pprintDNS() string {
+func (r *CLI) pprintDNS(ctx context.Context) (string, error) {
 	dnss := http_supplier.GetDNSServers()
 	dnssStrings := make([]string, 0, len(dnss))
 	for _, dns := range dnss {
+		if dns.Addr().IsGlobalUnicast() {
+			dnssStrings = append(dnssStrings, fmt.Sprintf("%s (%s)", dns.String(), r.shortLocationOrErr(ctx, dns.String())))
+		}
 		dnssStrings = append(dnssStrings, dns.String())
 	}
 
-	return fmt.Sprintf("DNS Servers: %s", color.WhiteString(strings_utils.JoinStringers(dnss, ", ")))
+	return fmt.Sprintf("%s: %s", color.GreenString("DNS Servers"), color.WhiteString(strings_utils.JoinStringers(dnss, ", "))), nil
 }
 
 func (r *CLI) shortLocationOrErr(ctx context.Context, ipOrDomain string) string {
