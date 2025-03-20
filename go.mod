@@ -18,6 +18,7 @@ require (
 	github.com/chelnak/ysmrr v0.5.0 // indirect
 	github.com/ebitengine/purego v0.8.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/go-ping/ping v1.2.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
@@ -33,6 +34,8 @@ require (
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/wI2L/jsondiff v0.6.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
+	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4 // indirect
+	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/term v0.27.0 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect

@@ -3,10 +3,11 @@ package cli
 import (
 	"context"
 	"dotfiles/cmd/http_supplier"
-	"github.com/pkg/errors"
-	"github.com/urfave/cli/v3"
 	"os"
 	"runtime"
+
+	"github.com/pkg/errors"
+	"github.com/urfave/cli/v3"
 )
 
 type CLI struct {
@@ -40,11 +41,6 @@ func (r *CLI) Run(ctx context.Context) error {
 				Name:        "l",
 				Description: "locates service by ip or domain from http://ip-api.com/json/",
 				Action:      r.commandLocateByIP,
-			},
-			{
-				Name:        "my-ip",
-				Description: "get my public IP address from https://api.ipify.org/",
-				Action:      r.commandMyIP,
 			},
 			{
 				Name:        "net",

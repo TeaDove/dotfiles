@@ -19,20 +19,25 @@ func printOrNone(ctx context.Context, run func(ctx context.Context) (string, err
 	if err != nil {
 		color.Red("Failed to get: %v\n", err)
 	}
+
 	if text != "" {
 		fmt.Println(text)
 	}
 }
 
 func (r *CLI) commandNet(ctx context.Context, command *cli.Command) error {
-	printOrNone(ctx, r.pprintNetInterfaces)
-
-	printOrNone(ctx, r.pprintOpenPorts)
-
 	printOrNone(ctx, r.pprintMyIP)
 
 	printOrNone(ctx, r.pprintDNS)
+	println()
 
+	printOrNone(ctx, r.pprintNetInterfaces)
+	println()
+
+	printOrNone(ctx, r.pprintOpenPorts)
+	//println()
+
+	//printOrNone(ctx, r.pprintPings)
 	return nil
 }
 
@@ -43,6 +48,7 @@ func (r *CLI) pprintNetInterfaces(ctx context.Context) (string, error) {
 	}
 
 	interfacesWithAddressess := make(net.InterfaceStatList, 0)
+
 	for _, i := range interfaces {
 		if len(i.Addrs) == 0 {
 			continue
@@ -56,7 +62,9 @@ func (r *CLI) pprintNetInterfaces(ctx context.Context) (string, error) {
 	}
 
 	var text strings.Builder
+
 	text.WriteString(color.GreenString("Interfaces with addresses:"))
+
 	for _, i := range interfacesWithAddressess {
 		addresses := make([]string, 0, len(i.Addrs))
 		for _, a := range i.Addrs {
@@ -82,10 +90,12 @@ func (r *CLI) pprintOpenPorts(ctx context.Context) (string, error) {
 	}
 
 	pidToPorts := make(map[int32][]string)
+
 	for _, conn := range connections {
 		if conn.Status != "LISTEN" || conn.Family != 2 || conn.Type != 1 {
 			continue
 		}
+
 		_, ok := pidToPorts[conn.Pid]
 		if ok {
 			pidToPorts[conn.Pid] = append(pidToPorts[conn.Pid], strconv.Itoa(int(conn.Laddr.Port)))
@@ -95,6 +105,7 @@ func (r *CLI) pprintOpenPorts(ctx context.Context) (string, error) {
 	}
 
 	var text strings.Builder
+
 	if len(pidToPorts) == 0 {
 		return "", errors.New("no open ports")
 	}
@@ -118,7 +129,7 @@ func (r *CLI) pprintOpenPorts(ctx context.Context) (string, error) {
 
 		text.WriteString(
 			fmt.Sprintf("%s (%d): %s\n",
-				color.New(color.FgBlue, color.Faint).Sprintf(name),
+				color.New(color.FgCyan, color.Faint).Sprintf(name),
 				pid,
 				strings.Join(ports, ","),
 			),
@@ -128,26 +139,65 @@ func (r *CLI) pprintOpenPorts(ctx context.Context) (string, error) {
 	return text.String(), nil
 }
 
+//func (r *CLI) pprintPings(ctx context.Context) (string, error) {
+//	pinger, err := ping.NewPinger("www.google.com")
+//	if err != nil {
+//		return "", errors.Wrap(err, "failed to init pinger")
+//	}
+//
+//	pinger.Timeout = time.Second * 3
+//
+//	var res = ""
+//	pinger.OnFinish = func(stats *ping.Statistics) {
+//		res = fmt.Sprintf("%d packets transmitted, %d packets received, %v%% packet loss\n"+
+//			"round-trip min/avg/max/stddev = %v/%v/%v/%v\n",
+//			stats.PacketsSent, stats.PacketsRecv, stats.PacketLoss,
+//			stats.MinRtt, stats.AvgRtt, stats.MaxRtt, stats.StdDevRtt,
+//		)
+//	}
+//
+//	err = pinger.Run()
+//	if err != nil {
+//		return "", errors.Wrap(err, "failed to ping www.google.com")
+//	}
+//
+//	return res, nil
+//}
+
 func (r *CLI) pprintMyIP(ctx context.Context) (string, error) {
 	myIp, err := r.httpSupplier.MyIP(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get MyIP")
 	}
 
-	return fmt.Sprintf("%s: %s (%s)", color.GreenString("My IP"), color.YellowString(myIp.String()), r.shortLocationOrErr(ctx, myIp.String())), nil
+	return fmt.Sprintf(
+		"%s: %s (%s)",
+		color.GreenString("My IP"),
+		color.YellowString(myIp.String()),
+		r.shortLocationOrErr(ctx, myIp.String()),
+	), nil
 }
 
 func (r *CLI) pprintDNS(ctx context.Context) (string, error) {
 	dnss := http_supplier.GetDNSServers()
 	dnssStrings := make([]string, 0, len(dnss))
+
 	for _, dns := range dnss {
 		if dns.Addr().IsGlobalUnicast() {
-			dnssStrings = append(dnssStrings, fmt.Sprintf("%s (%s)", dns.String(), r.shortLocationOrErr(ctx, dns.String())))
+			dnssStrings = append(
+				dnssStrings,
+				fmt.Sprintf("%s (%s)", dns.String(), r.shortLocationOrErr(ctx, dns.String())),
+			)
 		}
+
 		dnssStrings = append(dnssStrings, dns.String())
 	}
 
-	return fmt.Sprintf("%s: %s", color.GreenString("DNS Servers"), color.WhiteString(strings_utils.JoinStringers(dnss, ", "))), nil
+	return fmt.Sprintf(
+		"%s: %s",
+		color.GreenString("DNS Servers"),
+		color.WhiteString(strings_utils.JoinStringers(dnss, ", ")),
+	), nil
 }
 
 func (r *CLI) shortLocationOrErr(ctx context.Context, ipOrDomain string) string {

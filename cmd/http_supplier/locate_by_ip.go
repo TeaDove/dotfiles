@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type DomainLocationResp struct {
@@ -27,7 +28,6 @@ type DomainLocationResp struct {
 }
 
 func (r *Supplier) LocateByIP(ctx context.Context, ip string) (DomainLocationResp, error) {
-
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("http://ip-api.com/json/%s", ip), nil)
 	if err != nil {
 		return DomainLocationResp{}, errors.Wrap(err, "failed to build request to get ip")
@@ -39,12 +39,18 @@ func (r *Supplier) LocateByIP(ctx context.Context, ip string) (DomainLocationRes
 	}
 
 	var domainLocation DomainLocationResp
+
 	err = json.NewDecoder(resp.Body).Decode(&domainLocation)
 	if err != nil {
 		return DomainLocationResp{}, errors.Wrap(err, "failed to decode resp")
 	}
+
 	if domainLocation.Status != "success" {
-		return DomainLocationResp{}, errors.Errorf("failed to locate IP, %s, query: %s", domainLocation.Message, domainLocation.Query)
+		return DomainLocationResp{}, errors.Errorf(
+			"failed to locate IP, %s, query: %s",
+			domainLocation.Message,
+			domainLocation.Query,
+		)
 	}
 
 	return domainLocation, nil

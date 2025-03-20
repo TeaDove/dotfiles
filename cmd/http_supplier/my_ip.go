@@ -2,10 +2,11 @@ package http_supplier
 
 import (
 	"context"
-	"github.com/pkg/errors"
 	"io"
 	"net"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 func (r *Supplier) MyIP(ctx context.Context) (net.IP, error) {

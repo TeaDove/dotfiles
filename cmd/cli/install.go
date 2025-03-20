@@ -2,18 +2,17 @@ package cli
 
 import (
 	"context"
-	"github.com/fatih/color"
-	"github.com/pkg/errors"
-	"github.com/urfave/cli/v3"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/fatih/color"
+	"github.com/pkg/errors"
+	"github.com/urfave/cli/v3"
 )
 
-var (
-	dotfilesDirs = []string{"./dotfiles-configs", "~/dotfiles/dotfiles-configs", "~/.dotfiles/dotfiles-configs"}
-)
+var dotfilesDirs = []string{"./dotfiles-configs", "~/dotfiles/dotfiles-configs", "~/.dotfiles/dotfiles-configs"}
 
 const (
 	dest = "~"
@@ -21,6 +20,7 @@ const (
 
 func (r *CLI) commandInstall(ctx context.Context, command *cli.Command) error {
 	var dofilesPath string
+
 	for _, dir := range dotfilesDirs {
 		_, err := os.Stat(dir)
 		if !errors.Is(err, fs.ErrNotExist) {
@@ -42,6 +42,7 @@ func (r *CLI) commandInstall(ctx context.Context, command *cli.Command) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to walk")
 		}
+
 		if info.IsDir() {
 			return nil
 		}
@@ -53,7 +54,6 @@ func (r *CLI) commandInstall(ctx context.Context, command *cli.Command) error {
 
 		return nil
 	})
-
 	if err != nil {
 		return errors.Wrap(err, "failed to remove old files")
 	}
