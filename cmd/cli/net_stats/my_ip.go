@@ -28,11 +28,20 @@ func (r *NetStats) myIPView(ctx context.Context, wg *sync.WaitGroup) {
 	dnss := http_supplier.GetDNSServers()
 
 	for _, dns := range dnss {
-		if !dns.Addr().IsGlobalUnicast() {
+		if !dns.Addr().IsPrivate() {
 			r.model.myIP += fmt.Sprintf("%s (%s)", dns.String(), r.shortLocationOrErr(ctx, dns.Addr().String()))
 			continue
 		}
 
 		r.model.myIP += dns.String()
 	}
+}
+
+func (r *NetStats) shortLocationOrErr(ctx context.Context, ipOrDomain string) string {
+	location, err := r.httpSupplier.LocateByIP(ctx, ipOrDomain)
+	if err != nil {
+		return prettyErr(errors.Wrap(err, "failed to get location"))
+	}
+
+	return fmt.Sprintf("%s, %s, %s", location.Country, location.City, color.BlueString(location.Org))
 }

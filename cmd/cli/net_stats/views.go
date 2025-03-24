@@ -5,27 +5,23 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
+func buildView() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Align(lipgloss.Left, lipgloss.Top).
+		BorderStyle(lipgloss.RoundedBorder()).Width(80).
+		BorderForeground(lipgloss.Color("69"))
+}
+
 var (
-	myIPStyle = lipgloss.NewStyle().
-			Align(lipgloss.Left, lipgloss.Top).
-			BorderStyle(lipgloss.RoundedBorder()).Width(80).
-			BorderForeground(lipgloss.Color("69"))
-	interfacesStyle = lipgloss.NewStyle().
-			Align(lipgloss.Left, lipgloss.Top).
-			BorderStyle(lipgloss.RoundedBorder()).Width(80).
-			BorderForeground(lipgloss.Color("69"))
-	openPortsStyle = lipgloss.NewStyle().
-			Align(lipgloss.Left, lipgloss.Top).
-			BorderStyle(lipgloss.RoundedBorder()).Width(80).
-			BorderForeground(lipgloss.Color("69"))
-	speedStyle = lipgloss.NewStyle().
-			Align(lipgloss.Left, lipgloss.Top).
-			BorderStyle(lipgloss.RoundedBorder()).Width(80).
-			BorderForeground(lipgloss.Color("69"))
+	myIPStyle       = buildView()
+	interfacesStyle = buildView()
+	openPortsStyle  = buildView()
+	speedStyle      = buildView()
 )
 
 type keymap struct {
@@ -41,7 +37,7 @@ type model struct {
 	myIP       string
 	openPorts  string
 	interfaces string
-	speed      string
+	pings      table.Model
 }
 
 func (r *model) helpView() string {
@@ -63,7 +59,7 @@ func (r *model) View() string {
 		lipgloss.JoinHorizontal(
 			lipgloss.Top,
 			myIPStyle.Render(r.myIP),
-			speedStyle.Render(r.speed),
+			speedStyle.Render(r.pings.View()),
 		),
 	) + r.helpView()
 }

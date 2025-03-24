@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/v4/net"
 	"github.com/shirou/gopsutil/v4/process"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -41,6 +42,7 @@ func (r *NetStats) openPortsView(ctx context.Context, wg *sync.WaitGroup) {
 	}
 
 	r.model.openPorts = color.GreenString("Open ports:")
+	services := make([]string, 0, len(pidToPorts))
 
 	for pid, ports := range pidToPorts {
 		if pid == 0 {
@@ -59,11 +61,16 @@ func (r *NetStats) openPortsView(ctx context.Context, wg *sync.WaitGroup) {
 			return
 		}
 
-		r.model.openPorts +=
+		services = append(services,
 			fmt.Sprintf("\n%s (%d): %s",
 				color.New(color.FgCyan, color.Faint).Sprintf(name),
 				pid,
 				strings.Join(ports, ","),
-			)
+			))
+	}
+
+	slices.Sort(services)
+	for _, service := range services {
+		r.model.openPorts += service
 	}
 }
