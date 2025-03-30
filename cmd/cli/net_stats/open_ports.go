@@ -37,7 +37,7 @@ func (r *NetStats) openPortsView(ctx context.Context, wg *sync.WaitGroup) {
 	}
 
 	if len(pidToPorts) == 0 {
-		r.model.openPorts = prettyErr(errors.New("no open ports"))
+		r.model.openPorts = prettyWarn(errors.New("no open ports"))
 		return
 	}
 
@@ -46,12 +46,14 @@ func (r *NetStats) openPortsView(ctx context.Context, wg *sync.WaitGroup) {
 
 	for pid, ports := range pidToPorts {
 		if pid == 0 {
+			services = append(services, fmt.Sprintf("\nunknown: %s", strings.Join(ports, ",")))
 			continue
 		}
 
 		connProcess, err := process.NewProcess(pid)
 		if err != nil {
-			r.model.openPorts = prettyErr(errors.Wrap(err, "failed to get process"))
+			r.model.openPorts = prettyErr(errors.Wrap(err, "failed to get process name"))
+
 			return
 		}
 

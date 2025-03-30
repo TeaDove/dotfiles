@@ -6,6 +6,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/v4/net"
+	net2 "net"
 	"strings"
 	"sync"
 )
@@ -21,7 +22,15 @@ func (r *NetStats) interfacesView(ctx context.Context, wg *sync.WaitGroup) {
 	interfacesWithAddresses := make(net.InterfaceStatList, 0)
 
 	for _, i := range interfaces {
-		if len(i.Addrs) == 0 {
+		hasIpV4Add := false
+		for _, addr := range i.Addrs {
+			ip, _, err := net2.ParseCIDR(addr.Addr)
+			if err == nil && ip != nil && ip.To4() != nil {
+				hasIpV4Add = true
+			}
+		}
+
+		if !hasIpV4Add {
 			continue
 		}
 
@@ -29,7 +38,7 @@ func (r *NetStats) interfacesView(ctx context.Context, wg *sync.WaitGroup) {
 	}
 
 	if len(interfacesWithAddresses) == 0 {
-		r.model.interfaces = prettyErr(errors.New("no interfaces found"))
+		r.model.interfaces = prettyWarn(errors.New("no interfaces found"))
 	}
 
 	r.model.interfaces = color.GreenString("Interfaces with addresses:")

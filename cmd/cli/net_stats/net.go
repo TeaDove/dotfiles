@@ -2,13 +2,15 @@ package net_stats
 
 import (
 	"context"
+	"dotfiles/cmd/cli/gloss_utils"
 	"dotfiles/cmd/http_supplier"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
-	"github.com/charmbracelet/bubbles/table"
+	//"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"sync"
@@ -21,47 +23,32 @@ type NetStats struct {
 	model        *model
 }
 
-func makeColumnAutosized(title string) table.Column {
-	return table.Column{Title: title, Width: len(title) + 5}
-}
-
 func NewNetStats(httpSupplier *http_supplier.Supplier) *NetStats {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 
-	t := table.New(
-		table.WithColumns([]table.Column{
-			{"address", 25},
-			{"dur (ms)", 10},
-			{"success/failed", 20},
-		}),
-		table.WithHeight(len(addressesToPing)+2),
-	)
+	tableData := gloss_utils.NewMappingData(pingCols, addressesToPing)
 
-	tStyle := table.DefaultStyles()
-	tStyle.Header = tStyle.Header.
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("240")).
-		BorderBottom(true).
-		Bold(false)
-	t.SetStyles(tStyle)
+	t := table.New().
+		Wrap(true).
+		Headers(pingCols...).
+		Border(lipgloss.RoundedBorder()).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#df8e1d"))).
+		Data(tableData)
 
 	m := model{
 		myIP:       elipsis,
 		openPorts:  elipsis,
 		interfaces: elipsis,
-		pings:      t,
+		pings:      *t,
+		pingsData:  tableData,
 		spinner:    s,
 		help:       help.New(),
 		keymap: keymap{
 			quit: key.NewBinding(
 				key.WithKeys("ctrl+c", "q"),
 				key.WithHelp("q", "quit"),
-			),
-			verbose: key.NewBinding(
-				key.WithKeys("v"),
-				key.WithHelp("v", "verbose"),
 			),
 		},
 	}
@@ -97,4 +84,8 @@ func (r *NetStats) Net(ctx context.Context) error {
 
 func prettyErr(err error) string {
 	return color.RedString("unexpected error: ") + color.WhiteString(err.Error())
+}
+
+func prettyWarn(err error) string {
+	return color.YellowString("warning: ") + color.WhiteString(err.Error())
 }
