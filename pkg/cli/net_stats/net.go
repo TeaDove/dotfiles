@@ -2,8 +2,8 @@ package net_stats
 
 import (
 	"context"
-	"dotfiles/cmd/cli/gloss_utils"
-	"dotfiles/cmd/http_supplier"
+	"dotfiles/pkg/cli/gloss_utils"
+	"dotfiles/pkg/http_supplier"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -28,7 +28,7 @@ func NewNetStats(httpSupplier *http_supplier.Supplier) *NetStats {
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 
-	tableData := gloss_utils.NewMappingData(pingCols, addressesToPing)
+	tableData := gloss_utils.NewMappingData(pingCols...)
 
 	t := table.New().
 		Wrap(true).
@@ -38,13 +38,13 @@ func NewNetStats(httpSupplier *http_supplier.Supplier) *NetStats {
 		Data(tableData)
 
 	m := model{
-		myIP:       elipsis,
-		openPorts:  elipsis,
-		interfaces: elipsis,
-		pings:      *t,
-		pingsData:  tableData,
-		spinner:    s,
-		help:       help.New(),
+		myIP:           elipsis,
+		openPorts:      elipsis,
+		interfaces:     elipsis,
+		pingsTable:     *t,
+		pingsTableData: tableData,
+		spinner:        s,
+		help:           help.New(),
 		keymap: keymap{
 			quit: key.NewBinding(
 				key.WithKeys("ctrl+c", "q"),
@@ -56,7 +56,7 @@ func NewNetStats(httpSupplier *http_supplier.Supplier) *NetStats {
 	return &NetStats{httpSupplier: httpSupplier, model: &m}
 }
 
-func (r *NetStats) Net(ctx context.Context) error {
+func (r *NetStats) Run(ctx context.Context) error {
 	p := tea.NewProgram(r.model, tea.WithContext(ctx))
 
 	var wg sync.WaitGroup

@@ -1,12 +1,11 @@
 package net_stats
 
 import (
-	"dotfiles/cmd/cli/gloss_utils"
+	"dotfiles/pkg/cli/gloss_utils"
 	"fmt"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
-	//"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
@@ -27,8 +26,7 @@ var (
 )
 
 type keymap struct {
-	verbose key.Binding
-	quit    key.Binding
+	quit key.Binding
 }
 
 type model struct {
@@ -39,15 +37,16 @@ type model struct {
 	myIP       string
 	openPorts  string
 	interfaces string
-	pingsData  *gloss_utils.MappingData
-	pings      table.Table
+
+	pingsTable     table.Table
+	pingsTableData *gloss_utils.MappingData
 }
 
 func (r *model) helpView() string {
 	return fmt.Sprintf(
 		"\n %s %s",
 		r.spinner.View(),
-		r.help.ShortHelpView([]key.Binding{r.keymap.verbose, r.keymap.quit}),
+		r.help.ShortHelpView([]key.Binding{r.keymap.quit}),
 	)
 }
 
@@ -57,7 +56,7 @@ func (r *model) View() string {
 		lipgloss.JoinVertical(
 			lipgloss.Top,
 			myIPStyle.Render(r.myIP),
-			pingStyle.Render(r.pings.String()),
+			pingStyle.Render(r.pingsTable.String()),
 		),
 		lipgloss.JoinVertical(
 			lipgloss.Top,

@@ -30,7 +30,7 @@ func (r *NetStats) pingsView(ctx context.Context, wg *sync.WaitGroup) {
 	var pingsWg sync.WaitGroup
 
 	for _, address := range addressesToPing {
-		r.model.pingsData.Set(pingColAddress, address, address)
+		r.model.pingsTableData.Set(pingColAddress, address, address)
 
 		pingsWg.Add(1)
 		go func() {
@@ -54,7 +54,7 @@ func (r *NetStats) pingsView(ctx context.Context, wg *sync.WaitGroup) {
 					conn, err := net.DialTimeout("tcp", address, time.Second*2)
 					if err != nil {
 						failed++
-						r.model.pingsData.Set(pingColSucFail, address, fmt.Sprintf("%d/%d", success, failed))
+						r.model.pingsTableData.Set(pingColSucFail, address, fmt.Sprintf("%d/%d", success, failed))
 
 						continue
 					}
@@ -63,8 +63,8 @@ func (r *NetStats) pingsView(ctx context.Context, wg *sync.WaitGroup) {
 					success++
 					avg = time.Duration(uint64(totalDur) / success)
 
-					r.model.pingsData.Set(pingColDur, address, avg)
-					r.model.pingsData.Set(pingColSucFail, address, fmt.Sprintf("%d/%d", success, failed))
+					r.model.pingsTableData.Set(pingColDur, address, avg)
+					r.model.pingsTableData.Set(pingColSucFail, address, fmt.Sprintf("%d/%d", success, failed))
 
 					err = conn.Close()
 					if err != nil {

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"dotfiles/cmd/cli"
+	"dotfiles/pkg/cli"
 
 	"github.com/fatih/color"
 	"github.com/teadove/teasutils/utils/logger_utils"

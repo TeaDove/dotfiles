@@ -2,7 +2,7 @@ package net_stats
 
 import (
 	"context"
-	"dotfiles/cmd/http_supplier"
+	"dotfiles/pkg/http_supplier"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
