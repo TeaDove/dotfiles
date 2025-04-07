@@ -6,9 +6,11 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
+	"regexp"
 	"sync"
 )
 
@@ -40,10 +42,12 @@ type model struct {
 	cronjobTable     *table.Table
 	cronjobTableData *gloss_utils.MappingData
 
-	spinner  spinner.Model
-	help     help.Model
-	keymap   keymap
-	drawLock sync.Mutex
+	regexp      *regexp.Regexp
+	regexpInput textinput.Model
+	spinner     spinner.Model
+	help        help.Model
+	keymap      keymap
+	drawLock    sync.Mutex
 }
 
 func (r *model) helpView() string {
@@ -76,7 +80,7 @@ func (r *model) View() string {
 		tables = append(tables, r.containersTable.Render())
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left, tables...) + r.helpView()
+	return r.regexpInput.View() + "\n" + lipgloss.JoinVertical(lipgloss.Left, tables...) + r.helpView()
 }
 
 func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
@@ -88,13 +92,25 @@ func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return r, tea.Quit
 		}
-	default:
-		r.spinner, cmd = r.spinner.Update(msg)
+	}
+
+	r.regexpInput, cmd = r.regexpInput.Update(msgI)
+	if cmd == nil {
+		r.spinner, cmd = r.spinner.Update(msgI)
+	} else {
+		var err error
+		r.regexp, err = regexp.Compile(r.regexpInput.Value())
+		if err != nil {
+			r.regexpInput.Prompt = fmt.Errorf("bad regexp: %w > ", err).Error()
+			r.regexp = nil
+		} else {
+			r.regexpInput.Prompt = "> "
+		}
 	}
 
 	return r, cmd
 }
 
 func (r *model) Init() tea.Cmd {
-	return r.spinner.Tick
+	return tea.Batch(r.spinner.Tick, textinput.Blink)
 }

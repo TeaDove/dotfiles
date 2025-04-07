@@ -1,3 +1,5 @@
+github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
+github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1/go.mod h1:uYgXzlJ7ZpABp8OJ+exZzJJhRNQ2ASbcXHWsFqH8hp8=
 github.com/aymanbagabas/go-udiff v0.2.0 h1:TK0fH4MteXUDspT88n8CKzvK0X9O2xu9yQjWpi6yML8=
@@ -149,10 +151,6 @@ github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
 github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
-github.com/teadove/teasutils/utils v0.2.0 h1:7/G2S+OaaQdh/UjG4HDcnr38dpV8xVNdCXdtQrOmmmo=
-github.com/teadove/teasutils/utils v0.2.0/go.mod h1:lSrVaIxWXcdEcdjITLXVdXBYXJ9DBglWnBkEigkdmmI=
-github.com/teadove/teasutils/utils v0.2.3 h1:kxhdx7xCIKtBDWtNH0dXscDaDyldqizDSp4uehSJQLc=
-github.com/teadove/teasutils/utils v0.2.3/go.mod h1:6V9FXMZrBTV4+LVfQVKPbvOIGGNNCI2YzGejiHPddJI=
 github.com/teadove/teasutils/utils v0.2.4 h1:J4VYGrAxBo8iurUnC+sHgkcZArHOHwRqb/zMa+sI03Y=
 github.com/teadove/teasutils/utils v0.2.4/go.mod h1:6V9FXMZrBTV4+LVfQVKPbvOIGGNNCI2YzGejiHPddJI=
 github.com/tidwall/gjson v1.14.2/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=

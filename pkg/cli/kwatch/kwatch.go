@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
@@ -63,6 +64,12 @@ func New(kubeSupplier *kube_supplier.Supplier) *KWatch {
 
 	r.model.deploymentsTable, r.model.deploymentsTableData = buildTable("name", "replicas", "updated at", "images", "prevision images", "images updated at")
 	r.model.containersTable, r.model.containersTableData = buildTable("name", "image", "is ok", "age", "cpu", "mem")
+
+	r.model.regexpInput = textinput.New()
+	r.model.regexpInput.Placeholder = "Pikachu"
+	r.model.regexpInput.Focus()
+	r.model.regexpInput.CharLimit = 156
+	r.model.regexpInput.Width = 20
 
 	return r
 }
@@ -151,6 +158,14 @@ func colorIfLoaded(state float64, max float64) func(string, ...any) string {
 	}
 }
 
+func (r *KWatch) regexpFilter(name string) bool {
+	if r.model.regexp == nil {
+		return true
+	}
+
+	return r.model.regexp.MatchString(name)
+}
+
 func (r *KWatch) viewContainers(ctx context.Context) {
 	containers, err := r.kubeSupplier.GetContainersInfo(ctx)
 	if err != nil {
@@ -164,6 +179,10 @@ func (r *KWatch) viewContainers(ctx context.Context) {
 	r.model.containersTableData.Clear()
 
 	for _, container := range containers {
+		if !r.regexpFilter(container.PodName) {
+			continue
+		}
+
 		state := "ok"
 		if !container.Ready {
 			state = color.RedString(container.State)
@@ -192,7 +211,16 @@ func (r *KWatch) viewDeployments(ctx context.Context) {
 		return
 	}
 
+	r.model.drawLock.Lock()
+	defer r.model.drawLock.Unlock()
+
+	r.model.deploymentsTableData.Clear()
+
 	for _, deployment := range deployemnts {
+		if !r.regexpFilter(deployment.Name) {
+			continue
+		}
+
 		readyReplicas := fmt.Sprintf("%d", deployment.ReadyReplicas)
 		if !deployment.Ready {
 			readyReplicas = color.RedString(readyReplicas)

@@ -168,6 +168,6 @@ func (r *Supplier) GetDeploymentInfo(ctx context.Context) ([]*DeploymentInfo, er
 	}
 
 	return slices.SortedFunc(maps.Values(deploymentsInfo), func(a *DeploymentInfo, b *DeploymentInfo) int {
-		return strings.Compare(a.Name, a.Name)
+		return strings.Compare(a.Name, b.Name)
 	}), nil
 }
