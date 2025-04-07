@@ -9,7 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
-	"strings"
+	"sync"
 )
 
 func buildView() lipgloss.Style {
@@ -40,9 +40,10 @@ type model struct {
 	cronjobTable     *table.Table
 	cronjobTableData *gloss_utils.MappingData
 
-	spinner spinner.Model
-	help    help.Model
-	keymap  keymap
+	spinner  spinner.Model
+	help     help.Model
+	keymap   keymap
+	drawLock sync.Mutex
 }
 
 func (r *model) helpView() string {
@@ -54,30 +55,28 @@ func (r *model) helpView() string {
 }
 
 func (r *model) View() string {
-	var v strings.Builder
+	r.drawLock.Lock()
+	defer r.drawLock.Unlock()
+
+	tables := make([]string, 0)
+
 	if !r.deploymentsTableData.IsEmpty() {
-		v.WriteString(r.deploymentsTable.String())
-		v.WriteString("\n\n")
+		tables = append(tables, r.deploymentsTable.Render())
 	}
 
 	if !r.statefulsetTableData.IsEmpty() {
-		v.WriteString(r.statefulsetTable.String())
-		v.WriteString("\n\n")
+		tables = append(tables, r.statefulsetTable.Render())
 	}
 
 	if !r.cronjobTableData.IsEmpty() {
-		v.WriteString(r.cronjobTable.String())
-		v.WriteString("\n\n")
+		tables = append(tables, r.cronjobTable.Render())
 	}
 
 	if !r.containersTableData.IsEmpty() {
-		v.WriteString(r.containersTable.String())
-		v.WriteString("\n\n")
+		tables = append(tables, r.containersTable.Render())
 	}
 
-	v.WriteString(r.helpView())
-
-	return v.String()
+	return lipgloss.JoinVertical(lipgloss.Left, tables...) + r.helpView()
 }
 
 func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {

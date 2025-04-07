@@ -6,12 +6,14 @@ require (
 	github.com/charmbracelet/bubbles v0.20.0
 	github.com/charmbracelet/bubbletea v1.3.4
 	github.com/charmbracelet/lipgloss v1.1.0
+	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/fatih/color v1.18.0
 	github.com/google/uuid v1.6.0
+	github.com/monirz/romnum v0.0.0-20190303052443-82ba665eaf88
 	github.com/pkg/errors v0.9.1
 	github.com/shirou/gopsutil/v4 v4.25.2
 	github.com/stretchr/testify v1.10.0
-	github.com/teadove/teasutils/utils v0.2.0
+	github.com/teadove/teasutils/utils v0.2.4
 	github.com/urfave/cli/v3 v3.0.0-beta1
 	k8s.io/apimachinery v0.32.3
 	k8s.io/client-go v0.32.3
@@ -71,6 +73,7 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
+	golang.org/x/exp v0.0.0-20250128182459-e0ece0dbea4c // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect

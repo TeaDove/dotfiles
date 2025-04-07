@@ -20,6 +20,7 @@ func TestUnit_GlossUtils_NewMappingData_Ok(t *testing.T) {
 	tableData.SetMappingRow("olya", M{"name": "olya", "age": "21", "gender": "female"})
 	tableData.SetMappingRow("masha", M{"name": "masha", "age": "24", "gender": "female"})
 	tableData.SetMappingRow("artem", M{"name": "artem", "age": "25", "gender": "male"})
+	tableData.DeleteRow("masha")
 
 	println(tableStyle.String())
 }

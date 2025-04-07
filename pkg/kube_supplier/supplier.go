@@ -21,6 +21,11 @@ func NewSupplier() (*Supplier, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error loading default config: %v", err)
 	}
+
+	if config.Contexts[config.CurrentContext] == nil {
+		return nil, fmt.Errorf("no context found in config")
+	}
+
 	r.namespace = config.Contexts[config.CurrentContext].Namespace
 
 	clientConfig, err := clientcmd.NewDefaultClientConfig(*config, &clientcmd.ConfigOverrides{}).ClientConfig()

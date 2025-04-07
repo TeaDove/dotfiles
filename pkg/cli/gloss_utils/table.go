@@ -110,13 +110,16 @@ func (r *MappingData) Columns() int {
 	return len(r.columns)
 }
 
-func (r *MappingData) Clear() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (r *MappingData) Clear(rows ...string) {
+	notFoundRows := make([]string, 0)
+	for _, row := range r.rows {
+		if !slices.Contains(rows, row) {
+			notFoundRows = append(notFoundRows, row)
+		}
+	}
 
-	r.rows = []string{}
-	for col := range r.strings {
-		r.strings[col] = []any{}
+	for _, row := range notFoundRows {
+		r.DeleteRow(row)
 	}
 }
 
@@ -125,4 +128,27 @@ func (r *MappingData) IsEmpty() bool {
 	defer r.mu.RUnlock()
 
 	return len(r.rows) == 0
+}
+
+func (r *MappingData) DeleteRow(row string) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	idx := slices.Index(r.rows, row)
+	if idx == -1 {
+		return false
+	}
+
+	r.rows = slices.Delete(r.rows, idx, idx+1)
+	for colIdx := range r.strings {
+		r.strings[colIdx] = slices.Delete(r.strings[colIdx], idx, idx+1)
+	}
+
+	return true
+}
+
+func (r *MappingData) RowExists(row string) bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return slices.Contains(r.rows, row)
 }
