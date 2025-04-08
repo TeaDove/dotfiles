@@ -26,7 +26,8 @@ var (
 )
 
 type keymap struct {
-	quit key.Binding
+	quit  key.Binding
+	space key.Binding
 }
 
 type model struct {
@@ -48,13 +49,14 @@ type model struct {
 	help        help.Model
 	keymap      keymap
 	drawLock    sync.Mutex
+	altscreen   bool
 }
 
 func (r *model) helpView() string {
 	return fmt.Sprintf(
 		"\n %s %s",
 		r.spinner.View(),
-		r.help.ShortHelpView([]key.Binding{r.keymap.quit}),
+		r.help.ShortHelpView([]key.Binding{r.keymap.space, r.keymap.quit}),
 	)
 }
 
@@ -91,7 +93,16 @@ func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			return r, tea.Quit
+		case " ":
+			if r.altscreen {
+				cmd = tea.ExitAltScreen
+			} else {
+				cmd = tea.EnterAltScreen
+			}
+			r.altscreen = !r.altscreen
+			return r, cmd
 		}
+
 	}
 
 	r.regexpInput, cmd = r.regexpInput.Update(msgI)

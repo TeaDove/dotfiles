@@ -56,6 +56,7 @@ func New(kubeSupplier *kube_supplier.Supplier) *KWatch {
 				key.WithKeys("ctrl+c"),
 				key.WithHelp("ctrl+c", "quit"),
 			),
+			space: key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "switch modes")),
 		},
 	}
 
@@ -70,6 +71,7 @@ func New(kubeSupplier *kube_supplier.Supplier) *KWatch {
 	r.model.regexpInput.Focus()
 	r.model.regexpInput.CharLimit = 156
 	r.model.regexpInput.Width = 20
+	r.model.altscreen = true
 
 	return r
 }
