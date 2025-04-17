@@ -55,6 +55,11 @@ func (r *CLI) Run(ctx context.Context) error {
 				Usage:  "Displays k8s pod usage in current namespace",
 				Action: r.commandKwatch,
 			},
+			{
+				Name:   "sha",
+				Usage:  "Hashes string as sha512",
+				Action: r.commandSha,
+			},
 		},
 	}
 
