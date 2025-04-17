@@ -21,6 +21,8 @@ func NewCLI() *CLI {
 	return &CLI{httpSupplier: http_supplier.New()}
 }
 
+var verboseFlag = &cli.BoolFlag{Name: "v", Usage: "verbose info"}
+
 func (r *CLI) Run(ctx context.Context) error {
 	if runtime.GOOS == "windows" {
 		return errors.New("go fuck yourself with windows OS")
@@ -29,6 +31,7 @@ func (r *CLI) Run(ctx context.Context) error {
 	cmd := &cli.Command{
 		Name:        "dotfiles",
 		Description: "set of useful command",
+		Flags:       []cli.Flag{verboseFlag},
 		Commands: []*cli.Command{
 			{
 				Name:   "install",

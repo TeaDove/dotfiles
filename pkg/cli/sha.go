@@ -6,6 +6,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v3"
 	"io"
@@ -30,7 +31,7 @@ func getPipe() (string, error) {
 	return buf.String(), nil
 }
 
-func (r *CLI) commandSha(_ context.Context, _ *cli.Command) error {
+func (r *CLI) commandSha(_ context.Context, cmd *cli.Command) error {
 	text, err := getPipe()
 	if err != nil {
 		reader := bufio.NewReader(os.Stdin)
@@ -44,7 +45,11 @@ func (r *CLI) commandSha(_ context.Context, _ *cli.Command) error {
 	hasher.Write([]byte(text))
 	hashedText := hex.EncodeToString(hasher.Sum(nil))
 
-	fmt.Print(hashedText)
-
+	if cmd.Bool(verboseFlag.Name) {
+		fmt.Printf("input: %s\n", color.BlueString(text))
+		fmt.Printf("hash: %s\n", hashedText)
+	} else {
+		fmt.Print(hashedText)
+	}
 	return nil
 }
