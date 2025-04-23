@@ -63,6 +63,16 @@ func (r *CLI) Run(ctx context.Context) error {
 				Usage:  "Hashes string as sha512",
 				Action: r.commandSha,
 			},
+			{
+				Name:   "jq",
+				Usage:  "Attempt to parse every line as json and write it",
+				Action: r.commandJq,
+			},
+			{
+				Name:   "git-pull-and-merge",
+				Usage:  "Git utils",
+				Action: r.commandGitPullAndMerge,
+			},
 		},
 	}
 
