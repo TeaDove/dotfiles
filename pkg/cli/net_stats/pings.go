@@ -3,6 +3,7 @@ package net_stats
 import (
 	"context"
 	"fmt"
+	"github.com/fatih/color"
 	"net"
 	"sync"
 	"time"
@@ -30,7 +31,7 @@ func (r *NetStats) pingsView(ctx context.Context, wg *sync.WaitGroup) {
 	var pingsWg sync.WaitGroup
 
 	for _, address := range addressesToPing {
-		r.model.pingsTableData.Set(pingColAddress, address, address)
+		r.model.pingsTableData.Set(pingColAddress, address, color.New(color.FgCyan, color.Faint).Sprint(address))
 
 		pingsWg.Add(1)
 		go func() {
@@ -43,7 +44,7 @@ func (r *NetStats) pingsView(ctx context.Context, wg *sync.WaitGroup) {
 				avg      time.Duration
 			)
 
-			tillTimer := time.NewTimer(10 * time.Second)
+			tillTimer := time.NewTimer(1 * time.Minute)
 			ticker := time.NewTicker(500 * time.Millisecond)
 			for {
 				select {

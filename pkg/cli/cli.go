@@ -2,10 +2,8 @@ package cli
 
 import (
 	"context"
-	"dotfiles/pkg/cli/kwatch"
 	"dotfiles/pkg/cli/net_stats"
 	"dotfiles/pkg/http_supplier"
-	"dotfiles/pkg/kube_supplier"
 	"os"
 	"runtime"
 
@@ -54,11 +52,6 @@ func (r *CLI) Run(ctx context.Context) error {
 				Action: r.commandNet,
 			},
 			{
-				Name:   "kwatch",
-				Usage:  "Displays k8s pod usage in current namespace",
-				Action: r.commandKwatch,
-			},
-			{
 				Name:   "sha",
 				Usage:  "Hashes string as sha512",
 				Action: r.commandSha,
@@ -86,13 +79,4 @@ func (r *CLI) Run(ctx context.Context) error {
 
 func (r *CLI) commandNet(ctx context.Context, command *cli.Command) error {
 	return net_stats.NewNetStats(r.httpSupplier).Run(ctx)
-}
-
-func (r *CLI) commandKwatch(ctx context.Context, command *cli.Command) error {
-	kubeSupplier, err := kube_supplier.NewSupplier()
-	if err != nil {
-		return errors.Wrap(err, "failed to init kube_supplier")
-	}
-
-	return kwatch.New(kubeSupplier).Run(ctx)
 }

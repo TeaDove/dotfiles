@@ -15,7 +15,7 @@ func buildView() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Align(lipgloss.Left, lipgloss.Top).
 		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#df8e1d"))
+		BorderForeground(lipgloss.Color("69"))
 }
 
 var (

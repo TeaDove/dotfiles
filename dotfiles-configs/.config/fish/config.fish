@@ -16,11 +16,11 @@ alias b="bpython"
 alias speed='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -B'
 alias d='dust -X=.git'
 
-alias jup='cd ~/projects/jup && python3.10 -m jupyterlab ; cd -'
-alias jup-darwin='cd ~/projects/jup && python3.10 -m jupyterlab --app-dir=/opt/homebrew/share/jupyter/lab ; cd -'
-alias ljup='python3.10 -m jupyterlab'
-alias ljup-darwin='python3.10 -m jupyterlab --app-dir=/opt/homebrew/share/jupyter/lab'
-# alias u='python3 -c "import uuid; print(str(uuid.uuid4()).upper(), end=str())"'
+alias jup='cd ~/projects/jup && python3.13 -m jupyterlab ; cd -'
+alias jup-darwin='cd ~/projects/jup && python3.13 -m jupyterlab --app-dir=/opt/homebrew/share/jupyter/lab ; cd -'
+alias ljup='python3.13 -m jupyterlab'
+alias ljup-darwin='python3.13 -m jupyterlab --app-dir=/opt/homebrew/share/jupyter/lab'
+
 
 alias kubectl="kubecolor"
 
@@ -60,12 +60,8 @@ function kwatch
     end
 end
 
-function gittag
-    set DEV_TAG "$TAG".dev
-	git tag -d $DEV_TAG || true
-	git tag -a $DEV_TAG -m "auto: development release"
-	git push --delete origin $DEV_TAG || true
-	git push origin $DEV_TAG
+function kexec 
+	kubectl exec -it $(kubectl get pod -o custom-columns=CONTAINER:.metadata.name | grep $argv[1]) -- /bin/bash
 end
 
 function envsource

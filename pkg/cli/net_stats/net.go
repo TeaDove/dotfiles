@@ -34,7 +34,7 @@ func NewNetStats(httpSupplier *http_supplier.Supplier) *NetStats {
 		Wrap(true).
 		Headers(pingCols...).
 		Border(lipgloss.RoundedBorder()).
-		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#df8e1d"))).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("69"))).
 		Data(tableData)
 
 	m := model{

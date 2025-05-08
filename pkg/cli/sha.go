@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"crypto/sha512"
+	"dotfiles/pkg/cli/utils"
 	"encoding/hex"
 	"fmt"
 	"github.com/fatih/color"
@@ -11,7 +12,7 @@ import (
 )
 
 func (r *CLI) commandSha(_ context.Context, cmd *cli.Command) error {
-	text, err := readFromPipeOrSTDIN()
+	text, err := utils.ReadFromPipeOrSTDIN()
 	if err != nil {
 		return errors.Wrap(err, "unable to read from stdin")
 	}
