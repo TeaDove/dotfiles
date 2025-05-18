@@ -22,8 +22,8 @@ func (r *CLI) commandSha(_ context.Context, cmd *cli.Command) error {
 	hashedText := hex.EncodeToString(hasher.Sum(nil))
 
 	if cmd.Bool(verboseFlag.Name) {
-		fmt.Printf("input: %s\n", color.BlueString(text))
-		fmt.Printf("hash: %s\n", hashedText)
+		fmt.Printf("input:\n%s\n\n", color.BlueString(text))
+		fmt.Printf("hash:\n%s\n", hashedText)
 	} else {
 		fmt.Print(hashedText)
 	}
