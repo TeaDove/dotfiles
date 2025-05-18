@@ -2,8 +2,10 @@ package cli
 
 import (
 	"context"
+	"dotfiles/pkg/cli/kwatch"
 	"dotfiles/pkg/cli/net_stats"
 	"dotfiles/pkg/http_supplier"
+	"dotfiles/pkg/kube_supplier"
 	"os"
 	"runtime"
 
@@ -42,6 +44,11 @@ func (r *CLI) Run(ctx context.Context) error {
 				Action: r.commandUuid,
 			},
 			{
+				Name:   "t",
+				Usage:  "generates save to use password",
+				Action: r.commandText,
+			},
+			{
 				Name:   "l",
 				Usage:  "locates service by ip or domain from http://ip-api.com/json/",
 				Action: r.commandLocateByIP,
@@ -66,6 +73,11 @@ func (r *CLI) Run(ctx context.Context) error {
 				Usage:  "Git utils",
 				Action: r.commandGitPullAndMerge,
 			},
+			{
+				Name:   "kwatch",
+				Usage:  "Displays k8s pod usage in current namespace",
+				Action: r.commandKwatch,
+			},
 		},
 	}
 
@@ -77,6 +89,15 @@ func (r *CLI) Run(ctx context.Context) error {
 	return nil
 }
 
-func (r *CLI) commandNet(ctx context.Context, command *cli.Command) error {
+func (r *CLI) commandNet(ctx context.Context, _ *cli.Command) error {
 	return net_stats.NewNetStats(r.httpSupplier).Run(ctx)
+}
+
+func (r *CLI) commandKwatch(ctx context.Context, _ *cli.Command) error {
+	kubeSupplier, err := kube_supplier.NewSupplier()
+	if err != nil {
+		return errors.Wrap(err, "failed to init kube_supplier")
+	}
+
+	return kwatch.New(kubeSupplier).Run(ctx)
 }
