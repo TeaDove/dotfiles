@@ -49,7 +49,7 @@ func (r *CLI) commandInstall(_ context.Context, _ *cli.Command) error {
 		return errors.Wrap(err, "failed to get user home dir")
 	}
 
-	_ = os.MkdirAll(homeDir+"/local/bin", 0755)
+	_ = os.MkdirAll(homeDir+"/local/bin", 0o755)
 
 	var count int
 
