@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"github.com/teadove/teasutils/utils/test_utils"
 	"io"
 	"net/http"
 	"os"
@@ -49,7 +50,14 @@ func (r *CLI) commandInstall(_ context.Context, _ *cli.Command) error {
 		return errors.Wrap(err, "failed to get user home dir")
 	}
 
-	_ = os.MkdirAll(homeDir+"/local/bin", 0o755)
+	println(homeDir + "/local/bin")
+	err = os.MkdirAll(homeDir+"/local/bin", 0o755)
+	if err != nil {
+		test_utils.Pprint(err.Error())
+		return nil
+	} else {
+		test_utils.Pprint("ok")
+	}
 
 	var count int
 
