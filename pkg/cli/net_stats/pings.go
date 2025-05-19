@@ -3,10 +3,11 @@ package net_stats
 import (
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 const (
@@ -25,7 +26,7 @@ var (
 	pingCols = []string{pingColAddress, pingColDur, pingColSucFail}
 )
 
-func (r *NetStats) pingsView(ctx context.Context, wg *sync.WaitGroup) {
+func (r *NetStats) pingsView(_ context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	var pingsWg sync.WaitGroup
@@ -34,6 +35,7 @@ func (r *NetStats) pingsView(ctx context.Context, wg *sync.WaitGroup) {
 		r.model.pingsTableData.Set(pingColAddress, address, color.New(color.FgCyan, color.Faint).Sprint(address))
 
 		pingsWg.Add(1)
+
 		go func() {
 			defer pingsWg.Done()
 
@@ -46,12 +48,14 @@ func (r *NetStats) pingsView(ctx context.Context, wg *sync.WaitGroup) {
 
 			tillTimer := time.NewTimer(1 * time.Minute)
 			ticker := time.NewTicker(500 * time.Millisecond)
+
 			for {
 				select {
 				case <-tillTimer.C:
 					return
 				case <-ticker.C:
 					t0 := time.Now()
+
 					conn, err := net.DialTimeout("tcp", address, time.Second*2)
 					if err != nil {
 						failed++
@@ -59,6 +63,7 @@ func (r *NetStats) pingsView(ctx context.Context, wg *sync.WaitGroup) {
 
 						continue
 					}
+
 					dur := time.Since(t0)
 					totalDur += dur
 					success++

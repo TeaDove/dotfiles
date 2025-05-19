@@ -62,6 +62,7 @@ func (r *MappingData) Set(col, row string, value any) {
 
 		r.addRow(row)
 		r.Set(col, row, value)
+
 		return
 	}
 
@@ -112,6 +113,7 @@ func (r *MappingData) Columns() int {
 
 func (r *MappingData) Clear(rows ...string) {
 	notFoundRows := make([]string, 0)
+
 	for _, row := range r.rows {
 		if !slices.Contains(rows, row) {
 			notFoundRows = append(notFoundRows, row)
@@ -150,5 +152,6 @@ func (r *MappingData) DeleteRow(row string) bool {
 func (r *MappingData) RowExists(row string) bool {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
+
 	return slices.Contains(r.rows, row)
 }

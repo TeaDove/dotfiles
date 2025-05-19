@@ -3,6 +3,7 @@ package net_stats
 import (
 	"dotfiles/pkg/cli/gloss_utils"
 	"fmt"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"

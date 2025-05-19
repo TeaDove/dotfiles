@@ -8,12 +8,12 @@ import (
 	"strings"
 )
 
-func GetDNSServers() (nameservers []netip.AddrPort) {
+func GetDNSServers() []netip.AddrPort {
 	const filename = "/etc/resolv.conf"
 	return getLocalNameservers(filename)
 }
 
-func getLocalNameservers(filename string) (nameservers []netip.AddrPort) {
+func getLocalNameservers(filename string) []netip.AddrPort {
 	const defaultNameserverPort = 53
 	defaultLocalNameservers := []netip.AddrPort{
 		netip.AddrPortFrom(netip.AddrFrom4([4]byte{127, 0, 0, 1}), defaultNameserverPort),
@@ -24,6 +24,8 @@ func getLocalNameservers(filename string) (nameservers []netip.AddrPort) {
 	if err != nil {
 		return defaultLocalNameservers
 	}
+
+	var nameservers []netip.AddrPort
 
 	lines := strings.Split(string(data), "\n")
 	for _, line := range lines {

@@ -1,7 +1,7 @@
 .PHONY: ckeck install upload
 
 PKG_VERSION ?= $(shell cat VERSION)
-PKG_OUTPUT ?= u
+PKG_OUTPUT ?= build/u
 GO ?= GO111MODULE=on CGO_ENABLED=0 go
 GOOS ?= $(shell $(GO) version | cut -d' ' -f4 | cut -d'/' -f1)
 GOARCH ?= $(shell $(GO) version | cut -d' ' -f4 | cut -d'/' -f2)
@@ -38,3 +38,7 @@ crosscompile:
 	@echo ">> CROSSCOMPILE darwin/arm64"
 	@GOOS=darwin GOARCH=arm64 $(GO) build -o $(PKG_OUTPUT)-$(PKG_VERSION)-darwin-arm64
 	@echo ">> OK"
+
+release: lint crosscompile
+	git status -s | xargs --null test -z
+	gh release create $(PKG_VERSION) ./dist/*

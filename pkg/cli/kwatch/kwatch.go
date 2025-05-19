@@ -5,6 +5,10 @@ import (
 	"dotfiles/pkg/cli/gloss_utils"
 	"dotfiles/pkg/kube_supplier"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -18,8 +22,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/teadove/teasutils/utils/conv_utils"
 	"github.com/teadove/teasutils/utils/time_utils"
-	"strings"
-	"time"
 )
 
 type KWatch struct {
@@ -63,7 +65,14 @@ func New(kubeSupplier *kube_supplier.Supplier) *KWatch {
 	r.model.statefulsetTable, r.model.statefulsetTableData = buildTable("name", "image", "replicas")
 	r.model.cronjobTable, r.model.cronjobTableData = buildTable("name", "image", "replicas")
 
-	r.model.deploymentsTable, r.model.deploymentsTableData = buildTable("name", "replicas", "updated at", "images", "prevision images", "images updated at")
+	r.model.deploymentsTable, r.model.deploymentsTableData = buildTable(
+		"name",
+		"replicas",
+		"updated at",
+		"images",
+		"prevision images",
+		"images updated at",
+	)
 	r.model.containersTable, r.model.containersTableData = buildTable("name", "image", "is ok", "age", "cpu", "mem")
 
 	r.model.regexpInput = textinput.New()
@@ -113,6 +122,7 @@ func (r *KWatch) getCRKey(image string) string {
 
 	crIdx := len(fields) - 1
 	cr := strings.Join(fields[:crIdx], "/")
+
 	k, ok := r.crs[cr]
 	if ok {
 		return strings.Join(append([]string{k}, fields[crIdx:]...), "/")
@@ -122,9 +132,11 @@ func (r *KWatch) getCRKey(image string) string {
 	if err != nil {
 		return image
 	}
+
 	k = color.WhiteString(fmt.Sprintf("(%s)", k))
 
 	r.crs[cr] = k
+
 	return strings.Join(append([]string{k}, fields[crIdx:]...), "/")
 }
 
@@ -140,16 +152,18 @@ func makeContainerName(containers []*kube_supplier.ContainerInfo) map[kube_suppl
 			name += fmt.Sprintf(" (%s)", container.Name)
 			podNames.Add(name)
 		}
+
 		res[*container] = name
 	}
 
 	return res
 }
 
-func colorIfLoaded(state float64, max float64) func(string, ...any) string {
-	load := state / max
+func colorIfLoaded(state float64, request float64) func(string, ...any) string {
+	load := state / request
+
 	switch {
-	case max == 0:
+	case request == 0:
 		return fmt.Sprintf
 	case load >= 0.8:
 		return color.YellowString
@@ -180,6 +194,7 @@ func (r *KWatch) viewContainers(ctx context.Context) {
 	defer r.model.drawLock.Unlock()
 
 	containerNames := makeContainerName(containers)
+
 	r.model.containersTableData.Clear()
 
 	for _, container := range containers {
@@ -192,8 +207,18 @@ func (r *KWatch) viewContainers(ctx context.Context) {
 			state = color.RedString(container.State)
 		}
 
-		cpuState := colorIfLoaded(float64(container.CpuUsageMilli), float64(container.CpuRequestedMilli))(fmt.Sprintf("%.1f", float64(container.CpuUsageMilli)/10.0))
-		memState := colorIfLoaded(float64(container.MemUsageKiloByte), float64(container.MemRequestedKiloByte))(conv_utils.ClosestByte(container.MemUsageKiloByte * 1024))
+		cpuState := colorIfLoaded(
+			float64(container.CPUUsageMilli),
+			float64(container.CPURequestedMilli),
+		)(
+			fmt.Sprintf("%.1f", float64(container.CPUUsageMilli)/10.0),
+		)
+		memState := colorIfLoaded(
+			float64(container.MemUsageKiloByte),
+			float64(container.MemRequestedKiloByte),
+		)(
+			conv_utils.ClosestByte(container.MemUsageKiloByte * 1024),
+		)
 
 		r.model.containersTableData.SetMappingRow(
 			containerNames[*container],
@@ -202,7 +227,7 @@ func (r *KWatch) viewContainers(ctx context.Context) {
 				"image": r.getCRKey(container.Image),
 				"is ok": state,
 				"age":   time_utils.RoundDuration(time.Since(container.CreatedAt)),
-				"cpu":   fmt.Sprintf("%s%%/%.1f%%", cpuState, float64(container.CpuRequestedMilli)/10.0),
+				"cpu":   fmt.Sprintf("%s%%/%.1f%%", cpuState, float64(container.CPURequestedMilli)/10.0),
 				"mem":   fmt.Sprintf("%s/%s", memState, conv_utils.ClosestByte(container.MemRequestedKiloByte*1024)),
 			},
 		)
@@ -225,7 +250,7 @@ func (r *KWatch) viewDeployments(ctx context.Context) {
 			continue
 		}
 
-		readyReplicas := fmt.Sprintf("%d", deployment.ReadyReplicas)
+		readyReplicas := strconv.FormatUint(deployment.ReadyReplicas, 10)
 		if !deployment.Ready {
 			readyReplicas = color.RedString(readyReplicas)
 		}

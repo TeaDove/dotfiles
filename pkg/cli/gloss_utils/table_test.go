@@ -1,12 +1,15 @@
 package gloss_utils
 
 import (
+	"testing"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
-	"testing"
 )
 
 func TestUnit_GlossUtils_NewMappingData_Ok(t *testing.T) {
+	t.Parallel()
+
 	tableData := NewMappingData("name", "age", "gender")
 
 	tableStyle := table.New().

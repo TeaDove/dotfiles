@@ -6,6 +6,7 @@ import (
 	"dotfiles/pkg/cli/utils"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v3"
@@ -27,5 +28,6 @@ func (r *CLI) commandSha(_ context.Context, cmd *cli.Command) error {
 	} else {
 		fmt.Print(hashedText)
 	}
+
 	return nil
 }

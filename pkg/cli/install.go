@@ -1,10 +1,12 @@
 package cli
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
-	"io/fs"
+	"io"
+	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
@@ -12,25 +14,34 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var dotfilesDirs = []string{"./dotfiles-configs", "~/dotfiles/dotfiles-configs", "~/.dotfiles/dotfiles-configs"}
-
-const (
-	dest = "~"
-)
-
-func (r *CLI) commandInstall(ctx context.Context, command *cli.Command) error {
-	var dofilesPath string
-
-	for _, dir := range dotfilesDirs {
-		_, err := os.Stat(dir)
-		if !errors.Is(err, fs.ErrNotExist) {
-			dofilesPath = dir
-			break
-		}
+func downloadDotfiles() (*zip.Reader, error) {
+	resp, err := http.Get( //nolint: noctx // don't care
+		"https://github.com/TeaDove/dotfiles/archive/refs/heads/master.zip",
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to download dotfiles")
 	}
 
-	if dofilesPath == "" {
-		return errors.Errorf("no dotfiles-configs dir found")
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read body")
+	}
+	defer resp.Body.Close()
+
+	zipArchive, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open zip archive")
+	}
+
+	color.White("Dotfiles downloaded")
+
+	return zipArchive, nil
+}
+
+func (r *CLI) commandInstall(_ context.Context, _ *cli.Command) error {
+	zipArchive, err := downloadDotfiles()
+	if err != nil {
+		return errors.Wrap(err, "failed to download dotfiles")
 	}
 
 	homeDir, err := os.UserHomeDir()
@@ -38,32 +49,35 @@ func (r *CLI) commandInstall(ctx context.Context, command *cli.Command) error {
 		return errors.Wrap(err, "failed to get user home dir")
 	}
 
-	err = filepath.Walk(dofilesPath, func(path string, info fs.FileInfo, err error) error {
+	var count int
+
+	for _, file := range zipArchive.File {
+		if file.FileInfo().IsDir() || !strings.HasPrefix(file.Name, "dotfiles-master/dotfiles-configs/") {
+			continue
+		}
+
+		fileReader, err := file.Open()
 		if err != nil {
-			return errors.Wrap(err, "failed to walk")
+			return errors.Wrap(err, "failed to open file")
 		}
 
-		if info.IsDir() {
-			return nil
+		fileContent, err := io.ReadAll(fileReader)
+		if err != nil {
+			return errors.Wrap(err, "failed to read file")
 		}
 
-		err = os.Remove(filepath.Join(homeDir, strings.TrimPrefix(path, "dotfiles-configs/")))
-		if err != nil && !errors.Is(err, fs.ErrNotExist) {
-			return errors.Wrap(err, "failed to remove file")
+		name := strings.TrimPrefix(file.Name, "dotfiles-master/dotfiles-configs/")
+		targetName := homeDir + "/" + name
+
+		err = os.WriteFile(targetName, fileContent, file.Mode())
+		if err != nil {
+			return errors.Wrap(err, "failed to write file")
 		}
 
-		return nil
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed to remove old files")
+		count++
 	}
 
-	err = os.CopyFS(homeDir, os.DirFS(dofilesPath))
-	if err != nil {
-		return errors.Wrap(err, "failed to copy temp files")
-	}
-
-	color.Green("Dotfiles installed from %s to %s", dofilesPath, homeDir)
+	color.Green("Files loaded: %d", count)
 
 	return nil
 }

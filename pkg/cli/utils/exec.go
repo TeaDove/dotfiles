@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/pkg/errors"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/fatih/color"
+	"github.com/pkg/errors"
 )
 
 func ExecCommand(ctx context.Context, name string, args ...string) (string, error) {
@@ -30,6 +31,7 @@ func ReadFromPipeOrSTDIN() (string, error) {
 	stat, _ := os.Stdin.Stat()
 	if (stat.Mode() & os.ModeCharDevice) != 0 {
 		reader := bufio.NewReader(os.Stdin)
+
 		text, err := reader.ReadString('\n')
 		if err != nil {
 			return "", errors.Wrap(err, "unable to read from stdin")

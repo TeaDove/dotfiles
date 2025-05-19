@@ -4,14 +4,15 @@ import (
 	"cmp"
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"maps"
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type ContainerInfo struct {
@@ -23,9 +24,9 @@ type ContainerInfo struct {
 	Ready     bool
 	CreatedAt time.Time
 
-	CpuUsageMilli        uint64
+	CPUUsageMilli        uint64
 	MemUsageKiloByte     uint64
-	CpuRequestedMilli    uint64
+	CPURequestedMilli    uint64
 	MemRequestedKiloByte uint64
 }
 
@@ -39,11 +40,10 @@ func (r *Supplier) GetContainersInfo(ctx context.Context) ([]*ContainerInfo, err
 		return nil, errors.Wrap(err, "failed to get pods")
 	}
 
-	var containersInfo = make(map[string]*ContainerInfo, len(pods.Items))
+	containersInfo := make(map[string]*ContainerInfo, len(pods.Items))
 
 	for _, pod := range pods.Items {
 		for _, container := range pod.Status.ContainerStatuses {
-
 			containerInfo := containersInfo[getPodContainerName(pod.Name, container.Name)]
 			if containerInfo == nil {
 				containerInfo = &ContainerInfo{}
@@ -73,10 +73,13 @@ func (r *Supplier) GetContainersInfo(ctx context.Context) ([]*ContainerInfo, err
 			}
 
 			if container.Resources.Requests.Memory() != nil {
-				containerInfo.MemRequestedKiloByte = uint64(container.Resources.Requests.Memory().ScaledValue(resource.Kilo))
+				containerInfo.MemRequestedKiloByte = uint64(
+					container.Resources.Requests.Memory().ScaledValue(resource.Kilo),
+				)
 			}
+
 			if container.Resources.Requests.Cpu() != nil {
-				containerInfo.CpuRequestedMilli = uint64(container.Resources.Requests.Cpu().ScaledValue(resource.Milli))
+				containerInfo.CPURequestedMilli = uint64(container.Resources.Requests.Cpu().ScaledValue(resource.Milli))
 			}
 		}
 	}
@@ -95,7 +98,7 @@ func (r *Supplier) GetContainersInfo(ctx context.Context) ([]*ContainerInfo, err
 				continue
 			}
 
-			containerInfo.CpuUsageMilli = uint64(container.Usage.Cpu().ScaledValue(resource.Milli))
+			containerInfo.CPUUsageMilli = uint64(container.Usage.Cpu().ScaledValue(resource.Milli))
 			containerInfo.MemUsageKiloByte = uint64(container.Usage.Memory().ScaledValue(resource.Kilo))
 		}
 	}
@@ -133,7 +136,7 @@ func (r *Supplier) GetDeploymentInfo(ctx context.Context) ([]*DeploymentInfo, er
 		return nil, errors.Wrap(err, "failed to get pods")
 	}
 
-	var deploymentsInfo = make(map[string]*DeploymentInfo, len(deployments.Items))
+	deploymentsInfo := make(map[string]*DeploymentInfo, len(deployments.Items))
 
 	for _, deploy := range deployments.Items {
 		deploymentInfo := DeploymentInfo{
@@ -146,7 +149,9 @@ func (r *Supplier) GetDeploymentInfo(ctx context.Context) ([]*DeploymentInfo, er
 		}
 		deploymentsInfo[deploy.Name] = &deploymentInfo
 
-		replicasSet, err := r.kc.AppsV1().ReplicaSets(r.namespace).List(ctx, metav1.ListOptions{Limit: 30, LabelSelector: fmt.Sprintf("app=%s", deploy.Name)})
+		replicasSet, err := r.kc.AppsV1().
+			ReplicaSets(r.namespace).
+			List(ctx, metav1.ListOptions{Limit: 30, LabelSelector: fmt.Sprintf("app=%s", deploy.Name)})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get replicasets")
 		}
@@ -163,6 +168,7 @@ func (r *Supplier) GetDeploymentInfo(ctx context.Context) ([]*DeploymentInfo, er
 			} else {
 				deploymentInfo.ImageUpdatedAt = replicasSet.Items[idx-1].CreationTimestamp.Time
 			}
+
 			break
 		}
 	}

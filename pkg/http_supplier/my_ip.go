@@ -10,7 +10,7 @@ import (
 )
 
 func (r *Supplier) MyIP(ctx context.Context) (net.IP, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.ipify.org/", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.ipify.org/", nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build request to get ip")
 	}

@@ -3,18 +3,20 @@ package net_stats
 import (
 	"context"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/pkg/errors"
-	"github.com/shirou/gopsutil/v4/net"
-	"github.com/shirou/gopsutil/v4/process"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/fatih/color"
+	"github.com/pkg/errors"
+	"github.com/shirou/gopsutil/v4/net"
+	"github.com/shirou/gopsutil/v4/process"
 )
 
 func (r *NetStats) openPortsView(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
+
 	connections, err := net.ConnectionsWithContext(ctx, "all")
 	if err != nil {
 		r.model.openPorts = prettyErr(err)
@@ -72,6 +74,7 @@ func (r *NetStats) openPortsView(ctx context.Context, wg *sync.WaitGroup) {
 	}
 
 	slices.Sort(services)
+
 	for _, service := range services {
 		r.model.openPorts += service
 	}

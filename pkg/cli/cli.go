@@ -41,7 +41,7 @@ func (r *CLI) Run(ctx context.Context) error {
 			{
 				Name:   "u",
 				Usage:  "generates random uuid",
-				Action: r.commandUuid,
+				Action: r.commandUUID,
 			},
 			{
 				Name:   "t",

@@ -3,6 +3,9 @@ package kwatch
 import (
 	"dotfiles/pkg/cli/gloss_utils"
 	"fmt"
+	"regexp"
+	"sync"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -10,19 +13,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
-	"regexp"
-	"sync"
-)
-
-func buildView() lipgloss.Style {
-	return lipgloss.NewStyle().
-		Align(lipgloss.Left, lipgloss.Top)
-	//BorderStyle(lipgloss.RoundedBorder()).
-	//BorderForeground(lipgloss.Color("#df8e1d"))
-}
-
-var (
-	containersStyle = buildView()
 )
 
 type keymap struct {
@@ -99,10 +89,11 @@ func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				cmd = tea.EnterAltScreen
 			}
+
 			r.altscreen = !r.altscreen
+
 			return r, cmd
 		}
-
 	}
 
 	r.regexpInput, cmd = r.regexpInput.Update(msgI)
@@ -110,6 +101,7 @@ func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
 		r.spinner, cmd = r.spinner.Update(msgI)
 	} else {
 		var err error
+
 		r.regexp, err = regexp.Compile(r.regexpInput.Value())
 		if err != nil {
 			r.regexpInput.Prompt = fmt.Errorf("bad regexp: %w > ", err).Error()

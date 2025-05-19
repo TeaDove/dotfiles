@@ -4,16 +4,18 @@ import (
 	"context"
 	"dotfiles/pkg/cli/gloss_utils"
 	"dotfiles/pkg/http_supplier"
+	"sync"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
-	//"github.com/charmbracelet/bubbles/table"
+
+	// "github.com/charmbracelet/bubbles/table".
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
-	"sync"
 )
 
 const elipsis = "..."
@@ -60,13 +62,18 @@ func (r *NetStats) Run(ctx context.Context) error {
 	p := tea.NewProgram(r.model, tea.WithContext(ctx))
 
 	var wg sync.WaitGroup
+
 	wg.Add(1)
+
 	go r.myIPView(ctx, &wg)
 	wg.Add(1)
+
 	go r.interfacesView(ctx, &wg)
 	wg.Add(1)
+
 	go r.openPortsView(ctx, &wg)
 	wg.Add(1)
+
 	go r.pingsView(ctx, &wg)
 
 	go func() {
