@@ -30,6 +30,7 @@ def download_release(system: str, machine: str) -> None:
 
 def install() -> None:
     print()
+    os.system("chmod u+x u")
     os.system("./u install")
     print("Dotfiles installed")
 

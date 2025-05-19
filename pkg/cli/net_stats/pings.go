@@ -21,7 +21,7 @@ var (
 		"google.com:80",
 		"ya.ru:80",
 		"mts.ru:80",
-		"kodiki-hack.ru:8080",
+		"vultr.com:80",
 	}
 	pingCols = []string{pingColAddress, pingColDur, pingColSucFail}
 )
