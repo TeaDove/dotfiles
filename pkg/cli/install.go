@@ -49,6 +49,8 @@ func (r *CLI) commandInstall(_ context.Context, _ *cli.Command) error {
 		return errors.Wrap(err, "failed to get user home dir")
 	}
 
+	_ = os.MkdirAll(homeDir+"/local/bin", 755)
+
 	var count int
 
 	for _, file := range zipArchive.File {
