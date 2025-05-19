@@ -18,12 +18,6 @@ lint:
 
 test_and_lint: test lint
 
-run:
-	go run u
-
-install:
-	go install u.go
-
 crosscompile:
 	@echo ">> CROSSCOMPILE linux/amd64"
 	@GOOS=linux GOARCH=amd64 $(GO) build -o $(PKG_OUTPUT)-$(PKG_VERSION)-linux-amd64
