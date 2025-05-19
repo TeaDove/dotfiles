@@ -5,8 +5,8 @@ import os
 import urllib.request
 import json
 
-python_to_go_system: dict[str, str] = {"Darwin": "darwin", "Linux": "linux"}
-python_to_go_machines: dict[str, str] = {"arm64": "arm64", "X86-64": "amd64"}
+python_to_go_system: dict[str, str] = {"darwin": "darwin", "linux": "linux"}
+python_to_go_machines: dict[str, str] = {"arm64": "arm64", "x86-64": "amd64"}
 
 def download_release(system: str, machine: str) -> None:
     with urllib.request.urlopen('https://api.github.com/repos/teadove/dotfiles/releases/latest') as response:
@@ -37,14 +37,17 @@ def install() -> None:
 
 def main() -> None:
     uname = platform.uname()
-    if uname.system not in python_to_go_system:
-        raise Exception("No allowed system")
+    system = uname.system.lower()
+    machine = uname.machine.lower()
 
-    if uname.machine not in python_to_go_machines:
-        raise Exception("No allowed machine")
+    if system not in python_to_go_system:
+        raise Exception(f"No allowed system: {system}")
 
-    print(f"Installing for {uname.system}: {uname.machine}")
-    download_release(python_to_go_system[uname.system], python_to_go_machines[uname.machine])
+    if machine not in python_to_go_machines:
+        raise Exception(f"No allowed machine: {machine}")
+
+    print(f"Installing for {system}: {machine}")
+    download_release(python_to_go_system[system], python_to_go_machines[machine])
     install()
 
 if __name__ == main():
