@@ -19,6 +19,9 @@ lint:
 test_and_lint: test lint
 
 crosscompile:
+	rm -rf build
+	mkdir build
+
 	@echo ">> CROSSCOMPILE linux/amd64"
 	@GOOS=linux GOARCH=amd64 $(GO) build -o $(PKG_OUTPUT)-$(PKG_VERSION)-linux-amd64
 	@echo ">> OK"
@@ -35,4 +38,4 @@ crosscompile:
 
 release: lint crosscompile
 	git status -s | xargs --null test -z
-	gh release create $(PKG_VERSION) ./dist/*
+	gh release create $(PKG_VERSION) ./build/*

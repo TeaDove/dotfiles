@@ -21,7 +21,7 @@ def download_release(system: str, machine: str) -> None:
            with urllib.request.urlopen(asset['browser_download_url']) as response:
                 with open("u", "wb") as f:
                     f.write(response.read())
-                    print("Release downloaded!")
+                    print(f"Release {asset['browser_download_url']} downloaded!")
                     return
 
 
