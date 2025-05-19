@@ -38,4 +38,4 @@ crosscompile:
 
 release: lint crosscompile
 	git status -s | xargs --null test -z
-	gh release create $(PKG_VERSION) ./build/*
+	gh release create $(PKG_VERSION) ./build/* -t="$(PKG_VERSION)" -p=false -n="new release!!!"
