@@ -68,6 +68,11 @@ function envsource
     . (sed 's/^/export /' .env | psub)
 end
 
+function rsa
+	openssl genrsa -out $argv[1]-private.pem 2048
+	openssl rsa -in $argv[1]-private.pem -outform PEM -pubout -out $argv[1]-public.pem
+end
+
 #if test -z "$(pgrep ssh-agent)"
 #    eval (ssh-agent -c)
 #end
