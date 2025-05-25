@@ -16,7 +16,7 @@ lint:
 	wsl --fix ./...
 	golangci-lint run --fix
 
-test_and_lint: test lint
+test-and-lint: test lint
 
 crosscompile:
 	rm -rf build
@@ -36,6 +36,8 @@ crosscompile:
 	@GOOS=darwin GOARCH=arm64 $(GO) build -o $(PKG_OUTPUT)-$(PKG_VERSION)-darwin-arm64
 	@echo ">> OK"
 
-release: lint crosscompile
+git-check-pushed:
 	git status -s | xargs --null test -z
+
+release: test-and-lint git-check-pushed crosscompile
 	gh release create $(PKG_VERSION) ./build/* -t="$(PKG_VERSION)" -p=false -n="new release!!!"

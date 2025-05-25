@@ -53,7 +53,7 @@ func (r *NetStats) interfacesView(ctx context.Context, wg *sync.WaitGroup) {
 		}
 
 		r.model.interfaces += fmt.Sprintf("\n%s (%s) -> %s",
-			color.New(color.FgCyan, color.Faint).Sprintf(i.Name),
+			color.New(color.FgCyan, color.Faint).Sprint(i.Name),
 			i.HardwareAddr,
 			strings.Join(addresses, ", "),
 		)

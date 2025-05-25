@@ -29,10 +29,16 @@ func (r *NetStats) myIPView(ctx context.Context, wg *sync.WaitGroup) {
 	r.model.myIP += color.GreenString("DNS Servers: ")
 
 	dnss := http_supplier.GetDNSServers()
+
 	var dnssStrings []string
+
 	for _, dns := range dnss {
 		if !dns.Addr().IsPrivate() && !dns.Addr().IsLoopback() {
-			dnssStrings = append(dnssStrings, fmt.Sprintf("%s (%s)", dns.String(), r.shortLocationOrErr(ctx, dns.Addr().String())))
+			dnssStrings = append(
+				dnssStrings,
+				fmt.Sprintf("%s (%s)", dns.String(), r.shortLocationOrErr(ctx, dns.Addr().String())),
+			)
+
 			continue
 		}
 
@@ -45,7 +51,6 @@ func (r *NetStats) myIPView(ctx context.Context, wg *sync.WaitGroup) {
 		r.model.myIP += "\n"
 		r.model.myIP += strings.Join(dnssStrings, "\n")
 	}
-
 }
 
 func (r *NetStats) shortLocationOrErr(ctx context.Context, ipOrDomain string) string {

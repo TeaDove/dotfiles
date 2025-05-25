@@ -67,7 +67,7 @@ func (r *NetStats) openPortsView(ctx context.Context, wg *sync.WaitGroup) {
 
 		services = append(services,
 			fmt.Sprintf("\n%s (%d): %s",
-				color.New(color.FgCyan, color.Faint).Sprintf(name),
+				color.New(color.FgCyan, color.Faint).Sprint(name),
 				pid,
 				strings.Join(ports, ","),
 			))
