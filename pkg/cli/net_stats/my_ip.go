@@ -4,6 +4,7 @@ import (
 	"context"
 	"dotfiles/pkg/http_supplier"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/fatih/color"
@@ -28,15 +29,23 @@ func (r *NetStats) myIPView(ctx context.Context, wg *sync.WaitGroup) {
 	r.model.myIP += color.GreenString("DNS Servers: ")
 
 	dnss := http_supplier.GetDNSServers()
-
+	var dnssStrings []string
 	for _, dns := range dnss {
-		if !dns.Addr().IsPrivate() {
-			r.model.myIP += fmt.Sprintf("%s (%s)", dns.String(), r.shortLocationOrErr(ctx, dns.Addr().String()))
+		if !dns.Addr().IsPrivate() && !dns.Addr().IsLoopback() {
+			dnssStrings = append(dnssStrings, fmt.Sprintf("%s (%s)", dns.String(), r.shortLocationOrErr(ctx, dns.Addr().String())))
 			continue
 		}
 
-		r.model.myIP += dns.String()
+		dnssStrings = append(dnssStrings, dns.String())
 	}
+
+	if len(dnssStrings) == 1 {
+		r.model.myIP += dnssStrings[0]
+	} else {
+		r.model.myIP += "\n"
+		r.model.myIP += strings.Join(dnssStrings, "\n")
+	}
+
 }
 
 func (r *NetStats) shortLocationOrErr(ctx context.Context, ipOrDomain string) string {
