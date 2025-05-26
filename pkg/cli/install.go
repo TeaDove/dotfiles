@@ -86,7 +86,12 @@ func (r *CLI) commandInstall(_ context.Context, _ *cli.Command) error {
 }
 
 func (r *CLI) commandUpdate(ctx context.Context, _ *cli.Command) error {
-	_, err := utils.ExecCommand(ctx, "bash", "-c", "curl -s https://raw.githubusercontent.com/teadove/dotfiles/master/install.py | python3 -B")
+	_, err := utils.ExecCommand(
+		ctx,
+		"bash",
+		"-c",
+		"curl -s https://raw.githubusercontent.com/teadove/dotfiles/master/install.py | python3 -B",
+	)
 	if err != nil {
 		return errors.Wrap(err, "failed to install new version")
 	}
