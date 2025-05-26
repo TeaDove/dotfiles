@@ -35,8 +35,13 @@ func (r *CLI) Run(ctx context.Context) error {
 		Commands: []*cli.Command{
 			{
 				Name:   "install",
-				Usage:  "install all dotfiles like fish config",
+				Usage:  "install all dotfiles, i.e. fish config",
 				Action: r.commandInstall,
+			},
+			{
+				Name:   "update",
+				Usage:  "updates this executable",
+				Action: r.commandUpdate,
 			},
 			{
 				Name:   "u",

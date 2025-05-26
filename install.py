@@ -6,7 +6,7 @@ import urllib.request
 import json
 
 python_to_go_system: dict[str, str] = {"darwin": "darwin", "linux": "linux"}
-python_to_go_machines: dict[str, str] = {"arm64": "arm64", "x86-64": "amd64", "x86_64": "amd64"}
+python_to_go_machines: dict[str, str] = {"arm64": "arm64", "aarch64": "arm64", "x86-64": "amd64", "x86_64": "amd64"}
 
 def download_release(system: str, machine: str) -> None:
     with urllib.request.urlopen('https://api.github.com/repos/teadove/dotfiles/releases/latest') as response:

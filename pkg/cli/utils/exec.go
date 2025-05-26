@@ -19,7 +19,7 @@ func ExecCommand(ctx context.Context, name string, args ...string) (string, erro
 
 	out, err := cmd.Output()
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get current branch")
+		return "", errors.Wrap(err, "failed to execute command")
 	}
 
 	color.White(string(out))
