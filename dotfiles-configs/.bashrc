@@ -17,9 +17,9 @@ esac
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-	color_prompt=yes
+        color_prompt=yes
     else
-	color_prompt=
+        color_prompt=
     fi
 fi
 export PS1='\[\033[01;31m\]\u\[\033[01;33m\]@\[\033[01;32m\]\h \[\033[01;33m\]\w \[\033[01;35m\]\$ \[\033[00m\]'
@@ -29,8 +29,8 @@ if [ -x /usr/bin/dircolors ]; then
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
 fi
-alias ll='ls -la --color=auto 2&>/dev/null || ls -laG'
-alias l='ls -l --color=auto 2&>/dev/null || ls -lG'
+alias ll='ls -la --color=always 2&>/dev/null || ls -laG --color=always'
+alias l='ls -l --color=always 2&>/dev/null || ls -lG --color=always'
 alias s='source .venv/bin/activate'
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
@@ -45,4 +45,4 @@ if ! shopt -oq posix; then
   fi
 fi
 
-export PATH=/opt/homebrew/bin:$PATH
+export PATH=$HOME/.local/bin:/opt/homebrew/bin:$PATH

@@ -20,7 +20,7 @@ alias jup='cd ~/projects/jup && python3.13 -m jupyterlab ; cd -'
 alias jup-darwin='cd ~/projects/jup && python3.13 -m jupyterlab --app-dir=/opt/homebrew/share/jupyter/lab ; cd -'
 alias ljup='python3.13 -m jupyterlab'
 alias ljup-darwin='python3.13 -m jupyterlab --app-dir=/opt/homebrew/share/jupyter/lab'
-
+alias cloc-git='cloc (git ls-tree -r master --name-only)'
 
 alias kubectl="kubecolor"
 
