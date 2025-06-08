@@ -1,18 +1,20 @@
 package watch
 
 import (
-	"bufio"
 	"context"
+	"fmt"
+	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v3"
 	"os/exec"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -30,10 +32,18 @@ func New() *Watch {
 		help:    help.New(),
 		keymap: keymap{
 			quit: key.NewBinding(
-				key.WithKeys("ctrl+c", "q"),
+				key.WithKeys("ctrl+c"),
+				key.WithHelp("ctrl+c", "quit"),
 			),
 		},
 	}
+
+	m.grepInput = textinput.New()
+	m.grepInput.Cursor.SetMode(cursor.CursorHide)
+	m.grepInput.Placeholder = ""
+	m.grepInput.Focus()
+	m.grepInput.CharLimit = 156
+	m.grepInput.Width = 20
 
 	return &Watch{model: &m}
 }
@@ -52,7 +62,7 @@ func (r *Watch) Run(ctx context.Context, cmd *cli.Command) error {
 	if len(commands) == 0 {
 		return errors.New("at least one command is required")
 	}
-	r.model.commands = make([]string, len(commands))
+	r.model.commands = make([]commandExecution, len(commands))
 
 	for idx, command := range commands {
 		go r.executeAndShow(ctx, idx, command, interval)
@@ -68,17 +78,36 @@ func (r *Watch) Run(ctx context.Context, cmd *cli.Command) error {
 	return nil
 }
 
+type commandExecution struct {
+	cmd string
+	out string
+}
+
 func (r *Watch) executeAndShow(ctx context.Context, idx int, command string, interval time.Duration) {
+	var (
+		iters    int
+		totalDur time.Duration
+		avgDur   time.Duration
+	)
+
 	for {
 		t0 := time.Now()
 		out, err := executeAndRead(ctx, command)
 		if err != nil {
-			out = errors.Wrap(err, "failed to run").Error()
+			out += color.RedString(errors.Wrap(err, "failed to run").Error())
 		}
 
-		r.model.commands[idx] = out
+		iters++
+		dur := time.Since(t0)
+		totalDur += dur
+		avgDur = totalDur / time.Duration(iters)
 
-		time.Sleep(interval - time.Since(t0))
+		r.model.commands[idx] = commandExecution{
+			cmd: fmt.Sprintf("%s (%d), (%s)", color.MagentaString(command), iters, avgDur.String()),
+			out: strings.TrimSpace(out),
+		}
+
+		time.Sleep(interval - dur)
 	}
 }
 
@@ -87,50 +116,10 @@ func executeAndRead(ctx context.Context, command string) (string, error) {
 
 	cmd := exec.CommandContext(ctx, fields[0], fields[1:]...)
 
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", errors.Wrap(err, "failed to execute command")
+		return string(out), err
 	}
 
 	return string(out), nil
-}
-
-func executeAndReadChanneled(ctx context.Context, command string) <-chan string {
-	fields := strings.Fields(command)
-
-	cmd := exec.CommandContext(ctx, fields[0], fields[1:]...)
-
-	var wg sync.WaitGroup
-	out := make(chan string)
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		cmdReader, err := cmd.StdoutPipe()
-		if err != nil {
-			out <- errors.Wrap(err, "failed to open stdout pipe").Error()
-			return
-		}
-
-		scanner := bufio.NewScanner(cmdReader)
-		for scanner.Scan() {
-			out <- scanner.Text()
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		err := cmd.Run()
-		if err != nil {
-			out <- errors.Wrap(err, "failed to run command").Error()
-		}
-	}()
-
-	go func() {
-		wg.Wait()
-		close(out)
-	}()
-
-	return out
 }

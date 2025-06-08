@@ -8,7 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"regexp"
+	"strings"
 )
 
 type keymap struct {
@@ -16,9 +16,9 @@ type keymap struct {
 }
 
 type model struct {
-	commands []string
+	commands []commandExecution
 
-	grep      *regexp.Regexp
+	grep      string
 	grepInput textinput.Model
 	spinner   spinner.Model
 	help      help.Model
@@ -27,14 +27,37 @@ type model struct {
 
 func (r *model) helpView() string {
 	return fmt.Sprintf(
-		"\n %s %s",
+		"\n %s %s ",
 		r.spinner.View(),
-		r.help.ShortHelpView([]key.Binding{}),
+		r.help.ShortHelpView([]key.Binding{r.keymap.quit}),
 	)
 }
 
 func (r *model) View() string {
-	return r.grepInput.View() + "\n" + lipgloss.JoinVertical(lipgloss.Left, r.commands...) + r.helpView()
+	return lipgloss.JoinVertical(lipgloss.Left, r.greppedCommands()...) + r.helpView() + r.grepInput.View()
+}
+
+func (r *model) greppedCommands() []string {
+	grepValue := strings.ToLower(r.grepInput.Value())
+
+	var newCommands []string
+
+	for _, command := range r.commands {
+		var out strings.Builder
+		out.WriteString(command.cmd)
+
+		for _, line := range strings.Split(command.out, "\n") {
+			if strings.Contains(strings.ToLower(line), grepValue) {
+				out.WriteString("\n")
+				out.WriteString(line)
+			}
+		}
+
+		out.WriteString("\n")
+		newCommands = append(newCommands, out.String())
+	}
+
+	return newCommands
 }
 
 func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
@@ -48,7 +71,10 @@ func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	r.spinner, cmd = r.spinner.Update(msgI)
+	r.grepInput, cmd = r.grepInput.Update(msgI)
+	if cmd == nil {
+		r.spinner, cmd = r.spinner.Update(msgI)
+	}
 
 	return r, cmd
 }
