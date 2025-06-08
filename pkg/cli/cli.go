@@ -4,6 +4,7 @@ import (
 	"context"
 	"dotfiles/pkg/cli/kwatch"
 	"dotfiles/pkg/cli/net_stats"
+	"dotfiles/pkg/cli/watch"
 	"dotfiles/pkg/http_supplier"
 	"dotfiles/pkg/kube_supplier"
 	"os"
@@ -21,7 +22,9 @@ func NewCLI() *CLI {
 	return &CLI{httpSupplier: http_supplier.New()}
 }
 
-var verboseFlag = &cli.BoolFlag{Name: "v", Usage: "verbose info"}
+var (
+	verboseFlag = &cli.BoolFlag{Name: "v", Usage: "verbose info"}
+)
 
 func (r *CLI) Run(ctx context.Context) error {
 	if runtime.GOOS == "windows" {
@@ -60,28 +63,29 @@ func (r *CLI) Run(ctx context.Context) error {
 			},
 			{
 				Name:   "net",
-				Usage:  "Displays all network stats",
+				Usage:  "displays all network stats",
 				Action: r.commandNet,
 			},
 			{
 				Name:   "sha",
-				Usage:  "Hashes string as sha512",
+				Usage:  "hashes string as sha512",
 				Action: r.commandSha,
 			},
 			{
-				Name:   "jq",
-				Usage:  "Attempt to parse every line as json and write it",
-				Action: r.commandJq,
-			},
-			{
 				Name:   "git-pull-and-merge",
-				Usage:  "Git utils",
+				Usage:  "git utils",
 				Action: r.commandGitPullAndMerge,
 			},
 			{
 				Name:   "kwatch",
-				Usage:  "Displays k8s pod usage in current namespace",
+				Usage:  "displays k8s pod usage in current namespace",
 				Action: r.commandKwatch,
+			},
+			{
+				Name:   "watch",
+				Usage:  "like unix watch, but better",
+				Action: r.commandWatch,
+				Flags:  []cli.Flag{watch.IntervalFlag},
 			},
 		},
 	}
@@ -105,4 +109,8 @@ func (r *CLI) commandKwatch(ctx context.Context, _ *cli.Command) error {
 	}
 
 	return kwatch.New(kubeSupplier).Run(ctx)
+}
+
+func (r *CLI) commandWatch(ctx context.Context, cmd *cli.Command) error {
+	return watch.New().Run(ctx, cmd)
 }

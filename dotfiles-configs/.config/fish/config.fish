@@ -54,9 +54,9 @@ end
 
 function kwatch
     if [ "$argv[1]" ]
-        watch -n 0.5 "kubecolor config view --minify -o jsonpath='{..namespace}' && echo && kubecolor get deployments -o='custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas' | grep $argv[1] && kubectl get statefulset -o='custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas' | grep $argv[1] && echo && kubecolor get pods | grep $argv[1] && echo && kubecolor get events | grep $argv[1] | tail -n 10"
+        watch --color -n 0.5 "kubecolor --force-colors config view --minify -o jsonpath='{..namespace}' && echo && kubecolor --force-colors get deployments -o='custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas' | grep $argv[1] && kubecolors --force-colors get statefulset -o='custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas' | grep $argv[1] && echo && kubecolor --force-colors get pods | grep $argv[1] && echo && kubecolor --force-colors get events | grep $argv[1] | tail -n 10"
     else
-        watch -n 0.5 "kubecolor config view --minify -o jsonpath='{..namespace}' && echo && kubecolor get deployments -o='custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas' && kubectl get statefulset -o='custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas' && echo && kubecolor get pods && echo && kubecolor get events | tail -n 10"
+        watch --color -n 0.5 "kubecolor --force-colors config view --minify -o jsonpath='{..namespace}' && echo && kubecolor --force-colors get deployments -o='custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas' && kubecolor --force-colors get statefulset -o='custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas' && echo && kubecolor --force-colors get pods && echo && kubecolor --force-colors get events | tail -n 10"
     end
 end
 
