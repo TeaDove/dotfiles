@@ -3,6 +3,10 @@ package watch
 import (
 	"context"
 	"fmt"
+	"os/exec"
+	"strings"
+	"time"
+
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -13,9 +17,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v3"
-	"os/exec"
-	"strings"
-	"time"
 )
 
 type Watch struct {
@@ -48,20 +49,20 @@ func New() *Watch {
 	return &Watch{model: &m}
 }
 
-var (
-	IntervalFlag = &cli.DurationFlag{
-		Name:  "i",
-		Usage: "interval between executions",
-		Value: time.Second,
-	}
-)
+var IntervalFlag = &cli.DurationFlag{
+	Name:  "i",
+	Usage: "interval between executions",
+	Value: time.Second,
+}
 
 func (r *Watch) Run(ctx context.Context, cmd *cli.Command) error {
 	interval := cmd.Duration(IntervalFlag.Name)
+
 	commands := cmd.Args().Slice()
 	if len(commands) == 0 {
 		return errors.New("at least one command is required")
 	}
+
 	r.model.commands = make([]commandExecution, len(commands))
 
 	for idx, command := range commands {
@@ -92,6 +93,7 @@ func (r *Watch) executeAndShow(ctx context.Context, idx int, command string, int
 
 	for {
 		t0 := time.Now()
+
 		out, err := executeAndRead(ctx, command)
 		if err != nil {
 			out += color.RedString(errors.Wrap(err, "failed to run").Error())
@@ -114,7 +116,7 @@ func (r *Watch) executeAndShow(ctx context.Context, idx int, command string, int
 func executeAndRead(ctx context.Context, command string) (string, error) {
 	fields := strings.Fields(command)
 
-	cmd := exec.CommandContext(ctx, fields[0], fields[1:]...)
+	cmd := exec.CommandContext(ctx, fields[0], fields[1:]...) //nolint: gosec // FP
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {

@@ -2,13 +2,14 @@ package watch
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"strings"
 )
 
 type keymap struct {
@@ -18,7 +19,6 @@ type keymap struct {
 type model struct {
 	commands []commandExecution
 
-	grep      string
 	grepInput textinput.Model
 	spinner   spinner.Model
 	help      help.Model
@@ -44,6 +44,7 @@ func (r *model) greppedCommands() []string {
 
 	for _, command := range r.commands {
 		var out strings.Builder
+
 		out.WriteString(command.cmd)
 
 		for _, line := range strings.Split(command.out, "\n") {

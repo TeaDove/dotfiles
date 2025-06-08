@@ -22,9 +22,7 @@ func NewCLI() *CLI {
 	return &CLI{httpSupplier: http_supplier.New()}
 }
 
-var (
-	verboseFlag = &cli.BoolFlag{Name: "v", Usage: "verbose info"}
-)
+var verboseFlag = &cli.BoolFlag{Name: "v", Usage: "verbose info"}
 
 func (r *CLI) Run(ctx context.Context) error {
 	if runtime.GOOS == "windows" {
