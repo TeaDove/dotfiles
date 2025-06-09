@@ -39,5 +39,8 @@ crosscompile:
 git-check-pushed:
 	git status -s | xargs --null test -z
 
+install:
+	$(GO) install u.go
+
 release: test-and-lint git-check-pushed crosscompile
 	gh release create $(PKG_VERSION) ./build/* -t="$(PKG_VERSION)" -p=false -n="new release!!!"

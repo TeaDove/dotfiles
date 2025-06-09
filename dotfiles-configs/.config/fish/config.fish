@@ -23,6 +23,7 @@ alias ljup-darwin='python3.13 -m jupyterlab --app-dir=/opt/homebrew/share/jupyte
 alias cloc-git='cloc (git ls-tree -r master --name-only)'
 
 alias kubectl="kubecolor"
+alias kwatch=u watch -i=1s "kubecolor --force-colors config view --minify -o jsonpath='{..namespace}'" "kubecolor --force-colors get deployments -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas" "kubecolor --force-colors get statefulset -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas" "kubecolor --force-colors get pods" "kubecolor --force-colors get events"
 
 function sysgrep
     systemctl list-units --type=service | head -n 1 && systemctl list-units --type=service | grep $argv
@@ -52,13 +53,7 @@ function gitauto
     git push
 end
 
-function kwatch
-    if [ "$argv[1]" ]
-        watch --color -n 0.5 "kubecolor --force-colors config view --minify -o jsonpath='{..namespace}' && echo && kubecolor --force-colors get deployments -o='custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas' | grep $argv[1] && kubecolors --force-colors get statefulset -o='custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas' | grep $argv[1] && echo && kubecolor --force-colors get pods | grep $argv[1] && echo && kubecolor --force-colors get events | grep $argv[1] | tail -n 10"
-    else
-        watch --color -n 0.5 "kubecolor --force-colors config view --minify -o jsonpath='{..namespace}' && echo && kubecolor --force-colors get deployments -o='custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas' && kubecolor --force-colors get statefulset -o='custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas' && echo && kubecolor --force-colors get pods && echo && kubecolor --force-colors get events | tail -n 10"
-    end
-end
+
 
 function kexec 
 	kubectl exec -it $(kubectl get pod -o custom-columns=CONTAINER:.metadata.name | grep $argv[1]) -- /bin/bash
