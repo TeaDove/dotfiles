@@ -10,14 +10,6 @@ GOARCH ?= $(shell $(GO) version | cut -d' ' -f4 | cut -d'/' -f2)
 test:
 	$(GO) test ./...
 
-lint:
-	gofumpt -w .
-	golines --base-formatter=gofumpt --max-len=120 --no-reformat-tags -w .
-	wsl --fix ./...
-	golangci-lint run --fix
-
-test-and-lint: test lint
-
 crosscompile:
 	rm -rf build
 	mkdir build
@@ -42,5 +34,5 @@ git-check-pushed:
 install:
 	$(GO) install u.go
 
-release: test-and-lint git-check-pushed crosscompile
+release: test git-check-pushed crosscompile
 	gh release create $(PKG_VERSION) ./build/* -t="$(PKG_VERSION)" -p=false -n="new release!!!"

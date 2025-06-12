@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
@@ -71,6 +72,8 @@ func (r *CLI) commandInstall(_ context.Context, _ *cli.Command) error {
 
 		name := strings.TrimPrefix(file.Name, "dotfiles-master/dotfiles-configs/")
 		targetName := homeDir + "/" + name
+
+		_ = os.MkdirAll(filepath.Dir(targetName), file.Mode())
 
 		err = os.WriteFile(targetName, fileContent, file.Mode())
 		if err != nil {
