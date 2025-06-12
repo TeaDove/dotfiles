@@ -8,17 +8,20 @@ linters:
     - copyloopvar
     - cyclop
     - decorder
-    - dupl
     - durationcheck
     - errcheck
     - errname
     - errorlint
     - fatcontext
+    - forbidigo
     - funlen
     - gocheckcompilerdirectives
+    - gochecknoglobals
     - gochecknoinits
     - gochecksumtype
+    - gocognit
     - goconst
+    - gocritic
     - gocyclo
     - godot
     - goheader
@@ -28,6 +31,7 @@ linters:
     - gosec
     - iface
     - inamedparam
+    - ineffassign
     - interfacebloat
     - intrange
     - lll
@@ -35,6 +39,7 @@ linters:
     - makezero
     - mirror
     - misspell
+    - mnd
     - musttag
     - nakedret
     - nestif
@@ -55,7 +60,6 @@ linters:
     - sloglint
     - sqlclosecheck
     - staticcheck
-    - tagalign
     - testableexamples
     - testifylint
     - testpackage
@@ -106,8 +110,16 @@ linters:
       lines: 100
       statements: 50
       ignore-comments: true
+    gocognit:
+      min-complexity: 20
     gochecksumtype:
       default-signifies-exhaustive: false
+    gocritic:
+      settings:
+        captLocal:
+          paramsOnly: false
+        underef:
+          skipRecvDeref: false
     gomodguard:
       blocked:
         modules:
@@ -132,11 +144,26 @@ linters:
           strict: true
     inamedparam:
       skip-single-param: true
+    mnd:
+      ignored-functions:
+        - args.Error
+        - flag.Arg
+        - flag.Duration.*
+        - flag.Float.*
+        - flag.Int.*
+        - flag.Uint.*
+        - os.Chmod
+        - os.Mkdir.*
+        - os.OpenFile
+        - os.WriteFile
+        - prometheus.ExponentialBuckets.*
+        - prometheus.LinearBuckets
     nolintlint:
       require-explanation: true
       require-specific: true
       allow-no-explanation:
         - funlen
+        - gocognit
         - lll
     perfsprint:
       strconcat: false
@@ -164,7 +191,6 @@ linters:
           - gocritic
         source: //noinspection
       - linters:
-          - dupl
           - errcheck
           - funlen
           - goconst
