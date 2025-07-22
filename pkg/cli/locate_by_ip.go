@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"dotfiles/pkg/http_supplier"
 	"fmt"
 
 	"github.com/fatih/color"
@@ -16,7 +17,7 @@ func (r *CLI) commandLocateByIP(ctx context.Context, command *cli.Command) error
 
 	ipOrDomain := command.Args().First()
 
-	domainLocation, err := r.httpSupplier.LocateByIP(ctx, ipOrDomain)
+	domainLocation, err := http_supplier.New().LocateByIP(ctx, ipOrDomain)
 	if err != nil {
 		return errors.Wrap(err, "failed to get resp")
 	}

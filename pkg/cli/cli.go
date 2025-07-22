@@ -14,12 +14,10 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-type CLI struct {
-	httpSupplier *http_supplier.Supplier
-}
+type CLI struct{}
 
 func NewCLI() *CLI {
-	return &CLI{httpSupplier: http_supplier.New()}
+	return &CLI{}
 }
 
 var verboseFlag = &cli.BoolFlag{Name: "v", Usage: "verbose info"}
@@ -97,7 +95,7 @@ func (r *CLI) Run(ctx context.Context) error {
 }
 
 func (r *CLI) commandNet(ctx context.Context, _ *cli.Command) error {
-	return net_stats.NewNetStats(r.httpSupplier).Run(ctx)
+	return net_stats.NewNetStats(http_supplier.New()).Run(ctx)
 }
 
 func (r *CLI) commandKwatch(ctx context.Context, _ *cli.Command) error {
