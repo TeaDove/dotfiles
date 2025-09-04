@@ -64,10 +64,9 @@ func (r *model) greppedCommands() []string {
 func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
-	switch msg := msgI.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c":
+	msg, ok := msgI.(tea.KeyMsg)
+	if ok {
+		if msg.String() == "ctrl+c" {
 			return r, tea.Quit
 		}
 	}

@@ -17,16 +17,16 @@ const (
 )
 
 var (
-	addressesToPing = []string{
+	addressesToPing = []string{ //nolint:gochecknoglobals // is ok
 		"google.com:80",
 		"ya.ru:80",
 		"mts.ru:80",
 		"vultr.com:80",
 	}
-	pingCols = []string{pingColAddress, pingColDur, pingColSucFail}
+	pingCols = []string{pingColAddress, pingColDur, pingColSucFail} //nolint:gochecknoglobals // is ok
 )
 
-func (r *NetStats) pingsView(_ context.Context, wg *sync.WaitGroup) {
+func (r *NetStats) pingsView(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	var pingsWg sync.WaitGroup
@@ -44,6 +44,7 @@ func (r *NetStats) pingsView(_ context.Context, wg *sync.WaitGroup) {
 				failed   uint64
 				success  uint64
 				avg      time.Duration
+				dialer   = net.Dialer{Timeout: time.Second * 2}
 			)
 
 			tillTimer := time.NewTimer(1 * time.Minute)
@@ -56,7 +57,7 @@ func (r *NetStats) pingsView(_ context.Context, wg *sync.WaitGroup) {
 				case <-ticker.C:
 					t0 := time.Now()
 
-					conn, err := net.DialTimeout("tcp", address, time.Second*2)
+					conn, err := dialer.DialContext(ctx, "tcp", address)
 					if err != nil {
 						failed++
 						r.model.pingsTableData.Set(pingColSucFail, address, fmt.Sprintf("%d/%d", success, failed))

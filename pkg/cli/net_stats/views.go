@@ -20,10 +20,10 @@ func buildView() lipgloss.Style {
 }
 
 var (
-	openPortsStyle  = buildView()
-	interfacesStyle = buildView()
-	myIPStyle       = buildView().Width(60)
-	pingStyle       = buildView().Width(60).UnsetBorderStyle()
+	openPortsStyle  = buildView()                              //nolint:gochecknoglobals // is ok
+	interfacesStyle = buildView()                              //nolint:gochecknoglobals // is ok
+	myIPStyle       = buildView().Width(60)                    //nolint:gochecknoglobals // is ok
+	pingStyle       = buildView().Width(60).UnsetBorderStyle() //nolint:gochecknoglobals // is ok
 )
 
 type keymap struct {

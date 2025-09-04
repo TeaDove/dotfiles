@@ -66,12 +66,15 @@ func (r *NetStats) Run(ctx context.Context) error {
 	wg.Add(1)
 
 	go r.myIPView(ctx, &wg)
+
 	wg.Add(1)
 
 	go r.interfacesView(ctx, &wg)
+
 	wg.Add(1)
 
 	go r.openPortsView(ctx, &wg)
+
 	wg.Add(1)
 
 	go r.pingsView(ctx, &wg)

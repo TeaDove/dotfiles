@@ -15,6 +15,7 @@ func GetDNSServers() []netip.AddrPort {
 
 func getLocalNameservers(filename string) []netip.AddrPort {
 	const defaultNameserverPort = 53
+
 	defaultLocalNameservers := []netip.AddrPort{
 		netip.AddrPortFrom(netip.AddrFrom4([4]byte{127, 0, 0, 1}), defaultNameserverPort),
 		netip.AddrPortFrom(netip.AddrFrom16([16]byte{0, 0, 0, 0, 0, 0, 0, 1}), defaultNameserverPort),

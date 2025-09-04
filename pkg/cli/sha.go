@@ -23,10 +23,10 @@ func (r *CLI) commandSha(_ context.Context, cmd *cli.Command) error {
 	hashedText := hex.EncodeToString(hasher.Sum(nil))
 
 	if cmd.Bool(verboseFlag.Name) {
-		fmt.Printf("input:\n%s\n\n", color.BlueString(text))
-		fmt.Printf("hash:\n%s\n", hashedText)
+		fmt.Printf("input:\n%s\n\n", color.BlueString(text)) //nolint:forbidigo // is ok
+		fmt.Printf("hash:\n%s\n", hashedText)                //nolint:forbidigo // is ok
 	} else {
-		fmt.Print(hashedText)
+		fmt.Print(hashedText) //nolint:forbidigo // is ok
 	}
 
 	return nil

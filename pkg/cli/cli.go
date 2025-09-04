@@ -2,11 +2,9 @@ package cli
 
 import (
 	"context"
-	"dotfiles/pkg/cli/kwatch"
 	"dotfiles/pkg/cli/net_stats"
 	"dotfiles/pkg/cli/watch"
 	"dotfiles/pkg/http_supplier"
-	"dotfiles/pkg/kube_supplier"
 	"os"
 	"runtime"
 
@@ -20,7 +18,7 @@ func NewCLI() *CLI {
 	return &CLI{}
 }
 
-var verboseFlag = &cli.BoolFlag{Name: "v", Usage: "verbose info"}
+var verboseFlag = &cli.BoolFlag{Name: "v", Usage: "verbose info"} //nolint:gochecknoglobals // is ok
 
 func (r *CLI) Run(ctx context.Context) error {
 	if runtime.GOOS == "windows" {
@@ -73,11 +71,6 @@ func (r *CLI) Run(ctx context.Context) error {
 				Action: r.commandGitPullAndMerge,
 			},
 			{
-				Name:   "kwatch",
-				Usage:  "displays k8s pod usage in current namespace",
-				Action: r.commandKwatch,
-			},
-			{
 				Name:   "watch",
 				Usage:  "like unix watch, but better",
 				Action: r.commandWatch,
@@ -96,15 +89,6 @@ func (r *CLI) Run(ctx context.Context) error {
 
 func (r *CLI) commandNet(ctx context.Context, _ *cli.Command) error {
 	return net_stats.NewNetStats(http_supplier.New()).Run(ctx)
-}
-
-func (r *CLI) commandKwatch(ctx context.Context, _ *cli.Command) error {
-	kubeSupplier, err := kube_supplier.NewSupplier()
-	if err != nil {
-		return errors.Wrap(err, "failed to init kube_supplier")
-	}
-
-	return kwatch.New(kubeSupplier).Run(ctx)
 }
 
 func (r *CLI) commandWatch(ctx context.Context, cmd *cli.Command) error {

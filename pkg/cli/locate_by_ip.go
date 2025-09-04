@@ -22,19 +22,19 @@ func (r *CLI) commandLocateByIP(ctx context.Context, command *cli.Command) error
 		return errors.Wrap(err, "failed to get resp")
 	}
 
-	fmt.Printf(
+	fmt.Printf( //nolint:forbidigo // is ok
 		"Address: %s %s %s\n",
 		color.GreenString(domainLocation.Country),
 		domainLocation.RegionName,
 		domainLocation.City,
 	)
-	fmt.Printf(
+	fmt.Printf( //nolint:forbidigo // is ok
 		"Coordinates: %s (https://yandex.ru/maps/?ll=%f%%2C%f&z=16)\n",
 		color.YellowString(fmt.Sprintf("%f,%f", domainLocation.Lat, domainLocation.Lon)),
 		domainLocation.Lon,
 		domainLocation.Lat,
 	)
-	fmt.Printf(
+	fmt.Printf( //nolint:forbidigo // is ok
 		"Organization: %s, %s, %s\n",
 		domainLocation.Isp,
 		color.BlueString(domainLocation.Org),

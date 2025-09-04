@@ -49,7 +49,7 @@ func New() *Watch {
 	return &Watch{model: &m}
 }
 
-var IntervalFlag = &cli.DurationFlag{
+var IntervalFlag = &cli.DurationFlag{ //nolint:gochecknoglobals // is ok
 	Name:  "i",
 	Usage: "interval between executions",
 	Value: time.Second,
