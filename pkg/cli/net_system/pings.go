@@ -1,4 +1,4 @@
-package net_stats
+package net_system
 
 import (
 	"context"
@@ -26,9 +26,7 @@ var (
 	pingCols = []string{pingColAddress, pingColDur, pingColSucFail} //nolint:gochecknoglobals // is ok
 )
 
-func (r *NetStats) pingsView(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func (r *NetStats) pingsView(ctx context.Context) {
 	var pingsWg sync.WaitGroup
 
 	for _, address := range addressesToPing {

@@ -1,4 +1,4 @@
-package net_stats
+package net_system
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
@@ -14,9 +13,7 @@ import (
 	"github.com/shirou/gopsutil/v4/process"
 )
 
-func (r *NetStats) openPortsView(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func (r *NetStats) openPortsView(ctx context.Context) {
 	connections, err := net.ConnectionsWithContext(ctx, "all")
 	if err != nil {
 		r.model.openPorts = prettyErr(err)

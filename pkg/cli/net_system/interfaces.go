@@ -1,20 +1,17 @@
-package net_stats
+package net_system
 
 import (
 	"context"
 	"fmt"
 	net2 "net"
 	"strings"
-	"sync"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/v4/net"
 )
 
-func (r *NetStats) interfacesView(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func (r *NetStats) interfacesView(ctx context.Context) {
 	interfaces, err := net.InterfacesWithContext(ctx)
 	if err != nil {
 		r.model.interfaces = prettyErr(errors.Wrap(err, "failed to get my-ip"))

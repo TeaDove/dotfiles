@@ -1,10 +1,12 @@
-package net_stats
+package net_system
 
 import (
 	"context"
 	"dotfiles/pkg/cli/gloss_utils"
 	"dotfiles/pkg/http_supplier"
 	"sync"
+
+	"github.com/urfave/cli/v3"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -20,12 +22,7 @@ import (
 
 const elipsis = "..."
 
-type NetStats struct {
-	httpSupplier *http_supplier.Supplier
-	model        *model
-}
-
-func NewNetStats(httpSupplier *http_supplier.Supplier) *NetStats {
+func Run(ctx context.Context, _ *cli.Command) error {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
@@ -55,7 +52,14 @@ func NewNetStats(httpSupplier *http_supplier.Supplier) *NetStats {
 		},
 	}
 
-	return &NetStats{httpSupplier: httpSupplier, model: &m}
+	r := NetStats{httpSupplier: http_supplier.New(), model: &m}
+
+	return r.Run(ctx)
+}
+
+type NetStats struct {
+	httpSupplier *http_supplier.Supplier
+	model        *model
 }
 
 func (r *NetStats) Run(ctx context.Context) error {
@@ -63,21 +67,10 @@ func (r *NetStats) Run(ctx context.Context) error {
 
 	var wg sync.WaitGroup
 
-	wg.Add(1)
-
-	go r.myIPView(ctx, &wg)
-
-	wg.Add(1)
-
-	go r.interfacesView(ctx, &wg)
-
-	wg.Add(1)
-
-	go r.openPortsView(ctx, &wg)
-
-	wg.Add(1)
-
-	go r.pingsView(ctx, &wg)
+	wg.Go(func() { r.myIPView(ctx) })
+	wg.Go(func() { r.interfacesView(ctx) })
+	wg.Go(func() { r.openPortsView(ctx) })
+	wg.Go(func() { r.pingsView(ctx) })
 
 	go func() {
 		wg.Wait()

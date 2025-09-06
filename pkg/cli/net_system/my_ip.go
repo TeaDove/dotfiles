@@ -1,19 +1,16 @@
-package net_stats
+package net_system
 
 import (
 	"context"
 	"dotfiles/pkg/http_supplier"
 	"fmt"
 	"strings"
-	"sync"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 )
 
-func (r *NetStats) myIPView(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func (r *NetStats) myIPView(ctx context.Context) {
 	myIP, err := r.httpSupplier.MyIP(ctx)
 	if err != nil {
 		r.model.myIP = prettyErr(errors.Wrap(err, "failed to get my-ip"))

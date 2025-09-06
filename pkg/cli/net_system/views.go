@@ -1,4 +1,4 @@
-package net_stats
+package net_system
 
 import (
 	"dotfiles/pkg/cli/gloss_utils"

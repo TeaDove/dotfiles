@@ -2,9 +2,9 @@ package cli
 
 import (
 	"context"
-	"dotfiles/pkg/cli/net_stats"
+	"dotfiles/pkg/cli/net_scan"
+	"dotfiles/pkg/cli/net_system"
 	"dotfiles/pkg/cli/watch"
-	"dotfiles/pkg/http_supplier"
 	"os"
 	"runtime"
 
@@ -56,9 +56,20 @@ func (r *CLI) Run(ctx context.Context) error {
 				Action: r.commandLocateByIP,
 			},
 			{
-				Name:   "net",
-				Usage:  "displays all network stats",
-				Action: r.commandNet,
+				Name:  "net",
+				Usage: "net utils",
+				Commands: []*cli.Command{
+					{
+						Name:   "system",
+						Usage:  "display information about this machine",
+						Action: net_system.Run,
+					},
+					{
+						Name:   "scan",
+						Usage:  "display information about local networks",
+						Action: net_scan.Run,
+					},
+				},
 			},
 			{
 				Name:   "sha",
@@ -73,7 +84,7 @@ func (r *CLI) Run(ctx context.Context) error {
 			{
 				Name:   "watch",
 				Usage:  "like unix watch, but better",
-				Action: r.commandWatch,
+				Action: watch.Run,
 				Flags:  []cli.Flag{watch.IntervalFlag},
 			},
 		},
@@ -85,12 +96,4 @@ func (r *CLI) Run(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func (r *CLI) commandNet(ctx context.Context, _ *cli.Command) error {
-	return net_stats.NewNetStats(http_supplier.New()).Run(ctx)
-}
-
-func (r *CLI) commandWatch(ctx context.Context, cmd *cli.Command) error {
-	return watch.New().Run(ctx, cmd)
 }

@@ -23,7 +23,13 @@ type Watch struct {
 	model *model
 }
 
-func New() *Watch {
+var IntervalFlag = &cli.DurationFlag{ //nolint:gochecknoglobals // is ok
+	Name:  "i",
+	Usage: "interval between executions",
+	Value: time.Second,
+}
+
+func Run(ctx context.Context, cmd *cli.Command) error {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
@@ -46,13 +52,9 @@ func New() *Watch {
 	m.grepInput.CharLimit = 156
 	m.grepInput.Width = 20
 
-	return &Watch{model: &m}
-}
+	r := &Watch{model: &m}
 
-var IntervalFlag = &cli.DurationFlag{ //nolint:gochecknoglobals // is ok
-	Name:  "i",
-	Usage: "interval between executions",
-	Value: time.Second,
+	return r.Run(ctx, cmd)
 }
 
 func (r *Watch) Run(ctx context.Context, cmd *cli.Command) error {
