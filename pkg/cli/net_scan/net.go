@@ -2,106 +2,61 @@ package net_scan
 
 import (
 	"context"
-	"dotfiles/pkg/cli/utils"
-	"fmt"
-	netstd "net"
-	"strconv"
 	"sync"
-	"time"
 
-	"github.com/fatih/color"
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/spinner"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/pkg/errors"
-	"github.com/shirou/gopsutil/v4/net"
 	"github.com/urfave/cli/v3"
 )
 
-type NetSystem struct{}
+type NetSystem struct {
+	Collection   Collection
+	CollectionMu sync.RWMutex
+
+	Model *Model
+}
 
 func Run(ctx context.Context, _ *cli.Command) error {
-	mainInterface, err := getMainInterface(ctx)
-	if err != nil {
-		return errors.WithStack(err)
+	r := &NetSystem{}
+
+	s := spinner.New()
+	s.Spinner = spinner.Dot
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+
+	m := Model{
+		spinner: s,
+		help:    help.New(),
+		keymap: keymap{
+			quit: key.NewBinding(
+				key.WithKeys("ctrl+c", "q"),
+				key.WithHelp("q", "quit"),
+			),
+		},
+		net: r,
 	}
-
-	_, ipnet, err := netstd.ParseCIDR(mainInterface.Addrs[0].Addr)
-	if err != nil {
-		return errors.Wrap(err, "parse main address")
-	}
-
-	fmt.Printf("Checking %s interface on %s network\n\n", color.YellowString(mainInterface.Name), ipnet.String())
-
-	var (
-		wg        sync.WaitGroup
-		semaphore = utils.NewSemaphore(1000)
-	)
-	for ip := range iterateOverNet(ipnet) {
-		wg.Go(func() {
-			checkAddress(ctx, semaphore, ip)
-		})
-	}
-
-	wg.Wait()
-
-	return nil
-}
-
-func getMainInterface(ctx context.Context) (net.InterfaceStat, error) {
-	interfaces, err := net.InterfacesWithContext(ctx)
-	if err != nil {
-		return net.InterfaceStat{}, errors.Wrap(err, "get interfaces")
-	}
-
-	if len(interfaces) <= 1 {
-		return net.InterfaceStat{}, errors.New("only loopback found")
-	}
-
-	var mainInterface net.InterfaceStat
-
-	for _, i := range interfaces[1:] {
-		if len(i.Addrs) != 0 {
-			mainInterface = i
-			break
-		}
-	}
-
-	if mainInterface.Name == "" {
-		return net.InterfaceStat{}, errors.New("no interfaces with addresses found")
-	}
-
-	return mainInterface, nil
-}
-
-func checkAddress(ctx context.Context, semaphore *utils.Semaphore, ip netstd.IP) {
-	var ok bool
-
-	semaphore.Locked(func() {
-		ok = ping(ctx, ip.String())
-	})
-
-	if !ok {
-		return
-	}
-
-	fmt.Printf("%s is pingable!\n", color.GreenString(ip.String()))
+	r.Model = &m
+	p := tea.NewProgram(r.Model, tea.WithContext(ctx))
 
 	var wg sync.WaitGroup
+	wg.Go(func() { r.collect(ctx) })
 
-	for i := 1; i < 10000; i++ {
-		wg.Go(func() {
-			semaphore.Locked(func() {
-				dialer := netstd.Dialer{Timeout: 5 * time.Second}
+	go func() {
+		wg.Wait()
+		p.Quit()
+	}()
 
-				conn, err := dialer.DialContext(ctx, "tcp", ip.String()+":"+strconv.Itoa(i))
-				if err != nil {
-					return
-				}
-
-				defer conn.Close()
-
-				fmt.Printf("%s:%d is open!\n", color.GreenString(ip.String()), i)
-			})
-		})
+	_, err := p.Run()
+	if err != nil {
+		return errors.Wrap(err, "failed to run tea")
 	}
 
-	wg.Wait()
+	if r.Collection.Err != nil {
+		return errors.New("collection error")
+	}
+
+	return nil
 }

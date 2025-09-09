@@ -13,6 +13,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/teadove/teasutils/utils v0.2.14
 	github.com/urfave/cli/v3 v3.4.1
+	golang.org/x/sync v0.16.0
 )
 
 require (
