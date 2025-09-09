@@ -32,5 +32,7 @@ GLOBAL OPTIONS:
    -v          verbose info (default: false)
    --help, -h  show help
 ```
+
 i.e. `u net scan`
+
 ![img.png](img.png)
