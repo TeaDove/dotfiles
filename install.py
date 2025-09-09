@@ -5,6 +5,7 @@ import os
 import urllib.request
 import json
 
+install_location = '~/.local/bin/'
 python_to_go_system: dict[str, str] = {"darwin": "darwin", "linux": "linux"}
 python_to_go_machines: dict[str, str] = {"arm64": "arm64", "aarch64": "arm64", "x86-64": "amd64", "x86_64": "amd64"}
 
@@ -34,7 +35,7 @@ def install() -> None:
     os.system("./u install")
     print("Dotfiles installed")
 
-    os.system("mv u ~/.local/bin/")
+    os.system(f"mv u {install_location}")
 
 def main() -> None:
     uname = platform.uname()

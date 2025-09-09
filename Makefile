@@ -32,6 +32,7 @@ git-check-pushed:
 	git status -s | xargs --null test -z
 
 install:
+	rm ~/.local/bin/u || true
 	$(GO) install u.go
 
 release: test git-check-pushed crosscompile
