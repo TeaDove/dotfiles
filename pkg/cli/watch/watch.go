@@ -75,7 +75,7 @@ func (r *Watch) Run(ctx context.Context, cmd *cli.Command) error {
 
 	_, err := p.Run()
 	if err != nil {
-		return errors.Wrap(err, "failed to run tea")
+		return errors.Wrap(err, "run tea")
 	}
 
 	return nil
@@ -98,7 +98,7 @@ func (r *Watch) executeAndShow(ctx context.Context, idx int, command string, int
 
 		out, err := executeAndRead(ctx, command)
 		if err != nil {
-			out += color.RedString(errors.Wrap(err, "failed to run").Error())
+			out += color.RedString(errors.Wrap(err, "run").Error())
 		}
 
 		iters++

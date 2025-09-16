@@ -14,7 +14,7 @@ func (r *CLI) commandGitPullAndMerge(ctx context.Context, _ *cli.Command) error 
 
 	out, err := utils.ExecCommand(ctx, "git", "status", "-s")
 	if err != nil {
-		return errors.Wrap(err, "failed to get current branch")
+		return errors.Wrap(err, "get current branch")
 	}
 
 	if strings.TrimSpace(out) != "" {
@@ -23,7 +23,7 @@ func (r *CLI) commandGitPullAndMerge(ctx context.Context, _ *cli.Command) error 
 
 	out, err = utils.ExecCommand(ctx, "git", "rev-parse", "--abbrev-ref", "HEAD")
 	if err != nil {
-		return errors.Wrap(err, "failed to get current branch")
+		return errors.Wrap(err, "get current branch")
 	}
 
 	branch := strings.TrimSpace(out)
@@ -33,27 +33,27 @@ func (r *CLI) commandGitPullAndMerge(ctx context.Context, _ *cli.Command) error 
 
 	_, err = utils.ExecCommand(ctx, "git", "checkout", master)
 	if err != nil {
-		return errors.Wrap(err, "failed to checkout master")
+		return errors.Wrap(err, "checkout master")
 	}
 
 	_, err = utils.ExecCommand(ctx, "git", "pull")
 	if err != nil {
-		return errors.Wrap(err, "failed to pull")
+		return errors.Wrap(err, "pull")
 	}
 
 	_, err = utils.ExecCommand(ctx, "git", "checkout", branch)
 	if err != nil {
-		return errors.Wrap(err, "failed to pull")
+		return errors.Wrap(err, "checkout")
 	}
 
 	_, err = utils.ExecCommand(ctx, "git", "merge", master)
 	if err != nil {
-		return errors.Wrap(err, "failed to pull")
+		return errors.Wrap(err, "merge")
 	}
 
 	_, err = utils.ExecCommand(ctx, "git", "push")
 	if err != nil {
-		return errors.Wrap(err, "failed to pull")
+		return errors.Wrap(err, "push")
 	}
 
 	return nil

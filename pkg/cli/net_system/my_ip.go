@@ -13,7 +13,7 @@ import (
 func (r *NetStats) myIPView(ctx context.Context) {
 	myIP, err := r.httpSupplier.MyIP(ctx)
 	if err != nil {
-		r.model.myIP = prettyErr(errors.Wrap(err, "failed to get my-ip"))
+		r.model.myIP = prettyErr(errors.Wrap(err, "get my-ip"))
 		return
 	}
 
@@ -53,7 +53,7 @@ func (r *NetStats) myIPView(ctx context.Context) {
 func (r *NetStats) shortLocationOrErr(ctx context.Context, ipOrDomain string) string {
 	location, err := r.httpSupplier.LocateByIP(ctx, ipOrDomain)
 	if err != nil {
-		return prettyErr(errors.Wrap(err, "failed to get location"))
+		return prettyErr(errors.Wrap(err, "get location"))
 	}
 
 	return fmt.Sprintf("%s, %s, %s", location.Country, location.City, color.BlueString(location.Org))

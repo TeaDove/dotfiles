@@ -92,7 +92,7 @@ func (r *CLI) Run(ctx context.Context) error {
 
 	err := cmd.Run(ctx, os.Args)
 	if err != nil {
-		return errors.Wrap(err, "failed to run cmd")
+		return errors.Wrap(err, "run cmd")
 	}
 
 	return nil

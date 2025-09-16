@@ -19,7 +19,7 @@ func (r *CLI) commandLocateByIP(ctx context.Context, command *cli.Command) error
 
 	domainLocation, err := http_supplier.New().LocateByIP(ctx, ipOrDomain)
 	if err != nil {
-		return errors.Wrap(err, "failed to get resp")
+		return errors.Wrap(err, "get resp")
 	}
 
 	fmt.Printf( //nolint:forbidigo // is ok

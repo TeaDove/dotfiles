@@ -51,7 +51,7 @@ func Run(ctx context.Context, _ *cli.Command) error {
 
 	_, err := p.Run()
 	if err != nil {
-		return errors.Wrap(err, "failed to run tea")
+		return errors.Wrap(err, "run tea")
 	}
 
 	if r.Collection.Err != nil {

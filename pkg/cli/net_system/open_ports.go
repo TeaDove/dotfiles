@@ -51,14 +51,14 @@ func (r *NetStats) openPortsView(ctx context.Context) {
 
 		connProcess, err := process.NewProcess(pid)
 		if err != nil {
-			r.model.openPorts = prettyErr(errors.Wrap(err, "failed to get process name"))
+			r.model.openPorts = prettyErr(errors.Wrap(err, "get process name"))
 
 			return
 		}
 
 		name, err := connProcess.NameWithContext(ctx)
 		if err != nil {
-			r.model.openPorts = prettyErr(errors.Wrap(err, "failed to get process name"))
+			r.model.openPorts = prettyErr(errors.Wrap(err, "get process name"))
 			return
 		}
 

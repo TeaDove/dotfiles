@@ -134,8 +134,9 @@ func (r *NetSystem) checkAddress(ctx context.Context, weighted *semaphore.Weight
 	var wg sync.WaitGroup
 
 	for i := firstPort; i < lastPort; i++ {
+		_ = weighted.Acquire(ctx, 1)
+
 		wg.Go(func() {
-			_ = weighted.Acquire(ctx, 1)
 			defer weighted.Release(1)
 			defer func() {
 				r.CollectionMu.Lock()

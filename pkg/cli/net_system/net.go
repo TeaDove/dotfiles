@@ -79,7 +79,7 @@ func (r *NetStats) Run(ctx context.Context) error {
 
 	_, err := p.Run()
 	if err != nil {
-		return errors.Wrap(err, "failed to run tea")
+		return errors.Wrap(err, "run tea")
 	}
 
 	return nil

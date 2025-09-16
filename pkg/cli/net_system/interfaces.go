@@ -14,7 +14,7 @@ import (
 func (r *NetStats) interfacesView(ctx context.Context) {
 	interfaces, err := net.InterfacesWithContext(ctx)
 	if err != nil {
-		r.model.interfaces = prettyErr(errors.Wrap(err, "failed to get my-ip"))
+		r.model.interfaces = prettyErr(errors.Wrap(err, "get my-ip"))
 		return
 	}
 

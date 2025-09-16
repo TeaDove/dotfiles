@@ -36,12 +36,12 @@ func (r *CLI) commandInstall(_ context.Context, _ *cli.Command) error {
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return errors.Wrap(err, "failed to get user home dir")
+		return errors.Wrap(err, "get user home dir")
 	}
 
 	err = filepath.Walk(dofilesPath, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
-			return errors.Wrap(err, "failed to walk")
+			return errors.Wrap(err, "walk")
 		}
 
 		if info.IsDir() {
@@ -50,18 +50,18 @@ func (r *CLI) commandInstall(_ context.Context, _ *cli.Command) error {
 
 		err = os.Remove(filepath.Join(homeDir, strings.TrimPrefix(path, "dotfiles-configs/")))
 		if err != nil && !errors.Is(err, fs.ErrNotExist) {
-			return errors.Wrap(err, "failed to remove file")
+			return errors.Wrap(err, "remove file")
 		}
 
 		return nil
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to remove old files")
+		return errors.Wrap(err, "remove old files")
 	}
 
 	err = os.CopyFS(homeDir, os.DirFS(dofilesPath))
 	if err != nil {
-		return errors.Wrap(err, "failed to copy temp files")
+		return errors.Wrap(err, "copy temp files")
 	}
 
 	color.Green("Dotfiles installed from %s to %s", dofilesPath, homeDir)
@@ -77,7 +77,7 @@ func (r *CLI) commandUpdate(ctx context.Context, _ *cli.Command) error {
 		"curl -s https://raw.githubusercontent.com/teadove/dotfiles/master/install.py | python3 -B",
 	)
 	if err != nil {
-		return errors.Wrap(err, "failed to install new version")
+		return errors.Wrap(err, "install new version")
 	}
 
 	return nil
