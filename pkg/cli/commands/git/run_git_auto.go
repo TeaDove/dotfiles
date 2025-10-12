@@ -22,7 +22,7 @@ func RunGitAuto(ctx context.Context, _ *cli.Command) error {
 
 	_, err = utils.ExecCommand(ctx, "git", "commit", "-m", "undefined")
 	if err != nil {
-		var exitErr exec.ExitError
+		var exitErr *exec.ExitError
 		if !errors.As(err, &exitErr) || exitErr.ExitCode() != 1 {
 			return errors.Wrap(err, "git commit")
 		}
