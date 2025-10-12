@@ -1,61 +1,66 @@
-package net_scan
+package net_sniff
 
 import (
 	"context"
-	"sync"
+	"fmt"
+	"time"
 
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/spinner"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"github.com/fatih/color"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcap"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v3"
 )
 
-type NetSystem struct {
-	Collection   Collection
-	CollectionMu sync.RWMutex
-
-	Model *Model
-}
-
 func Run(ctx context.Context, _ *cli.Command) error {
-	r := &NetSystem{}
+	panic("Not implemented")
 
-	s := spinner.New()
-	s.Spinner = spinner.Dot
-	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-
-	m := Model{
-		spinner: s,
-		help:    help.New(),
-		keymap: keymap{
-			quit: key.NewBinding(
-				key.WithKeys("ctrl+c", "q"),
-				key.WithHelp("q", "quit"),
-			),
-		},
-		net: r,
-	}
-	r.Model = &m
-	p := tea.NewProgram(r.Model, tea.WithContext(ctx))
-
-	var wg sync.WaitGroup
-	wg.Go(func() { r.collect(ctx) })
-
-	go func() {
-		wg.Wait()
-		p.Quit()
-	}()
-
-	_, err := p.Run()
+	devices, err := pcap.FindAllDevs()
 	if err != nil {
-		return errors.Wrap(err, "run tea")
+		return errors.WithStack(err)
 	}
 
-	if r.Collection.Err != nil {
-		return errors.New("collection error")
+	if len(devices) == 0 {
+		return errors.New("no devices found")
+	}
+
+	device := devices[0]
+	fmt.Printf("using %s device %v\n", color.CyanString(device.Name), device.Addresses)
+
+	// Open the device for capturing
+	handle, err := pcap.OpenLive(device.Name, 1600, true, 30*time.Second)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer handle.Close()
+
+	// Use the handle as a packet source to process all packets
+	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+	for packet := range packetSource.Packets() {
+		ipv4, ok := packet.NetworkLayer().(*layers.IPv4)
+		if !ok {
+			continue
+		}
+
+		tcp, ok := packet.TransportLayer().(*layers.TCP)
+		if !ok {
+			continue
+		}
+
+		if tcp.SrcPort != 80 && tcp.DstPort != 80 {
+			continue
+		}
+
+		fmt.Printf(
+			"%s:%d -> %s:%d\n",
+			color.CyanString(ipv4.SrcIP.String()),
+			tcp.SrcPort,
+			color.CyanString(ipv4.DstIP.String()),
+			tcp.DstPort,
+		)
+		println(string(tcp.Payload))
+		// fmt.Printf("%s -> %s\n", color.CyanString(ipv4.SrcIP.String()), color.CyanString(ipv4.DstIP.String()))
 	}
 
 	return nil
