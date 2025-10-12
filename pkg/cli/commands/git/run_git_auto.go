@@ -27,10 +27,7 @@ func RunGitAuto(ctx context.Context, _ *cli.Command) error {
 			return errors.Wrap(err, "git commit")
 		}
 
-		_, err = utils.ExecCommand(ctx, "git", "commit", "-m", "undefined")
-		if err != nil {
-			return errors.Wrap(err, "git commit")
-		}
+		_, _ = utils.ExecCommand(ctx, "git", "commit", "-m", "undefined")
 	}
 
 	_, err = utils.ExecCommand(ctx, "git", "push")
