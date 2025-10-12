@@ -12,7 +12,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func (r *CLI) commandSha(_ context.Context, cmd *cli.Command) error {
+func CommandSha(_ context.Context, cmd *cli.Command) error {
 	text, err := utils.ReadFromPipeOrSTDIN()
 	if err != nil {
 		return errors.Wrap(err, "unable to read from stdin")

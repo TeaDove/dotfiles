@@ -19,7 +19,7 @@ var dotfilesDirs = []string{
 	"~/.dotfiles/dotfiles-configs",
 } //nolint:gochecknoglobals // is ok
 
-func (r *CLI) commandInstall(_ context.Context, _ *cli.Command) error {
+func CommandInstall(_ context.Context, _ *cli.Command) error {
 	var dofilesPath string
 
 	for _, dir := range dotfilesDirs {
@@ -69,7 +69,7 @@ func (r *CLI) commandInstall(_ context.Context, _ *cli.Command) error {
 	return nil
 }
 
-func (r *CLI) commandUpdate(ctx context.Context, _ *cli.Command) error {
+func CommandUpdate(ctx context.Context, _ *cli.Command) error {
 	_, err := utils.ExecCommand(
 		ctx,
 		"bash",

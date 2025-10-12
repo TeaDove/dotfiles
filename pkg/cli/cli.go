@@ -2,10 +2,11 @@ package cli
 
 import (
 	"context"
-	net_sniff "dotfiles/pkg/cli/net_scan"
-	net_scan "dotfiles/pkg/cli/net_sniff"
-	"dotfiles/pkg/cli/net_system"
-	"dotfiles/pkg/cli/watch"
+	"dotfiles/pkg/cli/commands/git"
+	net_scan2 "dotfiles/pkg/cli/commands/net_scan"
+	net_sniff2 "dotfiles/pkg/cli/commands/net_sniff"
+	"dotfiles/pkg/cli/commands/net_system"
+	"dotfiles/pkg/cli/commands/watch"
 	"os"
 	"runtime"
 
@@ -13,15 +14,9 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-type CLI struct{}
-
-func NewCLI() *CLI {
-	return &CLI{}
-}
-
 var verboseFlag = &cli.BoolFlag{Name: "v", Usage: "verbose info"} //nolint:gochecknoglobals // is ok
 
-func (r *CLI) Run(ctx context.Context) error {
+func Run(ctx context.Context) error {
 	if runtime.GOOS == "windows" {
 		return errors.New("go fuck yourself with windows OS")
 	}
@@ -34,27 +29,43 @@ func (r *CLI) Run(ctx context.Context) error {
 			{
 				Name:   "install",
 				Usage:  "install all dotfiles, i.e. fish config",
-				Action: r.commandInstall,
+				Action: CommandInstall,
 			},
 			{
 				Name:   "update",
 				Usage:  "updates this executable",
-				Action: r.commandUpdate,
+				Action: CommandUpdate,
 			},
 			{
 				Name:   "u",
 				Usage:  "generates random uuid",
-				Action: r.commandUUID,
+				Action: CommandUUID,
 			},
 			{
 				Name:   "t",
 				Usage:  "generates save to use password",
-				Action: r.commandText,
+				Action: CommandText,
 			},
 			{
 				Name:   "l",
 				Usage:  "locates service by ip or domain from http://ip-api.com/json/",
-				Action: r.commandLocateByIP,
+				Action: CommandLocateByIP,
+			},
+			{
+				Name:  "g",
+				Usage: "git utils",
+				Commands: []*cli.Command{
+					{
+						Name:   "a",
+						Usage:  "add, commit and push",
+						Action: git.RunGitAuto,
+					},
+					{
+						Name:   "m",
+						Usage:  "merge from master",
+						Action: git.RunGitPullAndMerge,
+					},
+				},
 			},
 			{
 				Name:  "net",
@@ -68,24 +79,19 @@ func (r *CLI) Run(ctx context.Context) error {
 					{
 						Name:   "scan",
 						Usage:  "display information about local networks",
-						Action: net_scan.Run,
+						Action: net_scan2.Run,
 					},
 					{
 						Name:   "sniff",
 						Usage:  "sniff traffic!",
-						Action: net_sniff.Run,
+						Action: net_sniff2.Run,
 					},
 				},
 			},
 			{
 				Name:   "sha",
 				Usage:  "hashes string as sha512",
-				Action: r.commandSha,
-			},
-			{
-				Name:   "git-pull-and-merge",
-				Usage:  "git utils",
-				Action: r.commandGitPullAndMerge,
+				Action: CommandSha,
 			},
 			{
 				Name:   "watch",

@@ -1,4 +1,4 @@
-package cli
+package git
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func CommandGitPullAndMerge(ctx context.Context, _ *cli.Command) error {
+func RunGitPullAndMerge(ctx context.Context, _ *cli.Command) error {
 	const master = "master"
 
 	out, err := utils.ExecCommand(ctx, "git", "status", "-s")

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -15,16 +16,20 @@ import (
 
 func ExecCommand(ctx context.Context, name string, args ...string) (string, error) {
 	color.Magenta(fmt.Sprintf("$ %s %s", name, strings.Join(args, " ")))
+
 	cmd := exec.CommandContext(ctx, name, args...)
 
-	out, err := cmd.Output()
+	var outBuf bytes.Buffer
+
+	cmd.Stdout = io.MultiWriter(os.Stdout, &outBuf)
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
 	if err != nil {
 		return "", errors.Wrap(err, "execute command")
 	}
 
-	color.White(string(out))
-
-	return string(out), nil
+	return outBuf.String(), nil
 }
 
 func ReadFromPipeOrSTDIN() (string, error) {

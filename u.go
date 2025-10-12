@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	err := cli.NewCLI().Run(context.Background())
+	err := cli.Run(context.Background())
 	if err != nil {
 		color.Red("Unexpected error during execution\n")
 		color.White(err.Error())

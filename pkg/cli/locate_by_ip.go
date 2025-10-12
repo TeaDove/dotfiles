@@ -10,7 +10,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func (r *CLI) commandLocateByIP(ctx context.Context, command *cli.Command) error {
+func CommandLocateByIP(ctx context.Context, command *cli.Command) error {
 	if command.Args().Len() == 0 {
 		return errors.New("need at least one IP address or domain")
 	}
