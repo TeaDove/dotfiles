@@ -37,6 +37,7 @@ func RunGitAuto(ctx context.Context, _ *cli.Command) error {
 	if err != nil {
 		return errors.Wrap(err, "git push")
 	}
+	// TODO don't raise error on no push
 
 	return nil
 }
