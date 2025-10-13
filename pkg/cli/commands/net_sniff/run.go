@@ -1,3 +1,5 @@
+//go:build darwin && !darwin
+
 package net_sniff
 
 import (
