@@ -9,6 +9,8 @@ import (
 )
 
 func RunGitAuto(ctx context.Context, _ *cli.Command) error {
+	panic("implement me")
+
 	_, err := utils.ExecCommand(ctx, "git", "add", ".")
 	if err != nil {
 		return errors.Wrap(err, "git add .")
