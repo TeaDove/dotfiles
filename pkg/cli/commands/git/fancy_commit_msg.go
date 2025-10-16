@@ -24,6 +24,7 @@ func calcCommitMsg(params *commitNameParams) string {
 	msg.WriteString(getCommitChangeFilesWord(params.commitChangedFiles))
 	msg.WriteString(" ")
 	msg.WriteString(getCommitDivWord(params.commitInsertions, params.commitDeletions))
+
 	if params.hostname != "" {
 		msg.WriteString(" from ")
 		msg.WriteString(params.hostname)
@@ -47,6 +48,7 @@ func getCommitDivWord(commitInsertions, commitDeletions int) string {
 	if div > 2 {
 		return "edit"
 	}
+
 	if div > 0.5 {
 		return "fix"
 	}
@@ -58,9 +60,11 @@ func getCommitChangeFilesWord(commitChangedFiles int) string {
 	if commitChangedFiles < 3 {
 		return "minor"
 	}
+
 	if commitChangedFiles < 15 {
 		return "small"
 	}
+
 	if commitChangedFiles < 30 {
 		return "major"
 	}
@@ -80,18 +84,23 @@ func hourToFancyName(hour int) string {
 	if hour < 1 {
 		return "midnight"
 	}
+
 	if hour < 5 {
 		return "nightly"
 	}
+
 	if hour < 10 {
 		return "early"
 	}
+
 	if hour < 18 {
 		return "daily"
 	}
+
 	if hour < 23 {
 		return "evening"
 	}
+
 	return "midnight"
 }
 

@@ -59,6 +59,7 @@ func Run(ctx context.Context) error {
 						Name:   "a",
 						Usage:  "add, commit and push",
 						Action: git.RunGitAuto,
+						Flags:  []cli.Flag{git.NoVerifyFlag},
 					},
 					{
 						Name:   "m",

@@ -1,12 +1,15 @@
 package git
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestExtractCommitChanges(t *testing.T) {
+	t.Parallel()
+
 	changed, insertions, deleteions := extractCommitChanges("2 files changed, 14 insertions(+), 10 deletions(-)")
 	assert.Equal(t, 2, changed)
 	assert.Equal(t, 14, insertions)
@@ -19,10 +22,13 @@ func TestExtractCommitChanges(t *testing.T) {
 }
 
 func TestHourToFancyName(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, "evening", hourToFancyName(time.Date(2025, 10, 16, 20, 0, 0, 0, time.UTC).Hour()))
 }
 
 func TestCalcCommitMsg(t *testing.T) {
+	t.Parallel()
+
 	msg := calcCommitMsg(&commitNameParams{
 		fancyHour:          "evening",
 		hostname:           "linux",
