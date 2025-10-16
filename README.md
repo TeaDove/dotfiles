@@ -17,16 +17,16 @@ DESCRIPTION:
    set of useful command
 
 COMMANDS:
-   install             install all dotfiles, i.e. fish config
-   update              updates this executable
-   u                   generates random uuid
-   t                   generates save to use password
-   l                   locates service by ip or domain from http://ip-api.com/json/
-   net                 net utils
-   sha                 hashes string as sha512
-   git-pull-and-merge  git utils
-   watch               like unix watch, but better
-   help, h             Shows a list of commands or help for one command
+   install  install all dotfiles, i.e. fish config
+   update   updates this executable
+   u        generates random uuid
+   t        generates save to use password
+   l        locates service by ip or domain from http://ip-api.com/json/
+   g        git utils
+   net      net utils
+   sha      hashes string as sha512
+   watch    like unix watch, but better
+   help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    -v          verbose info (default: false)
