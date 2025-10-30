@@ -36,5 +36,5 @@ func TestCalcCommitMsg(t *testing.T) {
 		commitInsertions:   15,
 		commitDeletions:    5,
 	})
-	assert.Equal(t, "evening minor edit from linux\n", msg)
+	assert.Equal(t, "evening minor edit from linux", msg)
 }
