@@ -33,7 +33,7 @@ func calcCommitMsg(params *commitNameParams) string {
 	return msg.String()
 }
 
-func getCommitMsg(ctx context.Context) string {
+func makeCommitMsg(ctx context.Context) string {
 	var params commitNameParams
 
 	params.fancyHour = hourToFancyName(time.Now().Hour())
