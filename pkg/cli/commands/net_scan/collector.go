@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	netstd "net"
+	"strings"
 	"sync"
 	"time"
 
@@ -66,7 +67,7 @@ func (r *NetSystem) collect(ctx context.Context) {
 
 	var (
 		wg       sync.WaitGroup
-		weighted = semaphore.NewWeighted(500)
+		weighted = semaphore.NewWeighted(1000)
 	)
 	for ip := range iterateOverNet(ipnet) {
 		wg.Go(func() {
@@ -79,6 +80,10 @@ func (r *NetSystem) collect(ctx context.Context) {
 	}
 
 	wg.Wait()
+}
+
+func isIPV6(ip string) bool {
+	return strings.Contains(ip, ":")
 }
 
 func getMainNetwork(ctx context.Context) (net.InterfaceStat, error) {
@@ -94,7 +99,7 @@ func getMainNetwork(ctx context.Context) (net.InterfaceStat, error) {
 	var mainInterface net.InterfaceStat
 
 	for _, i := range interfaces[1:] {
-		if len(i.Addrs) != 0 {
+		if len(i.Addrs) != 0 && !isIPV6(i.Addrs[0].Addr) {
 			mainInterface = i
 			break
 		}

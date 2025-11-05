@@ -3,8 +3,8 @@ package cli
 import (
 	"context"
 	"dotfiles/pkg/cli/commands/git"
-	net_scan2 "dotfiles/pkg/cli/commands/net_scan"
-	net_sniff2 "dotfiles/pkg/cli/commands/net_sniff"
+	"dotfiles/pkg/cli/commands/net_scan"
+	"dotfiles/pkg/cli/commands/net_sniff"
 	"dotfiles/pkg/cli/commands/net_system"
 	"dotfiles/pkg/cli/commands/watch"
 	"os"
@@ -80,12 +80,12 @@ func Run(ctx context.Context) error {
 					{
 						Name:   "scan",
 						Usage:  "display information about local networks",
-						Action: net_scan2.Run,
+						Action: net_scan.Run,
 					},
 					{
 						Name:   "sniff",
 						Usage:  "sniff traffic!",
-						Action: net_sniff2.Run,
+						Action: net_sniff.Run,
 					},
 				},
 			},
