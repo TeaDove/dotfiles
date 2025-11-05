@@ -59,6 +59,11 @@ func commit(ctx context.Context, msg string, noVerify bool) error {
 
 	_, err = utils.ExecCommand(ctx, "git", args...)
 	if err != nil {
+		_, err = utils.ExecCommand(ctx, "git", "add", ".")
+		if err != nil {
+			return errors.Wrap(err, "git add")
+		}
+
 		_, err = utils.ExecCommand(ctx, "git", args...)
 		if err != nil {
 			return errors.Wrap(err, "git commit")
