@@ -1,0 +1,48 @@
+add_newline = false
+format = """$directory$character"""
+right_format = """$username$hostname$git_branch$git_status$status$cmd_duration$time"""
+
+# Replace the "❯" symbol in the prompt with "❯❯"
+[directory]
+format = " [$path]($style)[$read_only]($read_only_style) "
+truncation_length = -1
+style = "#CD435E bold"
+truncate_to_repo = true
+
+[character]
+format = "$symbol "
+success_symbol = "[➜](bold white)"
+error_symbol = "[➜](bold red)"
+
+[status]
+disabled = false
+map_symbol = true
+format='code [$status]($style) '
+
+[time]
+disabled = false
+
+[username]
+style_user = "#4E9CB0 bold"
+style_root = "#792167 bold"
+format = "  [$user]($style) "
+disabled = false
+show_always = false
+
+[hostname]
+ssh_only = true
+format = "at [$hostname](#225663 bold) "
+disabled = false
+
+[cmd_duration]
+min_time = 100
+format = "underwent [$duration](dimmed #5DD5AE) "
+
+[git_status]
+disabled = false
+style = '#e28743'
+
+[git_branch]
+symbol = " "
+style = "#e28743"
+#truncation_length = 15

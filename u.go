@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dotfiles/pkg/cli"
+	"os"
 
 	"github.com/fatih/color"
 )
@@ -12,5 +13,6 @@ func main() {
 	if err != nil {
 		color.Red("Unexpected error during execution\n")
 		color.White(err.Error())
+		os.Exit(1)
 	}
 }

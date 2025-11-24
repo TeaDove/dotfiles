@@ -10,11 +10,11 @@ set fish_color_param D6DAE4
 # Aliases
 alias l="lsd -lh --blocks=permission,user,size,date,name"
 alias ll="lsd -lha --blocks=permission,user,size,date,name"
-alias i="ipython"
+alias d='dust'
 alias b="bpython"
+alias s='source .venv/bin/activate'
 
 alias speed='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -B'
-alias d='dust -X=.git'
 
 alias jup='cd ~/projects/jup && python3.13 -m jupyterlab ; cd -'
 alias jup-darwin='cd ~/projects/jup && python3.13 -m jupyterlab --app-dir=/opt/homebrew/share/jupyter/lab ; cd -'
@@ -25,35 +25,9 @@ alias cloc-git='cloc (git ls-tree -r master --name-only)'
 alias kubectl="kubecolor"
 alias kwatch='u watch -i=1s "kubecolor --force-colors config view --minify -o jsonpath={..namespace}" "kubecolor --force-colors get deployments -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas" "kubecolor --force-colors get statefulset -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas" "kubecolor --force-colors get pods"'
 
-function sysgrep
-    systemctl list-units --type=service | head -n 1 && systemctl list-units --type=service | grep $argv
-end
 function p
      ps aux | head -n 1 && ps aux | grep -v grep --color=auto | grep $argv
 end
-function s
-    if count $argv > /dev/null
-    	source $argv/bin/activate.fish
-    else
-	    source .venv/bin/activate.fish
-    end
-end
-
-function gitauto
-    echo "git add ."
-    git add . || exit 1
-    if [ "$argv[1]" ]
-        echo git commit -m "$argv[1]" $argv[2]
-        git commit -m "$argv[1]" $argv[2] || git add . && git commit -m "$argv[1]" $argv[2]
-    else
-        echo 'git commit -m "auto: autocommit"'
-        git commit -m "auto: autocommit" || git add . && git commit -m "auto: autocommit"
-    end
-    echo "git push"
-    git push
-end
-
-
 
 function kexec 
 	kubectl exec -it $(kubectl get pod -o custom-columns=CONTAINER:.metadata.name | grep $argv[1]) -- /bin/bash
@@ -63,19 +37,9 @@ function envsource
     . (sed 's/^/export /' .env | psub)
 end
 
-function rsa
-	openssl genrsa -out $argv[1]-private.pem 2048
-	openssl rsa -in $argv[1]-private.pem -outform PEM -pubout -out $argv[1]-public.pem
+function sss
+    .
 end
-
-#if test -z "$(pgrep ssh-agent)"
-#    eval (ssh-agent -c)
-#end
-#eval (ssh-agent -c)
-#set -Ux SSH_AUTH_SOCK $SSH_AUTH_SOCK
-#set -Ux SSH_AGENT_PID $SSH_AGENT_PID
-#set -Ux SSH_AUTH_SOCK $SSH_AUTH_SOCK
-
 
 # Haskell PATH
 set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME

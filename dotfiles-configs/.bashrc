@@ -32,7 +32,6 @@ fi
 alias ll='ls -la --color=always 2&>/dev/null || ls -laG --color=always'
 alias l='ls -l --color=always 2&>/dev/null || ls -lG --color=always'
 alias s='source .venv/bin/activate'
-alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases

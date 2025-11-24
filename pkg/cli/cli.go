@@ -100,6 +100,11 @@ func Run(ctx context.Context) error {
 				Action: watch.Run,
 				Flags:  []cli.Flag{watch.IntervalFlag},
 			},
+			{
+				Name:   "ss",
+				Usage:  "starship config swap",
+				Action: CommandStarshipSwap,
+			},
 		},
 	}
 
