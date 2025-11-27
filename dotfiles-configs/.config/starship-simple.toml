@@ -1,11 +1,10 @@
 add_newline = false
 format = """$directory$character"""
 
-# Replace the "❯" symbol in the prompt with "❯❯"
 [directory]
-format = " [$path]($style)[$read_only]($read_only_style) "
+format = "[$path]($style)[$read_only]($read_only_style) "
 truncation_length = -1
-style = "#CD435E bold"
+style = "#fb4934 bold"
 truncate_to_repo = true
 
 [character]
