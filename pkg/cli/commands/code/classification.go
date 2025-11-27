@@ -1,6 +1,8 @@
 package code
 
-import "go/ast"
+import (
+	"go/ast"
+)
 
 const (
 	literalErr = "err"

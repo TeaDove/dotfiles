@@ -160,31 +160,6 @@ func analyzeFile(fset *token.FileSet, filename string) (Report, error) {
 	return report, nil
 }
 
-func getIfSnippet(fset *token.FileSet, src []byte, ifStmt *ast.IfStmt) string {
-	startPos := fset.Position(ifStmt.Pos())
-	endPos := fset.Position(ifStmt.End())
-
-	// используем byte-Offsets для вытаскивания исходника
-	start := startPos.Offset
-	end := endPos.Offset
-
-	if start < 0 {
-		start = 0
-	}
-
-	if end > len(src) {
-		end = len(src)
-	}
-
-	if start >= end {
-		return ""
-	}
-
-	snippet := src[start:end]
-
-	return string(snippet)
-}
-
 type Report struct {
 	TotalErrors uint
 	Propagates  uint
