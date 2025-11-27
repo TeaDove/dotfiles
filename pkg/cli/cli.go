@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"dotfiles/pkg/cli/commands/code"
 	"dotfiles/pkg/cli/commands/git"
 	"dotfiles/pkg/cli/commands/net_scan"
 	"dotfiles/pkg/cli/commands/net_sniff"
@@ -16,7 +17,7 @@ import (
 
 var verboseFlag = &cli.BoolFlag{Name: "v", Usage: "verbose info"} //nolint:gochecknoglobals // is ok
 
-func Run(ctx context.Context) error {
+func Run(ctx context.Context) error { //nolint: funlen // Is presentation builder
 	if runtime.GOOS == "windows" {
 		return errors.New("go fuck yourself with windows OS")
 	}
@@ -104,6 +105,11 @@ func Run(ctx context.Context) error {
 				Name:   "ss",
 				Usage:  "starship config swap",
 				Action: CommandStarshipSwap,
+			},
+			{
+				Name:   "code",
+				Usage:  "analyse code",
+				Action: code.Run,
 			},
 		},
 	}
