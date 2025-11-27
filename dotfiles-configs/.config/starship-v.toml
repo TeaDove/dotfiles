@@ -1,6 +1,6 @@
 add_newline = false
 format = """ $time$directory$character"""
-right_format = """$git_branch$git_status$username$hostname$cmd_duration"""
+right_format = """$username$hostname$git_branch$git_status$cmd_duration"""
 
 [directory]
 format = "[$path]($style)[$read_only]($read_only_style) "
@@ -19,27 +19,27 @@ format = '\[[$time]($style)\] '
 style = '#b8bb26 bold'
 
 [username]
-style_user = "#fabd2f bold"
-style_root = "#fb4934 bold"
+style_user = "#fabd2f"
+style_root = "#fb4934"
 format = "  [$user]($style) "
 disabled = false
 show_always = false
 
 [hostname]
 ssh_only = true
-format = "at [$hostname](#8ec07c bold) "
+format = "at [$hostname](#8ec07c) "
 disabled = false
 
 [cmd_duration]
 min_time = 100
-format = "in [$duration](#83a598 bold) "
+format = "in [$duration](#83a598) "
 
 [git_status]
 disabled = false
-style = '#fe8019 bold'
+style = '#fe8019'
 
 [git_branch]
 symbol = " "
-style = '#fe8019 bold'
+style = '#fe8019'
 format = 'on [$symbol$branch(:$remote_branch)]($style) '
 #truncation_length = 15
