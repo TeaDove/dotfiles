@@ -13,6 +13,7 @@ type errType int
 
 const (
 	errPropagate errType = iota
+	errPropagateWithContext
 	errPanic
 	errSuppress
 	errOther
@@ -56,7 +57,7 @@ func classify(ifStmt *ast.IfStmt) errType {
 		for _, arg := range call.Args {
 			ident, ok = arg.(*ast.Ident)
 			if ok && ident.Name == literalErr {
-				return errPropagate
+				return errPropagateWithContext
 			}
 		}
 	}

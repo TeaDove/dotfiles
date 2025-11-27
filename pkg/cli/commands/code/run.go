@@ -10,6 +10,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/tidwall/match"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 	"github.com/fatih/color"
@@ -37,6 +39,7 @@ func drawTable(report *Report) *table.Table {
 		colDescription = "Description"
 	)
 
+	other := report.TotalErrors - report.Propagates - report.PropagatesWithContext - report.Suppresses - report.Panics
 	rows := []struct {
 		Title       string
 		Description string
@@ -56,6 +59,12 @@ func drawTable(report *Report) *table.Table {
 			Color:       color.FgGreen,
 		},
 		{
+			Title:       "Propagates with context",
+			Description: `if err != nil {return errors.Wrap(err, ...)}`,
+			Count:       report.PropagatesWithContext,
+			Color:       color.FgHiGreen,
+		},
+		{
 			Title:       "Suppresses",
 			Description: "if err != nil {return nil}",
 			Count:       report.Suppresses,
@@ -70,7 +79,7 @@ func drawTable(report *Report) *table.Table {
 		{
 			Title:       "Other",
 			Description: "anything other",
-			Count:       report.TotalErrors - report.Propagates - report.Suppresses - report.Panics,
+			Count:       other,
 			Color:       color.FgCyan,
 		},
 	}
@@ -138,6 +147,10 @@ func analyzeFile(fset *token.FileSet, filename string) (Report, error) {
 			color.Green("Propagate err:\n")
 
 			report.Propagates++
+		case errPropagateWithContext:
+			color.HiGreen("Propagate with context err:\n")
+
+			report.PropagatesWithContext++
 		case errPanic:
 			color.Red("Raise panic:\n")
 
@@ -161,10 +174,11 @@ func analyzeFile(fset *token.FileSet, filename string) (Report, error) {
 }
 
 type Report struct {
-	TotalErrors uint
-	Propagates  uint
-	Suppresses  uint
-	Panics      uint
+	TotalErrors           uint
+	Propagates            uint
+	PropagatesWithContext uint
+	Suppresses            uint
+	Panics                uint
 }
 
 func analyzeFiles(path string) (Report, error) {
@@ -190,7 +204,7 @@ func analyzeFiles(path string) (Report, error) {
 			return nil
 		}
 
-		if filepath.Ext(p) == ".go" {
+		if filepath.Ext(p) == ".go" && !match.Match(p, "*test.go") {
 			fileReport, err := analyzeFile(fset, p)
 			if err != nil {
 				return errors.Wrap(err, "analyze file")
@@ -198,6 +212,7 @@ func analyzeFiles(path string) (Report, error) {
 
 			report.TotalErrors += fileReport.TotalErrors
 			report.Propagates += fileReport.Propagates
+			report.PropagatesWithContext += fileReport.PropagatesWithContext
 			report.Suppresses += fileReport.Suppresses
 			report.Panics += fileReport.Panics
 		}
