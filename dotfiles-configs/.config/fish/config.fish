@@ -29,7 +29,7 @@ function p
      ps aux | head -n 1 && ps aux | grep -v grep --color=auto | grep $argv
 end
 
-function kexec 
+function kexec
 	kubectl exec -it $(kubectl get pod -o custom-columns=CONTAINER:.metadata.name | grep $argv[1]) -- /bin/bash
 end
 

@@ -23,4 +23,3 @@ jobs:
 
     - name: Run help
       run: go run u.go help
-      
