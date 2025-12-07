@@ -35,7 +35,7 @@ type PortStats struct {
 }
 
 func (r *NetSystem) collect(ctx context.Context) {
-	mainInterface, err := getMainNetwork(ctx)
+	mainInterface, addr, err := getMainNetwork(ctx)
 	if err != nil {
 		r.CollectionMu.Lock()
 		defer r.CollectionMu.Unlock()
@@ -49,7 +49,7 @@ func (r *NetSystem) collect(ctx context.Context) {
 	r.Collection.Interface = mainInterface.Name
 	r.CollectionMu.Unlock()
 
-	_, ipnet, err := netstd.ParseCIDR(mainInterface.Addrs[0].Addr)
+	_, ipnet, err := netstd.ParseCIDR(addr.Addr)
 	if err != nil {
 		r.CollectionMu.Lock()
 		defer r.CollectionMu.Unlock()
@@ -86,30 +86,27 @@ func isIPV6(ip string) bool {
 	return strings.Contains(ip, ":")
 }
 
-func getMainNetwork(ctx context.Context) (net.InterfaceStat, error) {
+func getMainNetwork(ctx context.Context) (net.InterfaceStat, net.InterfaceAddr, error) {
 	interfaces, err := net.InterfacesWithContext(ctx)
 	if err != nil {
-		return net.InterfaceStat{}, errors.Wrap(err, "get interfaces")
+		return net.InterfaceStat{}, net.InterfaceAddr{}, errors.Wrap(err, "get interfaces")
 	}
 
 	if len(interfaces) <= 1 {
-		return net.InterfaceStat{}, errors.New("only loopback found")
+		return net.InterfaceStat{}, net.InterfaceAddr{}, errors.New("only loopback found")
 	}
 
-	var mainInterface net.InterfaceStat
-
 	for _, i := range interfaces[1:] {
-		if len(i.Addrs) != 0 && !isIPV6(i.Addrs[0].Addr) {
-			mainInterface = i
-			break
+		for _, addr := range i.Addrs {
+			if isIPV6(addr.Addr) {
+				continue
+			}
+
+			return i, addr, nil
 		}
 	}
 
-	if mainInterface.Name == "" {
-		return net.InterfaceStat{}, errors.New("no interfaces with addresses found")
-	}
-
-	return mainInterface, nil
+	return net.InterfaceStat{}, net.InterfaceAddr{}, errors.New("no interfaces with addresses found")
 }
 
 func (r *NetSystem) checkAddress(ctx context.Context, weighted *semaphore.Weighted, ip netstd.IP) {
@@ -151,7 +148,7 @@ func (r *NetSystem) checkAddress(ctx context.Context, weighted *semaphore.Weight
 				r.CollectionMu.Unlock()
 			}()
 
-			dialer := netstd.Dialer{Timeout: 5 * time.Second}
+			dialer := netstd.Dialer{Timeout: 500 * time.Millisecond}
 
 			conn, err := dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%d", ip, i))
 			if err != nil {
