@@ -13,6 +13,7 @@ alias ll="lsd -lha --blocks=permission,user,size,date,name"
 alias d='dust'
 alias b="bpython"
 alias s='source .venv/bin/activate'
+alias mac-unquarantine='xattr -d com.apple.quarantine'
 
 alias speed='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -B'
 
@@ -26,11 +27,11 @@ alias kubectl="kubecolor"
 alias kwatch='u watch -i=1s "kubecolor --force-colors config view --minify -o jsonpath={..namespace}" "kubecolor --force-colors get deployments -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas" "kubecolor --force-colors get statefulset -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas" "kubecolor --force-colors get pods"'
 
 function p
-     ps aux | head -n 1 && ps aux | grep -v grep --color=auto | grep $argv
+    ps aux | head -n 1 && ps aux | grep -v grep --color=auto | grep $argv
 end
 
 function kexec
-	kubectl exec -it $(kubectl get pod -o custom-columns=CONTAINER:.metadata.name | grep $argv[1]) -- /bin/bash
+    kubectl exec -it $(kubectl get pod -o custom-columns=CONTAINER:.metadata.name | grep $argv[1]) -- /bin/bash
 end
 
 function envsource
@@ -43,9 +44,9 @@ end
 
 # Haskell PATH
 set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME
-test -f /home/teadove/.ghcup/env ; and set -gx PATH $HOME/.cabal/bin /home/teadove/.ghcup/bin $PATH
+test -f /home/teadove/.ghcup/env; and set -gx PATH $HOME/.cabal/bin /home/teadove/.ghcup/bin $PATH
 
-set PATH $HOME/.local/bin /usr/local/go/bin $HOME/go/bin  $HOME/.cargo/bin $PATH $HOME/Library/Python/3.8/bin /opt/homebrew/bin $HOME/yandex-cloud/bin $HOME/ydb/bin $HOME/projects/flutter/bin $HOME/go/bin $HOME/go/bin/darwin_amd64 $HOME/.spoof-dpi/bin /opt/homebrew/opt/libpq/bin
+set PATH $HOME/.local/bin /usr/local/go/bin $HOME/go/bin $HOME/.cargo/bin $PATH $HOME/Library/Python/3.8/bin /opt/homebrew/bin $HOME/yandex-cloud/bin $HOME/ydb/bin $HOME/projects/flutter/bin $HOME/go/bin $HOME/go/bin/darwin_amd64 $HOME/.spoof-dpi/bin /opt/homebrew/opt/libpq/bin
 set HOMEBREW_NO_AUTO_UPDATE 1
 
 # Starship init
