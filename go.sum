@@ -84,6 +84,12 @@ github.com/shirou/gopsutil/v4 v4.25.8 h1:NnAsw9lN7587WHxjJA9ryDnqhJpFH6A+wagYWTO
 github.com/shirou/gopsutil/v4 v4.25.8/go.mod h1:q9QdMmfAOVIw7a+eF86P7ISEU6ka+NLgkUxlopV4RwI=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
+github.com/teadove/netports v0.0.1 h1:uCzjOp5BXbjb9Sul0rNKY+spQ830syI+O4HXJU2Yy3w=
+github.com/teadove/netports v0.0.1/go.mod h1:gS65Ak3YMRZelT2Iu3zYt1waVpA1abu6k8mvtdfwXhg=
+github.com/teadove/netports v0.0.2 h1:xB6DYqyL4Ho5sxN0bUrq6k9h7nMIgaATNPJQ+7Tax1M=
+github.com/teadove/netports v0.0.2/go.mod h1:gS65Ak3YMRZelT2Iu3zYt1waVpA1abu6k8mvtdfwXhg=
+github.com/teadove/tcp_udp_port_numbers v0.0.0-20251214150736-a9b56a15b5e1 h1:RhNqo+1rkge6/3c/lOFGKEJGULlv0/WwU5+XwQF7Szg=
+github.com/teadove/tcp_udp_port_numbers v0.0.0-20251214150736-a9b56a15b5e1/go.mod h1:j4Ejw1mnn1tTwIohO9ZvFib5XA0V/u6fSkjvbFxdaZc=
 github.com/teadove/teasutils/utils v0.2.14 h1:YZ3wKcbMcUHnW3qfs2/gPUqCth/MGuVlVbkJTHTAnR8=
 github.com/teadove/teasutils/utils v0.2.14/go.mod h1:yO2qli6FDkV2kWgHAuovtuZ8oiq8F+cIoZ1smSFgI4U=
 github.com/teadove/teasutils/utils v0.3.0 h1:j+TR0Li5+bjmHfT0XSBXWgBHKtOWkZ9hNGhmVf5fADM=

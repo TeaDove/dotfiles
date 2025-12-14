@@ -3,6 +3,7 @@ package net_scan
 import (
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/list"
@@ -11,7 +12,7 @@ import (
 
 func (r *Model) renderInterface() string {
 	return fmt.Sprintf(
-		"Scanning %s on %s (%d/%d ips)",
+		"Scanning TCP ports %s on %s (%d/%d ips)",
 		color.CyanString(r.net.Collection.Network),
 		color.CyanString(r.net.Collection.Interface),
 		r.net.Collection.IPsChecked,
@@ -69,8 +70,14 @@ func (r *Model) renderIP(ip *IPStats) []any {
 	})
 
 	portsList := list.New()
+
 	for _, port := range ip.Ports {
-		portsList.Item(fmt.Sprintf(":%d", port.Number))
+		var descriptions []string
+		for _, info := range r.tcpToPort[port.Number] {
+			descriptions = append(descriptions, info.Description)
+		}
+
+		portsList.Item(fmt.Sprintf(":%d %s", port.Number, color.WhiteString(strings.Join(descriptions, "; "))))
 	}
 
 	items = append(items, portsList)

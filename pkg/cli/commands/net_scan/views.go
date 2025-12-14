@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/teadove/netports"
 )
 
 type keymap struct {
@@ -18,6 +19,8 @@ type Model struct {
 	spinner spinner.Model
 	help    help.Model
 	keymap  keymap
+
+	tcpToPort map[uint16]netports.Ports
 }
 
 func (r *Model) helpView() string {

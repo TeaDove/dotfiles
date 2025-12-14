@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/pkg/errors"
+	"github.com/teadove/netports"
 	"github.com/urfave/cli/v3"
 )
 
@@ -36,7 +37,8 @@ func Run(ctx context.Context, _ *cli.Command) error {
 				key.WithHelp("q", "quit"),
 			),
 		},
-		net: r,
+		net:       r,
+		tcpToPort: netports.KnownPorts.GroupByProto(netports.TCP),
 	}
 	r.Model = &m
 	p := tea.NewProgram(r.Model, tea.WithContext(ctx))
