@@ -18,11 +18,20 @@ type NetSystem struct {
 	Collection   Collection
 	CollectionMu sync.RWMutex
 
+	WellKnownPorts map[uint16]netports.Ports
+	PortsToScan    []uint16
+
 	Model *Model
 }
 
 func Run(ctx context.Context, _ *cli.Command) error {
-	r := &NetSystem{}
+	r := &NetSystem{
+		WellKnownPorts: netports.KnownPorts.FilterCollect(
+			netports.FilterByProto(netports.TCP),
+			netports.FilterByCategory(netports.CategoryWellKnown, netports.CategoryRegistered),
+		).GroupByNumber(),
+	}
+	r.PortsToScan = getPortsToScan(r.WellKnownPorts)
 
 	s := spinner.New()
 	s.Spinner = spinner.Dot
@@ -37,8 +46,7 @@ func Run(ctx context.Context, _ *cli.Command) error {
 				key.WithHelp("q", "quit"),
 			),
 		},
-		net:       r,
-		tcpToPort: netports.KnownPorts.GroupByProto(netports.TCP),
+		net: r,
 	}
 	r.Model = &m
 	p := tea.NewProgram(r.Model, tea.WithContext(ctx))
@@ -61,4 +69,27 @@ func Run(ctx context.Context, _ *cli.Command) error {
 	}
 
 	return nil
+}
+
+func getPortsToScan(wellKnown map[uint16]netports.Ports) []uint16 {
+	const (
+		firstPort = uint16(1)
+		lastPort  = uint16(10_000)
+	)
+
+	ports := make([]uint16, 0, lastPort-firstPort)
+	for port := range wellKnown {
+		ports = append(ports, port)
+	}
+
+	for port := firstPort; port <= lastPort; port++ {
+		_, ok := wellKnown[port]
+		if ok {
+			continue
+		}
+
+		ports = append(ports, port)
+	}
+
+	return ports
 }

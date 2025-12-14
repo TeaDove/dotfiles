@@ -121,13 +121,7 @@ func (r *NetSystem) checkAddress(ctx context.Context, weighted *semaphore.Weight
 		return
 	}
 
-	const (
-		firstPort  = uint16(1)
-		lastPort   = uint16(10_000)
-		totalPorts = lastPort - firstPort
-	)
-
-	ipStats := &IPStats{IP: ip, PortsTotal: totalPorts}
+	ipStats := &IPStats{IP: ip, PortsTotal: uint16(len(r.PortsToScan))}
 
 	r.CollectionMu.Lock()
 	r.Collection.IPs = append(r.Collection.IPs, ipStats)
@@ -135,35 +129,44 @@ func (r *NetSystem) checkAddress(ctx context.Context, weighted *semaphore.Weight
 
 	var wg sync.WaitGroup
 
-	for i := firstPort; i < lastPort; i++ {
+	for _, port := range r.PortsToScan {
 		_ = weighted.Acquire(ctx, 1)
 
 		wg.Go(func() {
-			defer weighted.Release(1)
-			defer func() {
-				r.CollectionMu.Lock()
-
-				ipStats.PortsChecked++
-
-				r.CollectionMu.Unlock()
-			}()
-
-			dialer := netstd.Dialer{Timeout: 500 * time.Millisecond}
-
-			conn, err := dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%d", ip, i))
-			if err != nil {
-				return
-			}
-
-			defer conn.Close()
-
-			r.CollectionMu.Lock()
-
-			ipStats.Ports = append(ipStats.Ports, &PortStats{Number: i})
-
-			r.CollectionMu.Unlock()
+			r.checkPort(ctx, weighted, ipStats, ip, port)
 		})
 	}
 
 	wg.Wait()
+}
+
+func (r *NetSystem) checkPort(
+	ctx context.Context,
+	weighted *semaphore.Weighted,
+	ipStats *IPStats,
+	ip netstd.IP,
+	port uint16,
+) {
+	defer weighted.Release(1)
+	defer func() {
+		r.CollectionMu.Lock()
+
+		ipStats.PortsChecked++
+
+		r.CollectionMu.Unlock()
+	}()
+
+	dialer := netstd.Dialer{Timeout: 500 * time.Millisecond}
+
+	conn, err := dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%d", ip, port))
+	if err != nil {
+		return
+	}
+
+	defer conn.Close()
+
+	r.CollectionMu.Lock()
+	defer r.CollectionMu.Unlock()
+
+	ipStats.Ports = append(ipStats.Ports, &PortStats{Number: port})
 }

@@ -73,7 +73,7 @@ func (r *Model) renderIP(ip *IPStats) []any {
 
 	for _, port := range ip.Ports {
 		var descriptions []string
-		for _, info := range r.tcpToPort[port.Number] {
+		for _, info := range r.net.WellKnownPorts[port.Number] {
 			descriptions = append(descriptions, info.Description)
 		}
 
