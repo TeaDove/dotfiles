@@ -4,6 +4,8 @@ import (
 	"context"
 	"dotfiles/pkg/http_supplier"
 	"fmt"
+	"net"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
@@ -40,6 +42,14 @@ func CommandLocateByIP(ctx context.Context, command *cli.Command) error {
 		color.BlueString(domainLocation.Org),
 		domainLocation.As,
 	)
+
+	addresses, err := (&net.Resolver{}).LookupAddr(ctx, ipOrDomain)
+	if err == nil && len(addresses) != 0 {
+		fmt.Printf(
+			"Domains: %s\n",
+			color.WhiteString(strings.Join(addresses, ",")),
+		)
+	}
 
 	return nil
 }

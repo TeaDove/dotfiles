@@ -1,5 +1,3 @@
-//go:build darwin || !darwin
-
 package net_sniff
 
 import (
@@ -8,6 +6,6 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func Run(ctx context.Context, _ *cli.Command) error {
-	panic("Implemented only for darwin")
+func Run(_ context.Context, _ *cli.Command) error {
+	panic("Not implemented")
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mostlygeek/arp"
 	"github.com/pkg/errors"
 	"github.com/teadove/netports"
 	"github.com/urfave/cli/v3"
@@ -20,6 +21,7 @@ type NetSystem struct {
 
 	WellKnownPorts map[uint16]netports.Ports
 	PortsToScan    []uint16
+	ARPTable       arp.ArpTable
 
 	Model *Model
 }
@@ -30,6 +32,7 @@ func Run(ctx context.Context, _ *cli.Command) error {
 			netports.FilterByProto(netports.TCP),
 			netports.FilterByCategory(netports.CategoryWellKnown, netports.CategoryRegistered),
 		).GroupByNumber(),
+		ARPTable: arp.Table(),
 	}
 	r.PortsToScan = getPortsToScan(r.WellKnownPorts)
 

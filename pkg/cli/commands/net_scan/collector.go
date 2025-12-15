@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/endobit/oui"
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/v4/net"
 	"golang.org/x/sync/semaphore"
@@ -24,6 +25,7 @@ type Collection struct {
 
 type IPStats struct {
 	IP           netstd.IP
+	Mac          string
 	Ports        []*PortStats
 	PortsChecked uint16
 	PortsTotal   uint16
@@ -121,7 +123,7 @@ func (r *NetSystem) checkAddress(ctx context.Context, weighted *semaphore.Weight
 		return
 	}
 
-	ipStats := &IPStats{IP: ip, PortsTotal: uint16(len(r.PortsToScan))}
+	ipStats := &IPStats{IP: ip, Mac: r.getMacDescription(ip), PortsTotal: uint16(len(r.PortsToScan))}
 
 	r.CollectionMu.Lock()
 	r.Collection.IPs = append(r.Collection.IPs, ipStats)
@@ -138,6 +140,20 @@ func (r *NetSystem) checkAddress(ctx context.Context, weighted *semaphore.Weight
 	}
 
 	wg.Wait()
+}
+
+func (r *NetSystem) getMacDescription(ip netstd.IP) string {
+	mac, ok := r.ARPTable[ip.String()]
+	if !ok {
+		return ""
+	}
+
+	vendor := oui.Vendor(mac)
+	if vendor == "" {
+		return mac
+	}
+
+	return fmt.Sprintf("%s %s", mac, vendor)
 }
 
 func (r *NetSystem) checkPort(

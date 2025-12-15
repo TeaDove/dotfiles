@@ -49,13 +49,7 @@ func (r *Model) renderIPList() string {
 }
 
 func (r *Model) renderIP(ip *IPStats) []any {
-	var items []any
-
-	if ip.PortsChecked == ip.PortsTotal {
-		items = append(items, color.GreenString(ip.IP.String()))
-	} else {
-		items = append(items, fmt.Sprintf("%s (%d/%d ports)", ip.IP.String(), ip.PortsChecked, ip.PortsTotal))
-	}
+	items := []any{r.renderIPLine(ip)}
 
 	if len(ip.Ports) == 0 {
 		return items
@@ -83,4 +77,20 @@ func (r *Model) renderIP(ip *IPStats) []any {
 	items = append(items, portsList)
 
 	return items
+}
+
+func (r *Model) renderIPLine(ip *IPStats) string {
+	var ipString string
+
+	if ip.PortsChecked == ip.PortsTotal {
+		ipString = color.GreenString(ip.IP.String())
+	} else {
+		ipString = fmt.Sprintf("%s (%d/%d ports)", ip.IP.String(), ip.PortsChecked, ip.PortsTotal)
+	}
+
+	if ip.Mac != "" {
+		ipString += fmt.Sprintf(" (%s)", color.WhiteString(ip.Mac))
+	}
+
+	return ipString
 }
