@@ -12,7 +12,7 @@ alias l="lsd -lh --blocks=permission,user,size,date,name"
 alias ll="lsd -lha --blocks=permission,user,size,date,name"
 alias d='dust'
 alias b="bpython"
-alias s='source .venv/bin/activate'
+alias s='source .venv/bin/activate.fish'
 alias mac-unquarantine='xattr -d com.apple.quarantine'
 
 alias speed='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -B'
