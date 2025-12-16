@@ -71,16 +71,18 @@ func (r *Model) renderIP(ip *IPStats) []any {
 			descriptions = append(descriptions, info.Description)
 		}
 
-		item := fmt.Sprintf(":%d", port.Number)
+		var item strings.Builder
+		item.WriteString(fmt.Sprintf(":%d", port.Number))
+
 		if port.Message != "" {
-			item += " " + color.CyanString(port.Message)
+			item.WriteString(fmt.Sprintf(" %s", color.CyanString(port.Message)))
 		}
 
 		if len(descriptions) != 0 {
-			item += fmt.Sprintf(" [%s]", color.WhiteString(strings.Join(descriptions, "; ")))
+			item.WriteString(fmt.Sprintf(" [%s]", color.WhiteString(strings.Join(descriptions, "; "))))
 		}
 
-		portsList.Item(item)
+		portsList.Item(item.String())
 	}
 
 	items = append(items, portsList)
