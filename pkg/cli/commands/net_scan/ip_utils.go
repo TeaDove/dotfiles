@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"iter"
 	"net"
+	"strings"
 )
 
 func iterateOverNet(ipnet *net.IPNet) iter.Seq[net.IP] {
@@ -44,4 +45,8 @@ func uint32toipv4(v uint32) net.IP {
 	binary.BigEndian.PutUint32(ip, v)
 
 	return ip
+}
+
+func isIPV6(ip string) bool {
+	return strings.Contains(ip, ":")
 }

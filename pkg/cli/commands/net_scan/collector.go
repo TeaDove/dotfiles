@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	netstd "net"
-	"strings"
 	"sync"
 
 	"github.com/endobit/oui"
@@ -14,9 +13,10 @@ import (
 )
 
 type Collection struct {
-	Err        error
-	Network    string
-	Interface  string
+	Err       error
+	Network   string
+	Interface string
+
 	IPs        []*IPStats
 	IPsChecked int
 	IPsTotal   int
@@ -81,10 +81,6 @@ func (r *NetSystem) collect(ctx context.Context) {
 	}
 
 	wg.Wait()
-}
-
-func isIPV6(ip string) bool {
-	return strings.Contains(ip, ":")
 }
 
 func getMainNetwork(ctx context.Context) (net.InterfaceStat, net.InterfaceAddr, error) {
@@ -165,10 +161,9 @@ func (r *NetSystem) checkPort(
 	defer weighted.Release(1)
 	defer func() {
 		r.CollectionMu.Lock()
+		defer r.CollectionMu.Unlock()
 
 		ipStats.PortsChecked++
-
-		r.CollectionMu.Unlock()
 	}()
 
 	conn, err := r.dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%d", ip, port))

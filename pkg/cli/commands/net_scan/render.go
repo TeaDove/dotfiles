@@ -21,8 +21,8 @@ func (r *Model) renderInterface() string {
 }
 
 func (r *Model) View() string {
-	r.net.CollectionMu.RLock()
-	defer r.net.CollectionMu.RUnlock()
+	r.net.CollectionMu.Lock()
+	defer r.net.CollectionMu.Unlock()
 
 	return lipgloss.JoinVertical(lipgloss.Left, r.renderInterface(), r.renderIPList()) + r.helpView()
 }

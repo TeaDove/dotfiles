@@ -21,7 +21,7 @@ import (
 
 type NetSystem struct {
 	Collection   Collection
-	CollectionMu sync.RWMutex
+	CollectionMu sync.Mutex
 
 	WellKnownPorts map[uint16]netports.Ports
 	PortsToScan    []uint16
@@ -52,6 +52,8 @@ func New() *NetSystem {
 
 	s := spinner.New()
 	s.Spinner = spinner.Dot
+	s.Spinner.FPS = time.Second / 20
+
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 
 	m := Model{
