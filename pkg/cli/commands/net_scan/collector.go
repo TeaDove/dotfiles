@@ -6,6 +6,7 @@ import (
 	netstd "net"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/endobit/oui"
 	"github.com/pkg/errors"
@@ -14,17 +15,21 @@ import (
 )
 
 type Collection struct {
-	Err        error
-	Network    string
-	Interface  string
+	Err       error
+	Network   string
+	Interface string
+
 	IPs        []*IPStats
-	IPsChecked int
+	IPsChecked atomic.Uint64
 	IPsTotal   int
 }
 
 type IPStats struct {
-	IP           netstd.IP
-	Mac          string
+	mu sync.Mutex
+
+	IP  netstd.IP
+	Mac string
+
 	Ports        []*PortStats
 	PortsChecked uint16
 	PortsTotal   uint16
@@ -38,45 +43,33 @@ type PortStats struct {
 func (r *NetSystem) collect(ctx context.Context) {
 	mainInterface, addr, err := getMainNetwork(ctx)
 	if err != nil {
-		r.CollectionMu.Lock()
-		defer r.CollectionMu.Unlock()
-
 		r.Collection.Err = errors.WithStack(err)
 
 		return
 	}
 
-	r.CollectionMu.Lock()
 	r.Collection.Interface = mainInterface.Name
-	r.CollectionMu.Unlock()
 
 	_, ipnet, err := netstd.ParseCIDR(addr.Addr)
 	if err != nil {
-		r.CollectionMu.Lock()
-		defer r.CollectionMu.Unlock()
-
 		r.Collection.Err = errors.Wrap(err, "parse main address")
 
 		return
 	}
 
-	r.CollectionMu.Lock()
 	r.Collection.Network = ipnet.String()
 	size, _ := ipnet.Mask.Size()
 	r.Collection.IPsTotal = 1 << (32 - size)
-	r.CollectionMu.Unlock()
 
 	var (
 		wg       sync.WaitGroup
-		weighted = semaphore.NewWeighted(1000)
+		weighted = semaphore.NewWeighted(2000)
 	)
 	for ip := range iterateOverNet(ipnet) {
 		wg.Go(func() {
-			r.checkAddress(ctx, weighted, ip)
+			defer r.Collection.IPsChecked.Add(1)
 
-			r.CollectionMu.Lock()
-			r.Collection.IPsChecked++
-			r.CollectionMu.Unlock()
+			r.checkAddress(ctx, weighted, ip)
 		})
 	}
 
@@ -164,11 +157,10 @@ func (r *NetSystem) checkPort(
 ) {
 	defer weighted.Release(1)
 	defer func() {
-		r.CollectionMu.Lock()
+		ipStats.mu.Lock()
+		defer ipStats.mu.Unlock()
 
 		ipStats.PortsChecked++
-
-		r.CollectionMu.Unlock()
 	}()
 
 	conn, err := r.dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%d", ip, port))
@@ -180,8 +172,8 @@ func (r *NetSystem) checkPort(
 
 	server := r.protoDetection(ctx, ip.String(), port)
 
-	r.CollectionMu.Lock()
-	defer r.CollectionMu.Unlock()
+	ipStats.mu.Lock()
+	defer ipStats.mu.Unlock()
 
 	ipStats.Ports = append(ipStats.Ports, &PortStats{Number: port, Message: server})
 }

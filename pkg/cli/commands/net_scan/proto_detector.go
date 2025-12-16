@@ -43,12 +43,21 @@ func (r *NetSystem) tryHttp(ctx context.Context, proto string, host string, port
 	}
 	defer resp.Body.Close()
 
-	server := resp.Header.Get("Server")
-	if server == "" {
-		server = resp.Header.Get("Content-Type")
+	return fmt.Sprintf("%s/%s", proto, serverInHeaders(resp.Header)), nil
+}
+
+var headersToTry = [3]string{"Server", "Content-Type", "X-Server-Hostname"}
+
+func serverInHeaders(headers http.Header) string {
+	var server string
+	for _, h := range headersToTry {
+		server = headers.Get(h)
+		if server != "" {
+			return server
+		}
 	}
 
-	return fmt.Sprintf("%s/%s", proto, server), nil
+	return ""
 }
 
 func (r *NetSystem) tryTcp(ctx context.Context, host string, port uint16) (string, error) {
