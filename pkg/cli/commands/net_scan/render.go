@@ -15,7 +15,7 @@ func (r *Model) renderInterface() string {
 		"Scanning TCP ports %s on %s (%d/%d ips)",
 		color.CyanString(r.net.Collection.Network),
 		color.CyanString(r.net.Collection.Interface),
-		r.net.Collection.IPsChecked.Load(),
+		r.net.Collection.IPsChecked,
 		r.net.Collection.IPsTotal,
 	)
 }
