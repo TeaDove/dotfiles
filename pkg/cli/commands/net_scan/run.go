@@ -2,7 +2,11 @@ package net_scan
 
 import (
 	"context"
+	"crypto/tls"
+	netstd "net"
+	"net/http"
 	"sync"
+	"time"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -23,17 +27,27 @@ type NetSystem struct {
 	PortsToScan    []uint16
 	ARPTable       arp.ArpTable
 
+	client *http.Client
+	dialer netstd.Dialer
+
 	Model *Model
 }
 
-func Run(ctx context.Context, _ *cli.Command) error {
+func New() *NetSystem {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint: gosec // As expected
+	}
+
 	r := &NetSystem{
 		WellKnownPorts: netports.KnownPorts.FilterCollect(
 			netports.FilterByProto(netports.TCP),
 			netports.FilterByCategory(netports.CategoryWellKnown, netports.CategoryRegistered),
 		).GroupByNumber(),
 		ARPTable: arp.Table(),
+		client:   &http.Client{Timeout: 500 * time.Millisecond, Transport: tr},
+		dialer:   netstd.Dialer{Timeout: 500 * time.Millisecond},
 	}
+
 	r.PortsToScan = getPortsToScan(r.WellKnownPorts)
 
 	s := spinner.New()
@@ -52,6 +66,12 @@ func Run(ctx context.Context, _ *cli.Command) error {
 		net: r,
 	}
 	r.Model = &m
+
+	return r
+}
+
+func Run(ctx context.Context, _ *cli.Command) error {
+	r := New()
 	p := tea.NewProgram(r.Model, tea.WithContext(ctx))
 
 	var wg sync.WaitGroup

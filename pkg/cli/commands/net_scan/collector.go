@@ -6,7 +6,6 @@ import (
 	netstd "net"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/endobit/oui"
 	"github.com/pkg/errors"
@@ -172,17 +171,17 @@ func (r *NetSystem) checkPort(
 		r.CollectionMu.Unlock()
 	}()
 
-	dialer := netstd.Dialer{Timeout: 500 * time.Millisecond}
-
-	conn, err := dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%d", ip, port))
+	conn, err := r.dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%d", ip, port))
 	if err != nil {
 		return
 	}
 
 	defer conn.Close()
 
+	server := r.protoDetection(ctx, ip.String(), port)
+
 	r.CollectionMu.Lock()
 	defer r.CollectionMu.Unlock()
 
-	ipStats.Ports = append(ipStats.Ports, &PortStats{Number: port})
+	ipStats.Ports = append(ipStats.Ports, &PortStats{Number: port, Message: server})
 }
