@@ -44,8 +44,8 @@ func New() *NetSystem {
 			netports.FilterByCategory(netports.CategoryWellKnown, netports.CategoryRegistered),
 		).GroupByNumber(),
 		ARPTable: arp.Table(),
-		client:   &http.Client{Timeout: 1000 * time.Millisecond, Transport: tr},
-		dialer:   netstd.Dialer{Timeout: 1000 * time.Millisecond},
+		client:   &http.Client{Timeout: 500 * time.Millisecond, Transport: tr},
+		dialer:   netstd.Dialer{Timeout: 500 * time.Millisecond},
 	}
 
 	r.PortsToScan = getPortsToScan(r.WellKnownPorts)
