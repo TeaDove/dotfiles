@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 	"unicode"
@@ -15,20 +16,39 @@ import (
 func (r *NetSystem) protoDetection(ctx context.Context, host string, port uint16) string {
 	server, err := r.tryHttp(ctx, "https", host, port)
 	if err == nil {
-		return server
+		return "https/" + stripServer(server)
 	}
 
 	server, err = r.tryHttp(ctx, "http", host, port)
 	if err == nil {
-		return server
+		return "http/" + stripServer(server)
 	}
 
 	server, err = r.tryTcp(ctx, host, port)
 	if err == nil {
-		return server
+		return "tcp/" + stripServer(server)
 	}
 
 	return ""
+}
+
+func stripServer(server string) string {
+	fields := slices.Collect(strings.Lines(strings.TrimSpace(server)))
+	if len(fields) == 0 {
+		return ""
+	}
+
+	server = fields[0]
+
+	server = strings.Map(func(r rune) rune {
+		if unicode.IsPrint(r) {
+			return r
+		}
+
+		return -1
+	}, server)
+
+	return redact_utils.TrimSized(server, 70)
 }
 
 func (r *NetSystem) tryHttp(ctx context.Context, proto string, host string, port uint16) (string, error) {
@@ -43,7 +63,7 @@ func (r *NetSystem) tryHttp(ctx context.Context, proto string, host string, port
 	}
 	defer resp.Body.Close()
 
-	return fmt.Sprintf("%s/%s", proto, serverInHeaders(resp.Header)), nil
+	return serverInHeaders(resp.Header), nil
 }
 
 var headersToTry = [3]string{"Server", "Content-Type", "X-Server-Hostname"}
@@ -81,15 +101,7 @@ func (r *NetSystem) tryTcp(ctx context.Context, host string, port uint16) (strin
 	}
 
 	if n != 0 {
-		clean := strings.Map(func(r rune) rune {
-			if unicode.IsPrint(r) {
-				return r
-			}
-
-			return -1
-		}, strings.TrimSpace(string(resp[:n])))
-
-		return "tcp/" + redact_utils.TrimSized(clean, 70), nil
+		return string(resp[:n]), nil
 	}
 
 	return "", errors.New("empty response")

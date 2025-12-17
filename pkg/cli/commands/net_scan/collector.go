@@ -3,6 +3,7 @@ package net_scan
 import (
 	"context"
 	"fmt"
+	"iter"
 	netstd "net"
 	"sync"
 
@@ -13,7 +14,6 @@ import (
 )
 
 type Collection struct {
-	Err       error
 	Network   string
 	Interface string
 
@@ -35,44 +35,71 @@ type PortStats struct {
 	Message string
 }
 
-func (r *NetSystem) collect(ctx context.Context) {
+func (r *NetSystem) collect(ctx context.Context, args []string) error {
 	mainInterface, addr, err := getMainNetwork(ctx)
 	if err != nil {
-		r.CollectionMu.Lock()
-		defer r.CollectionMu.Unlock()
-
-		r.Collection.Err = errors.WithStack(err)
-
-		return
+		return errors.Wrap(err, "get main network")
 	}
+
+	ipnet, err := parseIPNet(addr.Addr, args)
+	if err != nil {
+		return errors.Wrap(err, "parse main address")
+	}
+
+	size, _ := ipnet.Mask.Size()
 
 	r.CollectionMu.Lock()
 	r.Collection.Interface = mainInterface.Name
-	r.CollectionMu.Unlock()
-
-	_, ipnet, err := netstd.ParseCIDR(addr.Addr)
-	if err != nil {
-		r.CollectionMu.Lock()
-		defer r.CollectionMu.Unlock()
-
-		r.Collection.Err = errors.Wrap(err, "parse main address")
-
-		return
-	}
-
-	r.CollectionMu.Lock()
 	r.Collection.Network = ipnet.String()
-	size, _ := ipnet.Mask.Size()
 	r.Collection.IPsTotal = 1 << (32 - size)
 	r.CollectionMu.Unlock()
 
+	r.scanNet(ctx, iterateOverNet(ipnet))
+
+	return nil
+}
+
+func parseIPNet(mainNet string, args []string) (*netstd.IPNet, error) {
+	if len(args) == 0 {
+		_, ipnet, err := netstd.ParseCIDR(mainNet)
+		if err != nil {
+			return nil, errors.Wrap(err, "parse main address")
+		}
+
+		return ipnet, nil
+	}
+
+	ip := netstd.ParseIP(args[0])
+	if ip != nil {
+		_, ipnet, err := netstd.ParseCIDR(ip.String() + "/32")
+		if err != nil {
+			return nil, errors.Wrap(err, "parse main address")
+		}
+
+		return ipnet, nil
+	}
+
+	_, ipnet, err := netstd.ParseCIDR(args[0])
+	if err != nil {
+		return nil, errors.Wrap(err, "parse main address")
+	}
+
+	return ipnet, nil
+}
+
+func (r *NetSystem) scanNet(ctx context.Context, ips iter.Seq[netstd.IP]) {
 	var (
 		wg       sync.WaitGroup
-		weighted = semaphore.NewWeighted(1000)
+		weighted = semaphore.NewWeighted(50)
 	)
-	for ip := range iterateOverNet(ipnet) {
+
+	for ip := range ips {
+		_ = weighted.Acquire(ctx, 1)
+
 		wg.Go(func() {
-			r.checkAddress(ctx, weighted, ip)
+			defer weighted.Release(1)
+
+			r.scanIP(ctx, ip)
 
 			r.CollectionMu.Lock()
 			r.Collection.IPsChecked++
@@ -106,15 +133,8 @@ func getMainNetwork(ctx context.Context) (net.InterfaceStat, net.InterfaceAddr, 
 	return net.InterfaceStat{}, net.InterfaceAddr{}, errors.New("no interfaces with addresses found")
 }
 
-func (r *NetSystem) checkAddress(ctx context.Context, weighted *semaphore.Weighted, ip netstd.IP) {
-	var ok bool
-
-	_ = weighted.Acquire(ctx, 1)
-	ok = ping(ctx, ip.String())
-
-	weighted.Release(1)
-
-	if !ok {
+func (r *NetSystem) scanIP(ctx context.Context, ip netstd.IP) {
+	if !ping(ctx, ip.String()) {
 		return
 	}
 
@@ -124,13 +144,18 @@ func (r *NetSystem) checkAddress(ctx context.Context, weighted *semaphore.Weight
 	r.Collection.IPs = append(r.Collection.IPs, ipStats)
 	r.CollectionMu.Unlock()
 
-	var wg sync.WaitGroup
+	var (
+		wg       sync.WaitGroup
+		weighted = semaphore.NewWeighted(10)
+	)
 
 	for _, port := range r.PortsToScan {
 		_ = weighted.Acquire(ctx, 1)
 
 		wg.Go(func() {
-			r.checkPort(ctx, weighted, ipStats, ip, port)
+			defer weighted.Release(1)
+
+			r.scanPort(ctx, ipStats, ip, port)
 		})
 	}
 
@@ -151,14 +176,12 @@ func (r *NetSystem) getMacDescription(ip netstd.IP) string {
 	return fmt.Sprintf("%s %s", mac, vendor)
 }
 
-func (r *NetSystem) checkPort(
+func (r *NetSystem) scanPort(
 	ctx context.Context,
-	weighted *semaphore.Weighted,
 	ipStats *IPStats,
 	ip netstd.IP,
 	port uint16,
 ) {
-	defer weighted.Release(1)
 	defer func() {
 		r.CollectionMu.Lock()
 		defer r.CollectionMu.Unlock()

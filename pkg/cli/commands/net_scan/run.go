@@ -44,8 +44,8 @@ func New() *NetSystem {
 			netports.FilterByCategory(netports.CategoryWellKnown, netports.CategoryRegistered),
 		).GroupByNumber(),
 		ARPTable: arp.Table(),
-		client:   &http.Client{Timeout: 500 * time.Millisecond, Transport: tr},
-		dialer:   netstd.Dialer{Timeout: 500 * time.Millisecond},
+		client:   &http.Client{Timeout: 3 * time.Second, Transport: tr},
+		dialer:   netstd.Dialer{Timeout: 200 * time.Millisecond},
 	}
 
 	r.PortsToScan = getPortsToScan(r.WellKnownPorts)
@@ -72,12 +72,15 @@ func New() *NetSystem {
 	return r
 }
 
-func Run(ctx context.Context, _ *cli.Command) error {
+func Run(ctx context.Context, cmd *cli.Command) error {
 	r := New()
 	p := tea.NewProgram(r.Model, tea.WithContext(ctx))
 
-	var wg sync.WaitGroup
-	wg.Go(func() { r.collect(ctx) })
+	var (
+		wg         sync.WaitGroup
+		collectErr error
+	)
+	wg.Go(func() { collectErr = r.collect(ctx, cmd.Args().Slice()) })
 
 	go func() {
 		wg.Wait()
@@ -89,8 +92,8 @@ func Run(ctx context.Context, _ *cli.Command) error {
 		return errors.Wrap(err, "run tea")
 	}
 
-	if r.Collection.Err != nil {
-		return errors.New("collection error")
+	if collectErr != nil {
+		return errors.Wrap(collectErr, "collection error")
 	}
 
 	return nil
