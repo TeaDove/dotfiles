@@ -33,6 +33,8 @@ github.com/ebitengine/purego v0.9.1 h1:a/k2f2HQU3Pi399RPW1MOaZyhKJL9w/xFpKAg4q1s
 github.com/ebitengine/purego v0.9.1/go.mod h1:iIjxzd6CiRiOG0UyXP+V1+jWqUXVjPKLAI0mRfJZTmQ=
 github.com/endobit/oui v0.5.0 h1:/XI8/Jr4nmL1AnLcE4SuC8CKmRcr8+AsQGDUQZ9Dk+o=
 github.com/endobit/oui v0.5.0/go.mod h1:cOHrBXZvcHjpHWHILEOAvIAnMR4zvXAXuCwRsjtQ9iI=
+github.com/endobit/oui v0.6.0 h1:TDnUNRwhjb5wjMS8SCxWb/O7G6vSjJiaEocr8wNgOuM=
+github.com/endobit/oui v0.6.0/go.mod h1:Y40Y6pCm9rVd6L1OITp7WJp7+F3cSIfaYqohHvMreZs=
 github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f h1:Y/CXytFA4m6baUTXGLOoWe4PQhGxaX0KpnayAqC48p4=
 github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f/go.mod h1:vw97MGsxSvLiUE2X8qFplwetxpGLQrlU1Q9AUEIzCaM=
 github.com/fatih/color v1.18.0 h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM=
