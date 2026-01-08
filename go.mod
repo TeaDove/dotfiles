@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/mostlygeek/arp v0.0.0-20170424181311-541a2129847a
 	github.com/pkg/errors v0.9.1
-	github.com/shirou/gopsutil/v4 v4.25.11
+	github.com/shirou/gopsutil/v4 v4.25.12
 	github.com/stretchr/testify v1.11.1
 	github.com/teadove/netports v0.0.6
 	github.com/teadove/teasutils/utils v0.3.0
@@ -56,6 +56,7 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b // indirect
+	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/text v0.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

@@ -26,10 +26,12 @@ COMMANDS:
    net      net utils
    sha      hashes string as sha512
    watch    like unix watch, but better
+   ss       starship config swap
+   code     analyse code
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   -v          verbose info (default: false)
+   -v          verbose info
    --help, -h  show help
 ```
 

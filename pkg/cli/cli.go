@@ -7,6 +7,7 @@ import (
 	"dotfiles/pkg/cli/commands/net_scan"
 	"dotfiles/pkg/cli/commands/net_sniff"
 	"dotfiles/pkg/cli/commands/net_system"
+	"dotfiles/pkg/cli/commands/net_traceroute"
 	"dotfiles/pkg/cli/commands/watch"
 	"os"
 	"runtime"
@@ -87,6 +88,11 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 						Name:   "sniff",
 						Usage:  "sniff traffic!",
 						Action: net_sniff.Run,
+					},
+					{
+						Name:   "traceroute",
+						Usage:  "pretty traceroute",
+						Action: net_traceroute.Run,
 					},
 				},
 			},
