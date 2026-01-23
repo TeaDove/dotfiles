@@ -13,7 +13,7 @@ import (
 	"github.com/shirou/gopsutil/v4/process"
 )
 
-func (r *NetStats) openPortsView(ctx context.Context) {
+func (r *Service) openPortsView(ctx context.Context) {
 	connections, err := net.ConnectionsWithContext(ctx, "all")
 	if err != nil {
 		r.model.openPorts = prettyErr(err)

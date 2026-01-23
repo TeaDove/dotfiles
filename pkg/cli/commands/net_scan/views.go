@@ -13,14 +13,14 @@ type keymap struct {
 	quit key.Binding
 }
 
-type Model struct {
-	net     *NetSystem
+type model struct {
+	net     *Service
 	spinner spinner.Model
 	help    help.Model
 	keymap  keymap
 }
 
-func (r *Model) helpView() string {
+func (r *model) helpView() string {
 	return fmt.Sprintf(
 		"\n %s %s",
 		r.spinner.View(),
@@ -28,7 +28,7 @@ func (r *Model) helpView() string {
 	)
 }
 
-func (r *Model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
+func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msgI.(type) {
@@ -44,6 +44,6 @@ func (r *Model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
 	return r, cmd
 }
 
-func (r *Model) Init() tea.Cmd {
+func (r *model) Init() tea.Cmd {
 	return r.spinner.Tick
 }

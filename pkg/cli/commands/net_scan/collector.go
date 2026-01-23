@@ -35,7 +35,7 @@ type PortStats struct {
 	Message string
 }
 
-func (r *NetSystem) collect(ctx context.Context, args []string) error {
+func (r *Service) collect(ctx context.Context, args []string) error {
 	mainInterface, addr, err := getMainNetwork(ctx)
 	if err != nil {
 		return errors.Wrap(err, "get main network")
@@ -48,11 +48,11 @@ func (r *NetSystem) collect(ctx context.Context, args []string) error {
 
 	size, _ := ipnet.Mask.Size()
 
-	r.CollectionMu.Lock()
-	r.Collection.Interface = mainInterface.Name
-	r.Collection.Network = ipnet.String()
-	r.Collection.IPsTotal = 1 << (32 - size)
-	r.CollectionMu.Unlock()
+	r.collectionMu.Lock()
+	r.collection.Interface = mainInterface.Name
+	r.collection.Network = ipnet.String()
+	r.collection.IPsTotal = 1 << (32 - size)
+	r.collectionMu.Unlock()
 
 	r.scanNet(ctx, iterateOverNet(ipnet))
 
@@ -87,7 +87,7 @@ func parseIPNet(mainNet string, args []string) (*netstd.IPNet, error) {
 	return ipnet, nil
 }
 
-func (r *NetSystem) scanNet(ctx context.Context, ips iter.Seq[netstd.IP]) {
+func (r *Service) scanNet(ctx context.Context, ips iter.Seq[netstd.IP]) {
 	var (
 		wg       sync.WaitGroup
 		weighted = semaphore.NewWeighted(50)
@@ -101,9 +101,9 @@ func (r *NetSystem) scanNet(ctx context.Context, ips iter.Seq[netstd.IP]) {
 
 			r.scanIP(ctx, ip)
 
-			r.CollectionMu.Lock()
-			r.Collection.IPsChecked++
-			r.CollectionMu.Unlock()
+			r.collectionMu.Lock()
+			r.collection.IPsChecked++
+			r.collectionMu.Unlock()
 		})
 	}
 
@@ -133,23 +133,23 @@ func getMainNetwork(ctx context.Context) (net.InterfaceStat, net.InterfaceAddr, 
 	return net.InterfaceStat{}, net.InterfaceAddr{}, errors.New("no interfaces with addresses found")
 }
 
-func (r *NetSystem) scanIP(ctx context.Context, ip netstd.IP) {
+func (r *Service) scanIP(ctx context.Context, ip netstd.IP) {
 	if !ping(ctx, ip.String()) {
 		return
 	}
 
-	ipStats := &IPStats{IP: ip, Mac: r.getMacDescription(ip), PortsTotal: uint16(len(r.PortsToScan))}
+	ipStats := &IPStats{IP: ip, Mac: r.getMacDescription(ip), PortsTotal: uint16(len(r.portsToScan))}
 
-	r.CollectionMu.Lock()
-	r.Collection.IPs = append(r.Collection.IPs, ipStats)
-	r.CollectionMu.Unlock()
+	r.collectionMu.Lock()
+	r.collection.IPs = append(r.collection.IPs, ipStats)
+	r.collectionMu.Unlock()
 
 	var (
 		wg       sync.WaitGroup
 		weighted = semaphore.NewWeighted(10)
 	)
 
-	for _, port := range r.PortsToScan {
+	for _, port := range r.portsToScan {
 		_ = weighted.Acquire(ctx, 1)
 
 		wg.Go(func() {
@@ -162,8 +162,8 @@ func (r *NetSystem) scanIP(ctx context.Context, ip netstd.IP) {
 	wg.Wait()
 }
 
-func (r *NetSystem) getMacDescription(ip netstd.IP) string {
-	mac, ok := r.ARPTable[ip.String()]
+func (r *Service) getMacDescription(ip netstd.IP) string {
+	mac, ok := r.arpTable[ip.String()]
 	if !ok {
 		return ""
 	}
@@ -176,15 +176,15 @@ func (r *NetSystem) getMacDescription(ip netstd.IP) string {
 	return fmt.Sprintf("%s %s", mac, vendor)
 }
 
-func (r *NetSystem) scanPort(
+func (r *Service) scanPort(
 	ctx context.Context,
 	ipStats *IPStats,
 	ip netstd.IP,
 	port uint16,
 ) {
 	defer func() {
-		r.CollectionMu.Lock()
-		defer r.CollectionMu.Unlock()
+		r.collectionMu.Lock()
+		defer r.collectionMu.Unlock()
 
 		ipStats.PortsChecked++
 	}()
@@ -198,8 +198,8 @@ func (r *NetSystem) scanPort(
 
 	server := r.protoDetection(ctx, ip.String(), port)
 
-	r.CollectionMu.Lock()
-	defer r.CollectionMu.Unlock()
+	r.collectionMu.Lock()
+	defer r.collectionMu.Unlock()
 
 	ipStats.Ports = append(ipStats.Ports, &PortStats{Number: port, Message: server})
 }

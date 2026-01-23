@@ -73,7 +73,7 @@ func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msgI.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
+		case "ctrl+c", "q", "й":
 			return r, tea.Quit
 		}
 	default:

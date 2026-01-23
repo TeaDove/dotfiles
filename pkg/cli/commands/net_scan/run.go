@@ -19,36 +19,36 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-type NetSystem struct {
-	Collection   Collection
-	CollectionMu sync.Mutex
+type Service struct {
+	collection   Collection
+	collectionMu sync.Mutex
 
-	WellKnownPorts map[uint16]netports.Ports
-	PortsToScan    []uint16
-	ARPTable       arp.ArpTable
+	wellKnownPorts map[uint16]netports.Ports
+	portsToScan    []uint16
+	arpTable       arp.ArpTable
 
 	client *http.Client
 	dialer netstd.Dialer
 
-	Model *Model
+	model *model
 }
 
-func New() *NetSystem {
+func New() *Service {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint: gosec // As expected
 	}
 
-	r := &NetSystem{
-		WellKnownPorts: netports.KnownPorts.FilterCollect(
+	r := &Service{
+		wellKnownPorts: netports.KnownPorts.FilterCollect(
 			netports.FilterByProto(netports.TCP),
 			netports.FilterByCategory(netports.CategoryWellKnown, netports.CategoryRegistered),
 		).GroupByNumber(),
-		ARPTable: arp.Table(),
+		arpTable: arp.Table(),
 		client:   &http.Client{Timeout: 3 * time.Second, Transport: tr},
 		dialer:   netstd.Dialer{Timeout: 200 * time.Millisecond},
 	}
 
-	r.PortsToScan = getPortsToScan(r.WellKnownPorts)
+	r.portsToScan = getPortsToScan(r.wellKnownPorts)
 
 	s := spinner.New()
 	s.Spinner = spinner.Dot
@@ -56,7 +56,7 @@ func New() *NetSystem {
 
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 
-	m := Model{
+	m := model{
 		spinner: s,
 		help:    help.New(),
 		keymap: keymap{
@@ -67,14 +67,14 @@ func New() *NetSystem {
 		},
 		net: r,
 	}
-	r.Model = &m
+	r.model = &m
 
 	return r
 }
 
 func Run(ctx context.Context, cmd *cli.Command) error {
 	r := New()
-	p := tea.NewProgram(r.Model, tea.WithContext(ctx))
+	p := tea.NewProgram(r.model, tea.WithContext(ctx))
 
 	var (
 		wg         sync.WaitGroup

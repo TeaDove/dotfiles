@@ -2,165 +2,92 @@ package net_traceroute
 
 import (
 	"context"
-	"strconv"
-	"strings"
-
-	"github.com/cockroachdb/errors"
-	"github.com/teadove/teasutils/utils/time_utils"
-
-	"github.com/urfave/cli/v3"
-
-	"fmt"
-	"net"
+	"dotfiles/pkg/cli/gloss_utils"
+	"dotfiles/pkg/http_supplier"
+	"sync"
 	"time"
 
-	"golang.org/x/net/icmp"
-	"golang.org/x/net/ipv4"
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/spinner"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
+	"github.com/cockroachdb/errors"
+	"github.com/urfave/cli/v3"
 )
 
+type Service struct {
+	model *model
+
+	hops   []traceResult
+	hopsMu sync.RWMutex
+
+	httpSupplier *http_supplier.Supplier
+}
+
 func Run(ctx context.Context, command *cli.Command) error {
-	const (
-		maxHops  = 128
-		timeout  = 2 * time.Second
-		basePort = 33434
+	service := New()
+	p := tea.NewProgram(service.model, tea.WithContext(ctx))
+
+	var (
+		wg        sync.WaitGroup
+		runnerErr error
 	)
+	wg.Go(func() { runnerErr = service.run(ctx, command.Args().First()) })
 
-	target := command.Args().First()
+	go func() {
+		wg.Wait()
+		p.Quit()
+	}()
 
-	dstIP := net.ParseIP(target).To4()
-	if dstIP == nil {
-		return errors.Newf("invalid destination IP %q", target)
-	}
-
-	icmpConn, err := icmp.ListenPacket("ip4:icmp", "0.0.0.0")
+	_, err := p.Run()
 	if err != nil {
-		return errors.Wrap(err, "listen for icmp packets, most likely you need to run it with sudo: sudo !!")
-	}
-	defer icmpConn.Close()
-
-	udpConn, err := (&net.ListenConfig{}).ListenPacket(ctx, "udp4", "0.0.0.0:0")
-	if err != nil {
-		return errors.Wrap(err, "udp4 listen packet")
-	}
-	defer udpConn.Close()
-
-	v4udp := ipv4.NewPacketConn(udpConn)
-
-	fmt.Printf("traceroute to %s (%s), %d hops max\n", target, dstIP.String(), maxHops)
-	conn := Conn{
-		v4udp:    v4udp,
-		udpConn:  udpConn,
-		icmpConn: icmpConn,
-		basePort: basePort,
-		dstIP:    dstIP,
-		timeout:  timeout,
-		ttl:      0,
+		return errors.Wrap(err, "run tea")
 	}
 
-	for ttl := 1; ttl <= maxHops; ttl++ {
-		conn.ttl = ttl
-
-		result, err := conn.trace()
-		if err != nil {
-			return errors.Wrap(err, "trace")
-		}
-
-		var builder strings.Builder
-		builder.WriteString(strconv.Itoa(ttl))
-
-		if result.peer != nil {
-			builder.WriteString(fmt.Sprintf("\t%s\t%s", result.peer.String(), time_utils.RoundDuration(result.rtt)))
-
-			if dstIP.String() == result.peer.String() {
-				fmt.Println(builder.String())
-				return nil
-			}
-		} else {
-			builder.WriteString("\t* * *")
-		}
-
-		if result.icmpErr != "" {
-			builder.WriteString(fmt.Sprintf(" %s", result.icmpErr))
-		}
-
-		fmt.Println(builder.String())
+	if runnerErr != nil {
+		return errors.Wrap(runnerErr, "run error")
 	}
-
-	fmt.Println("max hops reached")
 
 	return nil
 }
 
-type Conn struct {
-	v4udp    *ipv4.PacketConn
-	udpConn  net.PacketConn
-	icmpConn *icmp.PacketConn
+func New() *Service {
+	s := spinner.New()
+	s.Spinner = spinner.Dot
+	s.Spinner.FPS = time.Second / 20
 
-	basePort int
-	dstIP    net.IP
-	timeout  time.Duration
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 
-	ttl int
-}
+	tableData := gloss_utils.NewMappingData(tableCols...)
 
-type traceResult struct {
-	peer    net.Addr
-	rtt     time.Duration
-	icmpErr string
-}
+	t := table.New().
+		Wrap(true).
+		Headers(tableCols...).
+		Border(lipgloss.RoundedBorder()).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("69"))).
+		Data(tableData)
 
-func (r *Conn) trace() (traceResult, error) {
-	if err := r.v4udp.SetTTL(r.ttl); err != nil {
-		return traceResult{}, errors.Wrap(err, "udp set ttl")
+	m := model{
+		spinner: s,
+		help:    help.New(),
+		keymap: keymap{
+			quit: key.NewBinding(
+				key.WithKeys("ctrl+c", "q"),
+				key.WithHelp("q", "quit"),
+			),
+		},
+		traceTableData: tableData,
+		traceTable:     *t,
 	}
 
-	dst := &net.UDPAddr{IP: r.dstIP, Port: r.basePort + r.ttl}
-
-	start := time.Now()
-
-	_, err := r.udpConn.WriteTo([]byte{0x42}, dst)
-	if err != nil {
-		return traceResult{}, errors.Wrap(err, "udp conn write")
+	service := Service{
+		hops:         make([]traceResult, 0, 100),
+		httpSupplier: http_supplier.New(),
+		model:        &m,
 	}
+	service.model.service = &service
 
-	buf := make([]byte, 1500)
-
-	_ = r.icmpConn.SetReadDeadline(time.Now().Add(r.timeout))
-
-	n, peer, err := r.icmpConn.ReadFrom(buf)
-	if err != nil {
-		return traceResult{}, nil //nolint: nilerr // as expected
-	}
-
-	result := traceResult{
-		peer:    peer,
-		rtt:     time.Since(start),
-		icmpErr: "",
-	}
-
-	msg, err := icmp.ParseMessage(ipv4.ICMPTypeEcho.Protocol(), buf[:n])
-	if err != nil {
-		result.icmpErr = fmt.Sprintf("parse error: %s", err.Error())
-		return result, nil
-	}
-
-	switch msg.Type {
-	case ipv4.ICMPTypeTimeExceeded:
-		return result, nil
-	case ipv4.ICMPTypeDestinationUnreachable:
-		if msg.Code == 3 && peer.String() == r.dstIP.String() {
-			return result, nil
-		}
-
-		result.peer = nil
-		result.icmpErr = strconv.Itoa(msg.Code)
-
-		return result, nil
-
-	default:
-		result.peer = nil
-		result.icmpErr = fmt.Sprintf("%v", msg.Type)
-
-		return result, nil
-	}
+	return &service
 }

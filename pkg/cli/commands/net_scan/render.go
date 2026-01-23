@@ -10,29 +10,29 @@ import (
 	"github.com/fatih/color"
 )
 
-func (r *Model) renderInterface() string {
+func (r *model) renderInterface() string {
 	return fmt.Sprintf(
 		"Scanning TCP ports %s on %s (%d/%d ips)",
-		color.CyanString(r.net.Collection.Network),
-		color.CyanString(r.net.Collection.Interface),
-		r.net.Collection.IPsChecked,
-		r.net.Collection.IPsTotal,
+		color.CyanString(r.net.collection.Network),
+		color.CyanString(r.net.collection.Interface),
+		r.net.collection.IPsChecked,
+		r.net.collection.IPsTotal,
 	)
 }
 
-func (r *Model) View() string {
-	r.net.CollectionMu.Lock()
-	defer r.net.CollectionMu.Unlock()
+func (r *model) View() string {
+	r.net.collectionMu.Lock()
+	defer r.net.collectionMu.Unlock()
 
 	return lipgloss.JoinVertical(lipgloss.Left, r.renderInterface(), r.renderIPList()) + r.helpView()
 }
 
-func (r *Model) renderIPList() string {
-	if len(r.net.Collection.IPs) == 0 {
+func (r *model) renderIPList() string {
+	if len(r.net.collection.IPs) == 0 {
 		return "no pingable addresses found"
 	}
 
-	slices.SortFunc(r.net.Collection.IPs, func(a, b *IPStats) int {
+	slices.SortFunc(r.net.collection.IPs, func(a, b *IPStats) int {
 		if a.IP.String() > b.IP.String() {
 			return 1
 		}
@@ -41,14 +41,14 @@ func (r *Model) renderIPList() string {
 	})
 
 	ipList := list.New()
-	for _, ip := range r.net.Collection.IPs {
+	for _, ip := range r.net.collection.IPs {
 		ipList.Items(r.renderIP(ip)...)
 	}
 
 	return ipList.String()
 }
 
-func (r *Model) renderIP(ip *IPStats) []any {
+func (r *model) renderIP(ip *IPStats) []any {
 	items := []any{r.renderIPLine(ip)}
 
 	if len(ip.Ports) == 0 {
@@ -67,7 +67,7 @@ func (r *Model) renderIP(ip *IPStats) []any {
 
 	for _, port := range ip.Ports {
 		var descriptions []string
-		for _, info := range r.net.WellKnownPorts[port.Number] {
+		for _, info := range r.net.wellKnownPorts[port.Number] {
 			descriptions = append(descriptions, info.Description)
 		}
 
@@ -90,7 +90,7 @@ func (r *Model) renderIP(ip *IPStats) []any {
 	return items
 }
 
-func (r *Model) renderIPLine(ip *IPStats) string {
+func (r *model) renderIPLine(ip *IPStats) string {
 	var ipString string
 
 	if ip.PortsChecked == ip.PortsTotal {

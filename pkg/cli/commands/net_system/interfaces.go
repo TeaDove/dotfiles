@@ -11,7 +11,7 @@ import (
 	"github.com/shirou/gopsutil/v4/net"
 )
 
-func (r *NetStats) interfacesView(ctx context.Context) {
+func (r *Service) interfacesView(ctx context.Context) {
 	interfaces, err := net.InterfacesWithContext(ctx)
 	if err != nil {
 		r.model.interfaces = prettyErr(errors.Wrap(err, "get my-ip"))

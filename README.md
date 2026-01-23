@@ -21,7 +21,7 @@ COMMANDS:
    update   updates this executable
    u        generates random uuid
    t        generates save to use password
-   l        locates service by ip or domain from http://ip-api.com/json/
+   l        locates service by ip or domains from http://ip-api.com/json/
    g        git utils
    net      net utils
    sha      hashes string as sha512

@@ -26,7 +26,7 @@ var (
 	pingCols = []string{pingColAddress, pingColDur, pingColSucFail} //nolint:gochecknoglobals // is ok
 )
 
-func (r *NetStats) pingsView(ctx context.Context) {
+func (r *Service) pingsView(ctx context.Context) {
 	var pingsWg sync.WaitGroup
 
 	for _, address := range addressesToPing {

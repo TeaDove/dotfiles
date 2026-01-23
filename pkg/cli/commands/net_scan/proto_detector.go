@@ -13,7 +13,7 @@ import (
 	"github.com/teadove/teasutils/utils/redact_utils"
 )
 
-func (r *NetSystem) protoDetection(ctx context.Context, host string, port uint16) string {
+func (r *Service) protoDetection(ctx context.Context, host string, port uint16) string {
 	server, err := r.tryHttp(ctx, "https", host, port)
 	if err == nil {
 		return "https/" + stripServer(server)
@@ -51,7 +51,7 @@ func stripServer(server string) string {
 	return redact_utils.TrimSized(server, 70)
 }
 
-func (r *NetSystem) tryHttp(ctx context.Context, proto string, host string, port uint16) (string, error) {
+func (r *Service) tryHttp(ctx context.Context, proto string, host string, port uint16) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s://%s:%d/", proto, host, port), nil)
 	if err != nil {
 		return "", errors.WithStack(err)
@@ -80,7 +80,7 @@ func serverInHeaders(headers http.Header) string {
 	return ""
 }
 
-func (r *NetSystem) tryTcp(ctx context.Context, host string, port uint16) (string, error) {
+func (r *Service) tryTcp(ctx context.Context, host string, port uint16) (string, error) {
 	conn, err := r.dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
 		return "", errors.WithStack(err)

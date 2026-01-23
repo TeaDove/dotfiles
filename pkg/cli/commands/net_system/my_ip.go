@@ -10,7 +10,7 @@ import (
 	"github.com/fatih/color"
 )
 
-func (r *NetStats) myIPView(ctx context.Context) {
+func (r *Service) myIPView(ctx context.Context) {
 	myIP, err := r.httpSupplier.MyIP(ctx)
 	if err != nil {
 		r.model.myIP = prettyErr(errors.Wrap(err, "get my-ip"))
@@ -50,7 +50,7 @@ func (r *NetStats) myIPView(ctx context.Context) {
 	}
 }
 
-func (r *NetStats) shortLocationOrErr(ctx context.Context, ipOrDomain string) string {
+func (r *Service) shortLocationOrErr(ctx context.Context, ipOrDomain string) string {
 	location, err := r.httpSupplier.LocateByIP(ctx, ipOrDomain)
 	if err != nil {
 		return prettyErr(errors.Wrap(err, "get location"))

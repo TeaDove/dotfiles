@@ -52,17 +52,17 @@ func Run(ctx context.Context, _ *cli.Command) error {
 		},
 	}
 
-	r := NetStats{httpSupplier: http_supplier.New(), model: &m}
+	r := Service{httpSupplier: http_supplier.New(), model: &m}
 
 	return r.Run(ctx)
 }
 
-type NetStats struct {
+type Service struct {
 	httpSupplier *http_supplier.Supplier
 	model        *model
 }
 
-func (r *NetStats) Run(ctx context.Context) error {
+func (r *Service) Run(ctx context.Context) error {
 	p := tea.NewProgram(r.model, tea.WithContext(ctx))
 
 	var wg sync.WaitGroup
