@@ -69,12 +69,14 @@ func Run(ctx context.Context, command *cli.Command) error {
 		builder.WriteString(strconv.Itoa(ttl))
 
 		if result.peer != nil {
-			builder.WriteString(fmt.Sprintf(" %s %s", result.peer.String(), time_utils.RoundDuration(result.rtt)))
+			builder.WriteString(fmt.Sprintf("\t%s\t%s", result.peer.String(), time_utils.RoundDuration(result.rtt)))
 
 			if dstIP.String() == result.peer.String() {
 				fmt.Println(builder.String())
 				return nil
 			}
+		} else {
+			builder.WriteString("\t* * *")
 		}
 
 		if result.icmpErr != "" {
@@ -124,16 +126,16 @@ func (r *Conn) trace() (traceResult, error) {
 	buf := make([]byte, 1500)
 
 	_ = r.icmpConn.SetReadDeadline(time.Now().Add(r.timeout))
+
 	n, peer, err := r.icmpConn.ReadFrom(buf)
+	if err != nil {
+		return traceResult{}, nil //nolint: nilerr // as expected
+	}
+
 	result := traceResult{
 		peer:    peer,
 		rtt:     time.Since(start),
 		icmpErr: "",
-	}
-
-	if err != nil {
-		result.icmpErr = "* * *"
-		return result, nil //nolint: nilerr // as expected
 	}
 
 	msg, err := icmp.ParseMessage(ipv4.ICMPTypeEcho.Protocol(), buf[:n])
@@ -150,12 +152,15 @@ func (r *Conn) trace() (traceResult, error) {
 			return result, nil
 		}
 
+		result.peer = nil
 		result.icmpErr = strconv.Itoa(msg.Code)
 
 		return result, nil
 
 	default:
+		result.peer = nil
 		result.icmpErr = fmt.Sprintf("%v", msg.Type)
+
 		return result, nil
 	}
 }

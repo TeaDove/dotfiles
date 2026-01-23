@@ -30,23 +30,23 @@ type DomainLocationResp struct {
 func (r *Supplier) LocateByIP(ctx context.Context, ip string) (DomainLocationResp, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("http://ip-api.com/json/%s", ip), nil)
 	if err != nil {
-		return DomainLocationResp{}, errors.Wrap(err, "failed to build request to get ip")
+		return DomainLocationResp{}, errors.Wrap(err, "build request to get ip")
 	}
 
 	resp, err := r.client.Do(req)
 	if err != nil {
-		return DomainLocationResp{}, errors.Wrap(err, "failed to get resp")
+		return DomainLocationResp{}, errors.Wrap(err, "get resp")
 	}
 
 	var domainLocation DomainLocationResp
 
 	err = json.NewDecoder(resp.Body).Decode(&domainLocation)
 	if err != nil {
-		return DomainLocationResp{}, errors.Wrap(err, "failed to decode resp")
+		return DomainLocationResp{}, errors.Wrap(err, "decode resp")
 	}
 
 	if domainLocation.Status != "success" {
-		return DomainLocationResp{}, errors.Errorf(
+		return DomainLocationResp{}, errors.Newf(
 			"failed to locate IP, %s, query: %s",
 			domainLocation.Message,
 			domainLocation.Query,

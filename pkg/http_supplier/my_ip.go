@@ -19,6 +19,7 @@ func (r *Supplier) MyIP(ctx context.Context) (net.IP, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch ip")
 	}
+	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
