@@ -16,8 +16,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
+	"github.com/cockroachdb/errors"
 	"github.com/fatih/color"
-	"github.com/pkg/errors"
 )
 
 const elipsis = "..."

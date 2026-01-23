@@ -9,8 +9,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/cockroachdb/errors"
 	"github.com/fatih/color"
-	"github.com/pkg/errors"
 	"github.com/tidwall/match"
 	"github.com/urfave/cli/v3"
 )

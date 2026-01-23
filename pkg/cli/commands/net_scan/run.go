@@ -13,8 +13,8 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/cockroachdb/errors"
 	"github.com/mostlygeek/arp"
-	"github.com/pkg/errors"
 	"github.com/teadove/netports"
 	"github.com/urfave/cli/v3"
 )

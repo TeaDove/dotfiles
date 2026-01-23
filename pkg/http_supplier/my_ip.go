@@ -6,7 +6,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 )
 
 func (r *Supplier) MyIP(ctx context.Context) (net.IP, error) {

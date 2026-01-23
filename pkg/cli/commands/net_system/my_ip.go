@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/fatih/color"
-	"github.com/pkg/errors"
 )
 
 func (r *NetStats) myIPView(ctx context.Context) {

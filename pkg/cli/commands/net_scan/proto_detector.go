@@ -9,7 +9,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 	"github.com/teadove/teasutils/utils/redact_utils"
 )
 

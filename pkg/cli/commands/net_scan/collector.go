@@ -7,8 +7,8 @@ import (
 	netstd "net"
 	"sync"
 
+	"github.com/cockroachdb/errors"
 	"github.com/endobit/oui"
-	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/v4/net"
 	"golang.org/x/sync/semaphore"
 )
