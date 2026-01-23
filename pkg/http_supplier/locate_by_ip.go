@@ -53,5 +53,9 @@ func (r *Supplier) LocateByIP(ctx context.Context, ip string) (DomainLocationRes
 		)
 	}
 
+	if domainLocation.City == domainLocation.RegionName {
+		domainLocation.City = ""
+	}
+
 	return domainLocation, nil
 }
