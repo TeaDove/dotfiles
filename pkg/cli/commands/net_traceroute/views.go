@@ -50,10 +50,7 @@ const (
 
 var tableCols = []string{colTTL, colIP, colRTT, colDomains, colLocation, colISP}
 
-func (r *model) View() string {
-	r.service.hopsMu.RLock()
-	defer r.service.hopsMu.RUnlock()
-
+func (r *model) updateTable() {
 	for _, hop := range r.service.hops {
 		ttlString := strconv.Itoa(hop.ttl)
 		if r.traceTableData.RowExists(ttlString) {
@@ -91,7 +88,9 @@ func (r *model) View() string {
 			)
 		}
 	}
+}
 
+func (r *model) View() string {
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		r.target,

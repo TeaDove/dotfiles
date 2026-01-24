@@ -3,6 +3,7 @@ package net_system
 import (
 	"dotfiles/pkg/cli/gloss_utils"
 	"fmt"
+	"sync/atomic"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -35,9 +36,9 @@ type model struct {
 	help    help.Model
 	keymap  keymap
 
-	myIP       string
-	openPorts  string
-	interfaces string
+	myIP       atomic.Pointer[string]
+	openPorts  atomic.Pointer[string]
+	interfaces atomic.Pointer[string]
 
 	pingsTable     table.Table
 	pingsTableData *gloss_utils.MappingData
@@ -56,13 +57,13 @@ func (r *model) View() string {
 		lipgloss.Left,
 		lipgloss.JoinVertical(
 			lipgloss.Top,
-			myIPStyle.Render(r.myIP),
+			myIPStyle.Render(*r.myIP.Load()),
 			pingStyle.Render(r.pingsTable.String()),
 		),
 		lipgloss.JoinVertical(
 			lipgloss.Top,
-			interfacesStyle.Render(r.interfaces),
-			openPortsStyle.Render(r.openPorts),
+			interfacesStyle.Render(*r.interfaces.Load()),
+			openPortsStyle.Render(*r.openPorts.Load()),
 		),
 	) + r.helpView()
 }

@@ -5,6 +5,7 @@ import (
 	"dotfiles/pkg/cli/gloss_utils"
 	"dotfiles/pkg/http_supplier"
 	"sync"
+	"sync/atomic"
 
 	"github.com/urfave/cli/v3"
 
@@ -19,8 +20,6 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/fatih/color"
 )
-
-const elipsis = "..."
 
 func Run(ctx context.Context, _ *cli.Command) error {
 	s := spinner.New()
@@ -37,9 +36,6 @@ func Run(ctx context.Context, _ *cli.Command) error {
 		Data(tableData)
 
 	m := model{
-		myIP:           elipsis,
-		openPorts:      elipsis,
-		interfaces:     elipsis,
 		pingsTable:     *t,
 		pingsTableData: tableData,
 		spinner:        s,
@@ -51,6 +47,10 @@ func Run(ctx context.Context, _ *cli.Command) error {
 			),
 		},
 	}
+	elipsis := "..."
+	m.myIP.Store(&elipsis)
+	m.openPorts.Store(&elipsis)
+	m.interfaces.Store(&elipsis)
 
 	r := Service{httpSupplier: http_supplier.New(), model: &m}
 
@@ -67,9 +67,9 @@ func (r *Service) Run(ctx context.Context) error {
 
 	var wg sync.WaitGroup
 
-	wg.Go(func() { r.myIPView(ctx) })
-	wg.Go(func() { r.interfacesView(ctx) })
-	wg.Go(func() { r.openPortsView(ctx) })
+	wg.Go(func() { runAndSet(ctx, &r.model.myIP, r.myIPView) })
+	wg.Go(func() { runAndSet(ctx, &r.model.interfaces, r.interfacesView) })
+	wg.Go(func() { runAndSet(ctx, &r.model.openPorts, r.openPortsView) })
 	wg.Go(func() { r.pingsView(ctx) })
 
 	go func() {
@@ -91,4 +91,9 @@ func prettyErr(err error) string {
 
 func prettyWarn(err error) string {
 	return color.YellowString("warning: ") + color.WhiteString(err.Error())
+}
+
+func runAndSet(ctx context.Context, ptr *atomic.Pointer[string], fn func(ctx context.Context) string) {
+	v := fn(ctx)
+	ptr.Store(&v)
 }

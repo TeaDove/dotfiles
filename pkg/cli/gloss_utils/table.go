@@ -112,6 +112,8 @@ func (r *MappingData) Columns() int {
 }
 
 func (r *MappingData) Clear(rows ...string) {
+	r.mu.RLock()
+
 	notFoundRows := make([]string, 0)
 
 	for _, row := range r.rows {
@@ -119,6 +121,8 @@ func (r *MappingData) Clear(rows ...string) {
 			notFoundRows = append(notFoundRows, row)
 		}
 	}
+
+	r.mu.RUnlock()
 
 	for _, row := range notFoundRows {
 		r.DeleteRow(row)

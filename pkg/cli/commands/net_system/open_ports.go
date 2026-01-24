@@ -13,11 +13,10 @@ import (
 	"github.com/shirou/gopsutil/v4/process"
 )
 
-func (r *Service) openPortsView(ctx context.Context) {
+func (r *Service) openPortsView(ctx context.Context) string {
 	connections, err := net.ConnectionsWithContext(ctx, "all")
 	if err != nil {
-		r.model.openPorts = prettyErr(err)
-		return
+		return prettyErr(err)
 	}
 
 	pidToPorts := make(map[int32][]string)
@@ -36,11 +35,10 @@ func (r *Service) openPortsView(ctx context.Context) {
 	}
 
 	if len(pidToPorts) == 0 {
-		r.model.openPorts = prettyWarn(errors.New("no open ports"))
-		return
+		return prettyWarn(errors.New("no open ports"))
 	}
 
-	r.model.openPorts = color.GreenString("Open ports:")
+	v := color.GreenString("Open ports:")
 	services := make([]string, 0, len(pidToPorts))
 
 	for pid, ports := range pidToPorts {
@@ -51,15 +49,12 @@ func (r *Service) openPortsView(ctx context.Context) {
 
 		connProcess, err := process.NewProcess(pid)
 		if err != nil {
-			r.model.openPorts = prettyErr(errors.Wrap(err, "get process name"))
-
-			return
+			return prettyErr(errors.Wrap(err, "get process name"))
 		}
 
 		name, err := connProcess.NameWithContext(ctx)
 		if err != nil {
-			r.model.openPorts = prettyErr(errors.Wrap(err, "get process name"))
-			return
+			return prettyErr(errors.Wrap(err, "get process name"))
 		}
 
 		services = append(services,
@@ -73,6 +68,8 @@ func (r *Service) openPortsView(ctx context.Context) {
 	slices.Sort(services)
 
 	for _, service := range services {
-		r.model.openPorts += service
+		v += service
 	}
+
+	return v
 }

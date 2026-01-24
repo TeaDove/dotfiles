@@ -10,24 +10,9 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/fatih/color"
 	"golang.org/x/net/icmp"
 	"golang.org/x/net/ipv4"
 )
-
-func (r *Service) run(ctx context.Context, arg string) error {
-	dstIP, err := parseAddr(ctx, arg)
-	if err != nil {
-		return errors.Wrap(err, "invalid target address")
-	}
-
-	err = r.traceRoute(ctx, dstIP)
-	if err != nil {
-		return errors.Wrap(err, "trace route")
-	}
-
-	return nil
-}
 
 func parseAddr(ctx context.Context, target string) (net.IP, error) {
 	dstIP := net.ParseIP(target).To4()
@@ -71,7 +56,6 @@ func (r *Service) traceRoute(ctx context.Context, dstIP net.IP) error {
 
 	v4udp := ipv4.NewPacketConn(udpConn)
 
-	r.model.target = fmt.Sprintf("traceroute to %s, %d hops max", color.CyanString(dstIP.String()), maxHops)
 	conn := Conn{
 		v4udp:    v4udp,
 		udpConn:  udpConn,
@@ -104,6 +88,7 @@ func (r *Service) traceRoute(ctx context.Context, dstIP net.IP) error {
 
 			return 0
 		})
+		r.model.updateTable()
 		r.hopsMu.Unlock()
 
 		if result.peer != nil && dstIP.String() == result.peer.String() {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"dotfiles/pkg/cli/gloss_utils"
 	"dotfiles/pkg/http_supplier"
+	"fmt"
+	"net"
 	"sync"
 	"time"
 
@@ -14,6 +16,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 	"github.com/cockroachdb/errors"
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v3"
 )
 
@@ -21,27 +24,37 @@ type Service struct {
 	model *model
 
 	hops   []traceResult
-	hopsMu sync.RWMutex
+	hopsMu sync.Mutex
 
 	httpSupplier *http_supplier.Supplier
+
+	maxHops  int
+	timeout  time.Duration
+	basePort uint16
+	dstIP    net.IP
 }
 
 func Run(ctx context.Context, command *cli.Command) error {
-	service := New()
+	dstIP, err := parseAddr(ctx, command.Args().First())
+	if err != nil {
+		return errors.Wrap(err, "invalid target address")
+	}
+
+	service := New(dstIP)
 	p := tea.NewProgram(service.model, tea.WithContext(ctx))
 
 	var (
 		wg        sync.WaitGroup
 		runnerErr error
 	)
-	wg.Go(func() { runnerErr = service.run(ctx, command.Args().First()) })
+	wg.Go(func() { runnerErr = service.traceRoute(ctx, dstIP) })
 
 	go func() {
 		wg.Wait()
 		p.Quit()
 	}()
 
-	_, err := p.Run()
+	_, err = p.Run()
 	if err != nil {
 		return errors.Wrap(err, "run tea")
 	}
@@ -53,7 +66,7 @@ func Run(ctx context.Context, command *cli.Command) error {
 	return nil
 }
 
-func New() *Service {
+func New(dstIP net.IP) *Service {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Spinner.FPS = time.Second / 20
@@ -86,8 +99,17 @@ func New() *Service {
 		hops:         make([]traceResult, 0, 100),
 		httpSupplier: http_supplier.New(),
 		model:        &m,
+		maxHops:      128,
+		timeout:      1 * time.Second,
+		basePort:     33434,
+		dstIP:        dstIP,
 	}
 	service.model.service = &service
+	service.model.target = fmt.Sprintf(
+		"traceroute to %s, %d hops max",
+		color.CyanString(dstIP.String()),
+		service.maxHops,
+	)
 
 	return &service
 }

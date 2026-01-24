@@ -11,11 +11,10 @@ import (
 	"github.com/shirou/gopsutil/v4/net"
 )
 
-func (r *Service) interfacesView(ctx context.Context) {
+func (r *Service) interfacesView(ctx context.Context) string {
 	interfaces, err := net.InterfacesWithContext(ctx)
 	if err != nil {
-		r.model.interfaces = prettyErr(errors.Wrap(err, "get my-ip"))
-		return
+		return prettyErr(errors.Wrap(err, "get my-ip"))
 	}
 
 	interfacesWithAddresses := make(net.InterfaceStatList, 0)
@@ -38,10 +37,10 @@ func (r *Service) interfacesView(ctx context.Context) {
 	}
 
 	if len(interfacesWithAddresses) == 0 {
-		r.model.interfaces = prettyWarn(errors.New("no interfaces found"))
+		return prettyWarn(errors.New("no interfaces found"))
 	}
 
-	r.model.interfaces = color.GreenString("Interfaces with addresses:")
+	v := color.GreenString("Interfaces with addresses:")
 
 	for _, i := range interfacesWithAddresses {
 		addresses := make([]string, 0, len(i.Addrs))
@@ -49,10 +48,12 @@ func (r *Service) interfacesView(ctx context.Context) {
 			addresses = append(addresses, a.Addr)
 		}
 
-		r.model.interfaces += fmt.Sprintf("\n%s (%s) -> %s",
+		v += fmt.Sprintf("\n%s (%s) -> %s",
 			color.New(color.FgCyan, color.Faint).Sprint(i.Name),
 			i.HardwareAddr,
 			strings.Join(addresses, ", "),
 		)
 	}
+
+	return v
 }

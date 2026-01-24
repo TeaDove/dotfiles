@@ -10,20 +10,18 @@ import (
 	"github.com/fatih/color"
 )
 
-func (r *Service) myIPView(ctx context.Context) {
+func (r *Service) myIPView(ctx context.Context) string {
 	myIP, err := r.httpSupplier.MyIP(ctx)
 	if err != nil {
-		r.model.myIP = prettyErr(errors.Wrap(err, "get my-ip"))
-		return
+		return prettyErr(errors.Wrap(err, "get my-ip"))
 	}
 
-	r.model.myIP = ""
-	r.model.myIP += fmt.Sprintf("%s: %s", color.GreenString("My IP"), color.YellowString(myIP.String()))
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("%s: %s", color.GreenString("My IP"), color.YellowString(myIP.String())))
 
-	r.model.myIP += fmt.Sprintf(" (%s)", r.shortLocationOrErr(ctx, myIP.String()))
+	builder.WriteString(fmt.Sprintf(" (%s)\n", r.shortLocationOrErr(ctx, myIP.String())))
 
-	r.model.myIP += "\n"
-	r.model.myIP += color.GreenString("DNS Servers: ")
+	builder.WriteString(color.GreenString("DNS Servers: "))
 
 	dnss := http_supplier.GetDNSServers()
 
@@ -43,11 +41,13 @@ func (r *Service) myIPView(ctx context.Context) {
 	}
 
 	if len(dnssStrings) == 1 {
-		r.model.myIP += dnssStrings[0]
+		builder.WriteString(dnssStrings[0])
 	} else {
-		r.model.myIP += "\n"
-		r.model.myIP += strings.Join(dnssStrings, "\n")
+		builder.WriteString("\n")
+		builder.WriteString(strings.Join(dnssStrings, "\n"))
 	}
+
+	return builder.String()
 }
 
 func (r *Service) shortLocationOrErr(ctx context.Context, ipOrDomain string) string {
