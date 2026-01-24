@@ -36,40 +36,16 @@ func parseAddr(ctx context.Context, target string) (net.IP, error) {
 }
 
 func (r *Service) traceRoute(ctx context.Context, dstIP net.IP) error {
-	const (
-		maxHops  = 128
-		timeout  = 1 * time.Second
-		basePort = 33434
-	)
-
 	icmpConn, err := icmp.ListenPacket("ip4:icmp", "0.0.0.0")
 	if err != nil {
 		return errors.Wrap(err, "listen for icmp packets, most likely you need to run it with sudo: sudo !!")
 	}
 	defer icmpConn.Close()
 
-	udpConn, err := (&net.ListenConfig{}).ListenPacket(ctx, "udp4", "0.0.0.0:0")
-	if err != nil {
-		return errors.Wrap(err, "udp4 listen packet")
-	}
-	defer udpConn.Close()
+	r.icmpConn = icmpConn
 
-	v4udp := ipv4.NewPacketConn(udpConn)
-
-	conn := Conn{
-		v4udp:    v4udp,
-		udpConn:  udpConn,
-		icmpConn: icmpConn,
-		basePort: basePort,
-		dstIP:    dstIP,
-		timeout:  timeout,
-		ttl:      0,
-	}
-
-	for ttl := 1; ttl <= maxHops; ttl++ {
-		conn.ttl = ttl
-
-		result, err := conn.trace()
+	for ttl := 1; ttl <= r.maxHops; ttl++ {
+		result, err := r.trace(ctx, uint16(ttl))
 		if err != nil {
 			return errors.Wrap(err, "trace")
 		}
@@ -99,20 +75,8 @@ func (r *Service) traceRoute(ctx context.Context, dstIP net.IP) error {
 	return nil
 }
 
-type Conn struct {
-	v4udp    *ipv4.PacketConn
-	udpConn  net.PacketConn
-	icmpConn *icmp.PacketConn
-
-	basePort int
-	dstIP    net.IP
-	timeout  time.Duration
-
-	ttl int
-}
-
 type traceResult struct {
-	ttl     int
+	ttl     uint16
 	peer    net.Addr
 	rtt     time.Duration
 	icmpErr string
@@ -126,33 +90,46 @@ type Result[T any] struct {
 	Err error
 }
 
-func (r *Conn) trace() (traceResult, error) {
-	if err := r.v4udp.SetTTL(r.ttl); err != nil {
+func (r *Service) trace(ctx context.Context, ttl uint16) (traceResult, error) {
+	udpConn, err := (&net.ListenConfig{}).ListenPacket(ctx, "udp4", "0.0.0.0:0")
+	if err != nil {
+		return traceResult{}, errors.Wrap(err, "udp4 listen packet")
+	}
+	defer udpConn.Close()
+
+	v4udp := ipv4.NewPacketConn(udpConn)
+	defer v4udp.Close()
+
+	if err = v4udp.SetTTL(int(ttl)); err != nil {
 		return traceResult{}, errors.Wrap(err, "udp set ttl")
 	}
 
-	dst := &net.UDPAddr{IP: r.dstIP, Port: r.basePort + r.ttl}
+	port := r.basePort + ttl
+	dst := &net.UDPAddr{IP: r.dstIP, Port: int(port)}
 
 	start := time.Now()
 
-	_, err := r.udpConn.WriteTo([]byte{0x42}, dst)
+	_, err = udpConn.WriteTo([]byte{0x42}, dst)
 	if err != nil {
 		return traceResult{}, errors.Wrap(err, "udp conn write")
 	}
 
 	buf := make([]byte, 1500)
 
-	_ = r.icmpConn.SetReadDeadline(time.Now().Add(r.timeout))
+	err = r.icmpConn.SetReadDeadline(time.Now().Add(r.timeout))
+	if err != nil {
+		return traceResult{}, errors.Wrap(err, "icmp set read deadline")
+	}
 
 	n, peer, err := r.icmpConn.ReadFrom(buf)
 	result := traceResult{
-		ttl:  r.ttl,
+		ttl:  ttl,
 		peer: peer,
 		rtt:  time.Since(start),
 	}
 
 	if err != nil {
-		return result, nil //nolint: nilerr // as expected
+		return result, nil
 	}
 
 	msg, err := icmp.ParseMessage(ipv4.ICMPTypeEcho.Protocol(), buf[:n])
@@ -182,6 +159,37 @@ func (r *Conn) trace() (traceResult, error) {
 
 		return result, nil
 	}
+}
+
+func getUDPPort(msg *icmp.Message) (uint16, error) {
+	var data []byte
+
+	switch b := msg.Body.(type) {
+	case *icmp.TimeExceeded:
+		data = b.Data
+	case *icmp.DstUnreach:
+		data = b.Data
+	default:
+		return 0, errors.New("unexpected message type")
+	}
+
+	iphdr, err := ipv4.ParseHeader(data)
+	if err != nil {
+		return 0, errors.Wrap(err, "parse header")
+	}
+
+	if iphdr.Protocol != 17 {
+		return 0, errors.Newf("wrong protocol %d", iphdr.Protocol)
+	}
+
+	off := iphdr.Len
+	if len(data) < off+8 {
+		return 0, errors.Newf("data too short")
+	}
+
+	dstPort := int(data[off+2])<<8 | int(data[off+3])
+
+	return uint16(dstPort), nil
 }
 
 func (r *Service) populateTraceResult(ctx context.Context, result *traceResult) {

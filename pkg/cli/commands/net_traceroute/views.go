@@ -55,7 +55,7 @@ func (r *model) updateTable() {
 	defer r.traceTableData.Locker().Unlock()
 
 	for _, hop := range r.service.hops {
-		ttlString := strconv.Itoa(hop.ttl)
+		ttlString := strconv.Itoa(int(hop.ttl))
 		if r.traceTableData.RowExists(ttlString) {
 			continue
 		}

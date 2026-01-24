@@ -18,6 +18,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v3"
+	"golang.org/x/net/icmp"
 )
 
 type Service struct {
@@ -32,6 +33,10 @@ type Service struct {
 	timeout  time.Duration
 	basePort uint16
 	dstIP    net.IP
+
+	icmpConn   *icmp.PacketConn
+	requestsMu sync.RWMutex
+	requests   map[uint16]time.Duration
 }
 
 func Run(ctx context.Context, command *cli.Command) error {
@@ -99,7 +104,7 @@ func New(dstIP net.IP) *Service {
 		hops:         make([]traceResult, 0, 100),
 		httpSupplier: http_supplier.New(),
 		model:        &m,
-		maxHops:      128,
+		maxHops:      64,
 		timeout:      1 * time.Second,
 		basePort:     33434,
 		dstIP:        dstIP,
