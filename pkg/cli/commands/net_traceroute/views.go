@@ -57,13 +57,14 @@ func (r *model) updateTable() {
 			continue
 		}
 
-		r.traceTableData.Set(colTTL, ttlString, ttlString)
-
 		if hop.peer == nil {
+			r.traceTableData.Set(colTTL, ttlString, ttlString)
 			r.traceTableData.Set(colIP, ttlString, "* * *")
+
 			continue
 		}
 
+		r.traceTableData.Set(colTTL, ttlString, ttlString)
 		r.traceTableData.Set(colIP, ttlString, hop.peer.String())
 		r.traceTableData.Set(colRTT, ttlString, time_utils.RoundDuration(hop.rtt))
 
