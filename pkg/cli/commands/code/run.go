@@ -84,8 +84,8 @@ func drawTable(report *Report) *table.Table {
 		},
 	}
 
-	pingCols := []string{colDescription, colTitle, colCount}
-	tableData := gloss_utils.NewMappingData(pingCols...)
+	tableCols := []string{colDescription, colTitle, colCount}
+	tableData := gloss_utils.NewMappingData(tableCols...)
 
 	for _, row := range rows {
 		percent := 100 * float64(row.Count) / float64(report.TotalErrors)
@@ -101,7 +101,7 @@ func drawTable(report *Report) *table.Table {
 
 	t := table.New().
 		Wrap(true).
-		Headers(pingCols...).
+		Headers(tableCols...).
 		Border(lipgloss.RoundedBorder()).
 		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("69"))).
 		Data(tableData)
