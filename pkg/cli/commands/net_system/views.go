@@ -53,6 +53,9 @@ func (r *model) helpView() string {
 }
 
 func (r *model) View() string {
+	r.pingsTableData.RLocker().Lock()
+	defer r.pingsTableData.RLocker().Unlock()
+
 	return lipgloss.JoinHorizontal(
 		lipgloss.Left,
 		lipgloss.JoinVertical(

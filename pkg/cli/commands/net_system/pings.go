@@ -30,13 +30,11 @@ func (r *Service) pingsView(ctx context.Context) {
 	var pingsWg sync.WaitGroup
 
 	for _, address := range addressesToPing {
+		r.model.pingsTableData.Locker().Lock()
 		r.model.pingsTableData.Set(pingColAddress, address, color.New(color.FgCyan, color.Faint).Sprint(address))
+		r.model.pingsTableData.Locker().Unlock()
 
-		pingsWg.Add(1)
-
-		go func() {
-			defer pingsWg.Done()
-
+		pingsWg.Go(func() {
 			var (
 				totalDur = time.Duration(int64(0))
 				failed   uint64
@@ -58,7 +56,10 @@ func (r *Service) pingsView(ctx context.Context) {
 					conn, err := dialer.DialContext(ctx, "tcp", address)
 					if err != nil {
 						failed++
+
+						r.model.pingsTableData.Locker().Lock()
 						r.model.pingsTableData.Set(pingColSucFail, address, fmt.Sprintf("%d/%d", success, failed))
+						r.model.pingsTableData.Locker().Unlock()
 
 						continue
 					}
@@ -68,8 +69,10 @@ func (r *Service) pingsView(ctx context.Context) {
 					success++
 					avg = time.Duration(uint64(totalDur) / success)
 
+					r.model.pingsTableData.Locker().Lock()
 					r.model.pingsTableData.Set(pingColDur, address, avg)
 					r.model.pingsTableData.Set(pingColSucFail, address, fmt.Sprintf("%d/%d", success, failed))
+					r.model.pingsTableData.Locker().Unlock()
 
 					err = conn.Close()
 					if err != nil {
@@ -77,7 +80,7 @@ func (r *Service) pingsView(ctx context.Context) {
 					}
 				}
 			}
-		}()
+		})
 	}
 
 	pingsWg.Wait()

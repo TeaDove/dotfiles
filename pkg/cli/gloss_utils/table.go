@@ -36,10 +36,15 @@ func NewMappingData(columns ...string) *MappingData {
 	return r
 }
 
-func (r *MappingData) addRow(row string) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (r *MappingData) Locker() sync.Locker {
+	return &r.mu
+}
 
+func (r *MappingData) RLocker() sync.Locker {
+	return r.mu.RLocker()
+}
+
+func (r *MappingData) addRow(row string) {
 	r.rows = append(r.rows, row)
 	for idx := range r.strings {
 		r.strings[idx] = append(r.strings[idx], nil)
@@ -47,9 +52,6 @@ func (r *MappingData) addRow(row string) {
 }
 
 func (r *MappingData) Set(col, row string, value any) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	colIdx := slices.Index(r.columns, col)
 	if colIdx == -1 {
 		panic("column not found: " + col)
@@ -57,9 +59,6 @@ func (r *MappingData) Set(col, row string, value any) {
 
 	rowIdx := slices.Index(r.rows, row)
 	if rowIdx == -1 {
-		r.mu.Unlock()
-		defer r.mu.Lock()
-
 		r.addRow(row)
 		r.Set(col, row, value)
 
@@ -82,9 +81,6 @@ func (r *MappingData) SetMappingColumn(col string, v M) {
 }
 
 func (r *MappingData) At(row, col int) string {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
 	if col >= len(r.strings) || row >= len(r.strings[col]) {
 		return ""
 	}
@@ -98,22 +94,14 @@ func (r *MappingData) At(row, col int) string {
 }
 
 func (r *MappingData) Rows() int {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
 	return len(r.rows)
 }
 
 func (r *MappingData) Columns() int {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
 	return len(r.columns)
 }
 
 func (r *MappingData) Clear(rows ...string) {
-	r.mu.RLock()
-
 	notFoundRows := make([]string, 0)
 
 	for _, row := range r.rows {
@@ -122,24 +110,16 @@ func (r *MappingData) Clear(rows ...string) {
 		}
 	}
 
-	r.mu.RUnlock()
-
 	for _, row := range notFoundRows {
 		r.DeleteRow(row)
 	}
 }
 
 func (r *MappingData) IsEmpty() bool {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
 	return len(r.rows) == 0
 }
 
 func (r *MappingData) DeleteRow(row string) bool {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	idx := slices.Index(r.rows, row)
 	if idx == -1 {
 		return false
@@ -154,8 +134,5 @@ func (r *MappingData) DeleteRow(row string) bool {
 }
 
 func (r *MappingData) RowExists(row string) bool {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
 	return slices.Contains(r.rows, row)
 }
