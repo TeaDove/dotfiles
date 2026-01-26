@@ -34,9 +34,7 @@ type Service struct {
 	basePort uint16
 	dstIP    net.IP
 
-	icmpConn   *icmp.PacketConn
-	requestsMu sync.RWMutex
-	requests   map[uint16]time.Duration
+	icmpConn *icmp.PacketConn
 }
 
 func Run(ctx context.Context, command *cli.Command) error {
@@ -104,7 +102,7 @@ func New(dstIP net.IP) *Service {
 		hops:         make([]traceResult, 0, 100),
 		httpSupplier: http_supplier.New(),
 		model:        &m,
-		maxHops:      64,
+		maxHops:      40,
 		timeout:      1 * time.Second,
 		basePort:     33434,
 		dstIP:        dstIP,

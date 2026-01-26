@@ -3,7 +3,6 @@ package net_traceroute
 import (
 	"context"
 	"dotfiles/pkg/http_supplier"
-	"fmt"
 	"net"
 	"slices"
 	"strings"
@@ -45,11 +44,12 @@ func (r *Service) traceRoute(ctx context.Context, dstIP net.IP) error {
 	r.icmpConn = icmpConn
 
 	for ttl := 1; ttl <= r.maxHops; ttl++ {
-		result, err := r.trace(ctx, uint16(ttl))
+		start, err := r.sendTrace(ctx, uint16(ttl))
 		if err != nil {
-			return errors.Wrap(err, "trace")
+			return errors.Wrap(err, "send trace")
 		}
 
+		result := r.catchTrace(start, uint16(ttl))
 		r.populateTraceResult(ctx, &result)
 		r.hopsMu.Lock()
 		r.hops = append(r.hops, result)
@@ -76,10 +76,10 @@ func (r *Service) traceRoute(ctx context.Context, dstIP net.IP) error {
 }
 
 type traceResult struct {
-	ttl     uint16
-	peer    net.Addr
-	rtt     time.Duration
-	icmpErr string
+	ttl  uint16
+	peer net.Addr
+	rtt  time.Duration
+	err  error
 
 	domains  Result[string]
 	location Result[http_supplier.DomainLocationResp]
@@ -90,10 +90,10 @@ type Result[T any] struct {
 	Err error
 }
 
-func (r *Service) trace(ctx context.Context, ttl uint16) (traceResult, error) {
+func (r *Service) sendTrace(ctx context.Context, ttl uint16) (time.Time, error) {
 	udpConn, err := (&net.ListenConfig{}).ListenPacket(ctx, "udp4", "0.0.0.0:0")
 	if err != nil {
-		return traceResult{}, errors.Wrap(err, "udp4 listen packet")
+		return time.Time{}, errors.Wrap(err, "udp4 listen packet")
 	}
 	defer udpConn.Close()
 
@@ -101,7 +101,7 @@ func (r *Service) trace(ctx context.Context, ttl uint16) (traceResult, error) {
 	defer v4udp.Close()
 
 	if err = v4udp.SetTTL(int(ttl)); err != nil {
-		return traceResult{}, errors.Wrap(err, "udp set ttl")
+		return time.Time{}, errors.Wrap(err, "udp set ttl")
 	}
 
 	port := r.basePort + ttl
@@ -111,86 +111,121 @@ func (r *Service) trace(ctx context.Context, ttl uint16) (traceResult, error) {
 
 	_, err = udpConn.WriteTo([]byte{0x42}, dst)
 	if err != nil {
-		return traceResult{}, errors.Wrap(err, "udp conn write")
+		return time.Time{}, errors.Wrap(err, "udp conn write")
 	}
 
+	return start, nil
+}
+
+func (r *Service) catchTrace(start time.Time, ttl uint16) traceResult {
+	result := traceResult{ttl: ttl}
 	buf := make([]byte, 1500)
 
-	err = r.icmpConn.SetReadDeadline(time.Now().Add(r.timeout))
+	err := r.icmpConn.SetReadDeadline(time.Now().Add(r.timeout))
 	if err != nil {
-		return traceResult{}, errors.Wrap(err, "icmp set read deadline")
+		result.err = errors.Wrap(err, "icmp set read deadline")
+		return result
 	}
 
 	n, peer, err := r.icmpConn.ReadFrom(buf)
-	result := traceResult{
-		ttl:  ttl,
-		peer: peer,
-		rtt:  time.Since(start),
-	}
+	result.rtt = time.Since(start)
 
 	if err != nil {
-		return result, nil
+		result.err = errors.Wrap(err, "icmp read")
+		return result
 	}
+
+	result.peer = peer
 
 	msg, err := icmp.ParseMessage(ipv4.ICMPTypeEcho.Protocol(), buf[:n])
 	if err != nil {
-		result.icmpErr = fmt.Sprintf("parse error: %s", err.Error())
-		return result, nil
+		result.err = errors.Wrap(err, "parse error")
+		return result
 	}
 
 	switch msg.Type {
 	case ipv4.ICMPTypeTimeExceeded:
 		// Expected hop
-		return result, nil
+		return result
 	case ipv4.ICMPTypeDestinationUnreachable:
 		if msg.Code == 3 && peer.String() == r.dstIP.String() {
 			// reached
-			return result, nil
+			return result
 		}
 
 		result.peer = nil
-		result.icmpErr = fmt.Sprintf("msg.Code=%d", msg.Code)
+		result.err = errors.Newf("msg.Code=%d", msg.Code)
 
-		return result, nil
+		return result
 
 	default:
 		result.peer = nil
-		result.icmpErr = fmt.Sprintf("msg.Type=%v", msg.Type)
+		result.err = errors.Newf("msg.Type=%v", msg.Type)
 
-		return result, nil
+		return result
 	}
 }
 
-func getUDPPort(msg *icmp.Message) (uint16, error) {
-	var data []byte
-
-	switch b := msg.Body.(type) {
-	case *icmp.TimeExceeded:
-		data = b.Data
-	case *icmp.DstUnreach:
-		data = b.Data
-	default:
-		return 0, errors.New("unexpected message type")
-	}
-
-	iphdr, err := ipv4.ParseHeader(data)
-	if err != nil {
-		return 0, errors.Wrap(err, "parse header")
-	}
-
-	if iphdr.Protocol != 17 {
-		return 0, errors.Newf("wrong protocol %d", iphdr.Protocol)
-	}
-
-	off := iphdr.Len
-	if len(data) < off+8 {
-		return 0, errors.Newf("data too short")
-	}
-
-	dstPort := int(data[off+2])<<8 | int(data[off+3])
-
-	return uint16(dstPort), nil
-}
+// func (r *Service) trace(ctx context.Context, ttl uint16) (traceResult, error) {
+//	start, err := r.sendTrace(ctx, ttl)
+//	if err != nil {
+//		return traceResult{}, errors.Wrap(err, "send trace")
+//	}
+//
+//	buf := make([]byte, 1500)
+//
+//	err = r.icmpConn.SetReadDeadline(time.Now().Add(r.timeout))
+//	if err != nil {
+//		return traceResult{}, errors.Wrap(err, "icmp set read deadline")
+//	}
+//
+//	n, peer, err := r.icmpConn.ReadFrom(buf)
+//	result := traceResult{
+//		ttl:  ttl,
+//		peer: peer,
+//		rtt:  time.Since(start),
+//	}
+//
+//	if err != nil {
+//		return result, nil
+//	}
+//
+//	msg, err := icmp.ParseMessage(ipv4.ICMPTypeEcho.Protocol(), buf[:n])
+//	if err != nil {
+//		result.icmpErr = fmt.Sprintf("parse error: %s", err.Error())
+//		return result, nil
+//	}
+//
+//	udpPort, err := getUDPPort(msg)
+//	if err != nil {
+//		result.icmpErr = fmt.Sprintf("get UDP error: %s", err.Error())
+//		return result, nil
+//	}
+//
+//	result.ttl = udpPort - r.basePort
+//
+//	switch msg.Type {
+//	case ipv4.ICMPTypeTimeExceeded:
+//		// Expected hop
+//		return result, nil
+//	case ipv4.ICMPTypeDestinationUnreachable:
+//		if msg.Code == 3 && peer.String() == r.dstIP.String() {
+//			// reached
+//			return result, nil
+//		}
+//
+//		result.peer = nil
+//		result.icmpErr = fmt.Sprintf("msg.Code=%d", msg.Code)
+//
+//		return result, nil
+//
+//	default:
+//		result.peer = nil
+//		result.icmpErr = fmt.Sprintf("msg.Type=%v", msg.Type)
+//
+//		return result, nil
+//	}
+//}
 
 func (r *Service) populateTraceResult(ctx context.Context, result *traceResult) {
 	if result.peer == nil {
