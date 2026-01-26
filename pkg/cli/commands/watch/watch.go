@@ -16,6 +16,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/cockroachdb/errors"
 	"github.com/fatih/color"
+	"github.com/teadove/teasutils/utils/time_utils"
 	"github.com/urfave/cli/v3"
 )
 
@@ -106,10 +107,12 @@ func (r *Watch) executeAndShow(ctx context.Context, idx int, command string, int
 		totalDur += dur
 		avgDur = totalDur / time.Duration(iters)
 
+		r.model.commandsMu.Lock()
 		r.model.commands[idx] = commandExecution{
-			cmd: fmt.Sprintf("%s (%d), (%s)", color.MagentaString(command), iters, avgDur.String()),
+			cmd: fmt.Sprintf("%s (%d), (%s)", color.MagentaString(command), iters, time_utils.RoundDuration(avgDur)),
 			out: strings.TrimSpace(out),
 		}
+		r.model.commandsMu.Unlock()
 
 		time.Sleep(interval - dur)
 	}

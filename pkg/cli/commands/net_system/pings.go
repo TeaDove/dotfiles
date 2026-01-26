@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/teadove/teasutils/utils/time_utils"
 )
 
 const (
@@ -21,6 +22,7 @@ var (
 		"google.com:80",
 		"ya.ru:80",
 		"mts.ru:80",
+		"gov.ge:80",
 		"vultr.com:80",
 	}
 	pingCols = []string{pingColAddress, pingColDur, pingColSucFail} //nolint:gochecknoglobals // is ok
@@ -70,7 +72,7 @@ func (r *Service) pingsView(ctx context.Context) {
 					avg = time.Duration(uint64(totalDur) / success)
 
 					r.model.pingsTableData.Locker().Lock()
-					r.model.pingsTableData.Set(pingColDur, address, avg)
+					r.model.pingsTableData.Set(pingColDur, address, time_utils.RoundDuration(avg))
 					r.model.pingsTableData.Set(pingColSucFail, address, fmt.Sprintf("%d/%d", success, failed))
 					r.model.pingsTableData.Locker().Unlock()
 

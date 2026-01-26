@@ -3,6 +3,7 @@ package watch
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -17,7 +18,8 @@ type keymap struct {
 }
 
 type model struct {
-	commands []commandExecution
+	commandsMu sync.RWMutex
+	commands   []commandExecution
 
 	grepInput textinput.Model
 	spinner   spinner.Model
@@ -41,6 +43,9 @@ func (r *model) greppedCommands() []string {
 	grepValue := strings.ToLower(r.grepInput.Value())
 
 	var newCommands []string
+
+	r.commandsMu.Lock()
+	defer r.commandsMu.Unlock()
 
 	for _, command := range r.commands {
 		var out strings.Builder

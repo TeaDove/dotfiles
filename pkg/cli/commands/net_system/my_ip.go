@@ -56,5 +56,5 @@ func (r *Service) shortLocationOrErr(ctx context.Context, ipOrDomain string) str
 		return prettyErr(errors.Wrap(err, "get location"))
 	}
 
-	return fmt.Sprintf("%s, %s, %s", location.Country, location.City, color.BlueString(location.Org))
+	return fmt.Sprintf("%s, %s, %s", location.Country, location.RegionName, color.BlueString(location.Org))
 }
