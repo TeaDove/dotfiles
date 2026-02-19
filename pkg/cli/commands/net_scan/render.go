@@ -72,14 +72,14 @@ func (r *model) renderIP(ip *IPStats) []any {
 		}
 
 		var item strings.Builder
-		item.WriteString(fmt.Sprintf(":%d", port.Number))
+		fmt.Fprintf(&item, ":%d", port.Number)
 
 		if port.Message != "" {
-			item.WriteString(fmt.Sprintf(" %s", color.CyanString(port.Message)))
+			fmt.Fprintf(&item, " %s", color.CyanString(port.Message))
 		}
 
 		if len(descriptions) != 0 {
-			item.WriteString(fmt.Sprintf(" [%s]", color.WhiteString(strings.Join(descriptions, "; "))))
+			fmt.Fprintf(&item, " [%s]", color.WhiteString(strings.Join(descriptions, "; ")))
 		}
 
 		portsList.Item(item.String())

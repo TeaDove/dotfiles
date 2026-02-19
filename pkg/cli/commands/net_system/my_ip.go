@@ -17,9 +17,9 @@ func (r *Service) myIPView(ctx context.Context) string {
 	}
 
 	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("%s: %s", color.GreenString("My IP"), color.YellowString(myIP.String())))
+	fmt.Fprintf(&builder, "%s: %s", color.GreenString("My IP"), color.YellowString(myIP.String()))
 
-	builder.WriteString(fmt.Sprintf(" (%s)\n", r.shortLocationOrErr(ctx, myIP.String())))
+	fmt.Fprintf(&builder, " (%s)\n", r.shortLocationOrErr(ctx, myIP.String()))
 
 	builder.WriteString(color.GreenString("DNS Servers: "))
 

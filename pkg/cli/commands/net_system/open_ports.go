@@ -67,9 +67,12 @@ func (r *Service) openPortsView(ctx context.Context) string {
 
 	slices.Sort(services)
 
+	var vSb70 strings.Builder
 	for _, service := range services {
-		v += service
+		vSb70.WriteString(service)
 	}
+
+	v += vSb70.String()
 
 	return v
 }

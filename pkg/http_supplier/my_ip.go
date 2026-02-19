@@ -15,11 +15,15 @@ func (r *Supplier) MyIP(ctx context.Context) (net.IP, error) {
 		return nil, errors.Wrap(err, "failed to build request to get ip")
 	}
 
-	resp, err := r.client.Do(req)
+	resp, err := r.client.Do(req) //nolint: gosec // no taint
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch ip")
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		return nil, errors.Newf("bad status code: %d", resp.StatusCode)
+	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

@@ -42,18 +42,21 @@ func (r *Service) interfacesView(ctx context.Context) string {
 
 	v := color.GreenString("Interfaces with addresses:")
 
+	var vSb45 strings.Builder
+
 	for _, i := range interfacesWithAddresses {
 		addresses := make([]string, 0, len(i.Addrs))
 		for _, a := range i.Addrs {
 			addresses = append(addresses, a.Addr)
 		}
 
-		v += fmt.Sprintf("\n%s (%s) -> %s",
+		fmt.Fprintf(&vSb45, "\n%s (%s) -> %s",
 			color.New(color.FgCyan, color.Faint).Sprint(i.Name),
 			i.HardwareAddr,
-			strings.Join(addresses, ", "),
-		)
+			strings.Join(addresses, ", "))
 	}
+
+	v += vSb45.String()
 
 	return v
 }

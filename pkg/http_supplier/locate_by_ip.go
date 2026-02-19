@@ -33,7 +33,7 @@ func (r *Supplier) LocateByIP(ctx context.Context, ip string) (DomainLocationRes
 		return DomainLocationResp{}, errors.Wrap(err, "new request")
 	}
 
-	resp, err := r.client.Do(req)
+	resp, err := r.client.Do(req) //nolint: gosec // no taint
 	if err != nil {
 		return DomainLocationResp{}, errors.Wrap(err, "get resp")
 	}
