@@ -2,6 +2,7 @@ package watch
 
 import (
 	"context"
+	"dotfiles/pkg/cli/utils"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -63,7 +64,16 @@ func (r *Watch) Run(ctx context.Context, cmd *cli.Command) error {
 
 	commands := cmd.Args().Slice()
 	if len(commands) == 0 {
-		return errors.New("at least one command is required")
+		command, err := utils.ReadFromPipeOrSTDIN()
+		if err != nil {
+			return errors.Wrap(err, "at least one command is required from pipe, stdin or args")
+		}
+
+		if command == "" {
+			return errors.New("empty command specified")
+		}
+
+		commands = []string{command}
 	}
 
 	r.model.commands = make([]commandExecution, len(commands))
