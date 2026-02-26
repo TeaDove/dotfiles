@@ -102,6 +102,11 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 				Action: CommandSha,
 			},
 			{
+				Name:   "md5",
+				Usage:  "hashes string as md5 and returns it as UUID",
+				Action: CommandMD5UUID,
+			},
+			{
 				Name:   "watch",
 				Usage:  "like unix watch, but better",
 				Action: watch.Run,
