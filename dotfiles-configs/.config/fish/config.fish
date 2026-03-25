@@ -25,7 +25,7 @@ alias cloc-git='cloc (git ls-tree -r master --name-only)'
 
 alias kubectl="kubecolor"
 alias kwatch='u watch -i=1s "kubecolor --force-colors config view --minify -o jsonpath={..namespace}" "kubecolor --force-colors get deployments -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas" "kubecolor --force-colors get statefulset -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas" "kubecolor --force-colors get pods"'
-alias ass="mkdir ~/.local/agent-sandbox && cd ~/.local/agent-sandbox && agent"
+alias ass="mkdir -p ~/.local/agent-sandbox && cd ~/.local/agent-sandbox && agent"
 
 function p
     ps aux | head -n 1 && ps aux | grep -v grep --color=auto | grep $argv
