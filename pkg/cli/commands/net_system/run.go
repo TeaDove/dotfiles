@@ -94,6 +94,5 @@ func prettyWarn(err error) string {
 }
 
 func runAndSet(ctx context.Context, ptr *atomic.Pointer[string], fn func(ctx context.Context) string) {
-	v := fn(ctx)
-	ptr.Store(&v)
+	ptr.Store(new(fn(ctx)))
 }

@@ -8,7 +8,7 @@ GOARCH ?= $(shell $(GO) version | cut -d' ' -f4 | cut -d'/' -f2)
 
 
 test:
-	gotestsum --format-hide-empty-pkg -- ./... --race
+	go tool gotestsum --format-hide-empty-pkg -- ./... --race
 
 crosscompile:
 	rm -rf build
