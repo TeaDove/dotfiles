@@ -13,11 +13,11 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var dotfilesDirs = []string{
+var dotfilesDirs = [3]string{
 	"./dotfiles-configs",
 	"~/dotfiles/dotfiles-configs",
 	"~/.dotfiles/dotfiles-configs",
-} //nolint:gochecknoglobals // is ok
+}
 
 func CommandInstall(_ context.Context, _ *cli.Command) error {
 	var dofilesPath string
@@ -26,6 +26,7 @@ func CommandInstall(_ context.Context, _ *cli.Command) error {
 		_, err := os.Stat(dir)
 		if !errors.Is(err, fs.ErrNotExist) {
 			dofilesPath = dir
+
 			break
 		}
 	}

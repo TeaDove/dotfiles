@@ -14,14 +14,14 @@ func iterateOverNet(ipnet *net.IPNet) iter.Seq[net.IP] {
 
 	return func(yield func(net.IP) bool) {
 		maskOnes, _ := ipnet.Mask.Size()
-		curIp := ipv4touint32(ipnet.IP)
+		curIP := ipv4touint32(ipnet.IP)
 
 		for range 1 << (32 - maskOnes) {
-			if !yield(uint32toipv4(curIp)) {
+			if !yield(uint32toipv4(curIP)) {
 				return
 			}
 
-			curIp++
+			curIP++
 		}
 	}
 }

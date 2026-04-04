@@ -20,14 +20,6 @@ type model struct {
 	keymap  keymap
 }
 
-func (r *model) helpView() string {
-	return fmt.Sprintf(
-		"\n %s %s",
-		r.spinner.View(),
-		r.help.ShortHelpView([]key.Binding{r.keymap.quit}),
-	)
-}
-
 func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
@@ -46,4 +38,12 @@ func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
 
 func (r *model) Init() tea.Cmd {
 	return r.spinner.Tick
+}
+
+func (r *model) helpView() string {
+	return fmt.Sprintf(
+		"\n %s %s",
+		r.spinner.View(),
+		r.help.ShortHelpView([]key.Binding{r.keymap.quit}),
+	)
 }

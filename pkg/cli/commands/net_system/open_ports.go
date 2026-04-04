@@ -44,15 +44,20 @@ func (r *Service) openPortsView(ctx context.Context) string {
 	for pid, ports := range pidToPorts {
 		if pid == 0 {
 			services = append(services, fmt.Sprintf("\nunknown: %s", strings.Join(ports, ",")))
+
 			continue
 		}
 
-		connProcess, err := process.NewProcess(pid)
+		var connProcess *process.Process
+
+		connProcess, err = process.NewProcess(pid)
 		if err != nil {
 			return prettyErr(errors.Wrap(err, "get process name"))
 		}
 
-		name, err := connProcess.NameWithContext(ctx)
+		var name string
+
+		name, err = connProcess.NameWithContext(ctx)
 		if err != nil {
 			return prettyErr(errors.Wrap(err, "get process name"))
 		}

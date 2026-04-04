@@ -44,13 +44,6 @@ func (r *MappingData) RLocker() sync.Locker {
 	return r.mu.RLocker()
 }
 
-func (r *MappingData) addRow(row string) {
-	r.rows = append(r.rows, row)
-	for idx := range r.strings {
-		r.strings[idx] = append(r.strings[idx], nil)
-	}
-}
-
 func (r *MappingData) Set(col, row string, value any) {
 	colIdx := slices.Index(r.columns, col)
 	if colIdx == -1 {
@@ -135,4 +128,11 @@ func (r *MappingData) DeleteRow(row string) bool {
 
 func (r *MappingData) RowExists(row string) bool {
 	return slices.Contains(r.rows, row)
+}
+
+func (r *MappingData) addRow(row string) {
+	r.rows = append(r.rows, row)
+	for idx := range r.strings {
+		r.strings[idx] = append(r.strings[idx], nil)
+	}
 }

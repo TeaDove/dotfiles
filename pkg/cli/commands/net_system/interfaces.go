@@ -23,7 +23,9 @@ func (r *Service) interfacesView(ctx context.Context) string {
 		hasIPV4Add := false
 
 		for _, addr := range i.Addrs {
-			ip, _, err := net2.ParseCIDR(addr.Addr)
+			var ip net2.IP
+
+			ip, _, err = net2.ParseCIDR(addr.Addr)
 			if err == nil && ip != nil && ip.To4() != nil {
 				hasIPV4Add = true
 			}

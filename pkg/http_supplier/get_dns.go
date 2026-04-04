@@ -10,6 +10,7 @@ import (
 
 func GetDNSServers() []netip.AddrPort {
 	const filename = "/etc/resolv.conf"
+
 	return getLocalNameservers(filename)
 }
 
@@ -28,8 +29,8 @@ func getLocalNameservers(filename string) []netip.AddrPort {
 
 	var nameservers []netip.AddrPort
 
-	lines := strings.Split(string(data), "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(string(data), "\n")
+	for line := range lines {
 		if line == "" {
 			continue
 		}
@@ -40,13 +41,14 @@ func getLocalNameservers(filename string) []netip.AddrPort {
 		}
 
 		for _, field := range fields[1:] {
-			ip, err := netip.ParseAddr(field)
+			var ip netip.Addr
+
+			ip, err = netip.ParseAddr(field)
 			if err != nil {
 				continue
 			}
 
-			nameservers = append(nameservers,
-				netip.AddrPortFrom(ip, defaultNameserverPort))
+			nameservers = append(nameservers, netip.AddrPortFrom(ip, defaultNameserverPort))
 		}
 	}
 

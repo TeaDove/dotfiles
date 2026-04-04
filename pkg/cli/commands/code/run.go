@@ -142,7 +142,7 @@ func analyzeFile(fset *token.FileSet, filename string) (Report, error) {
 
 		report.TotalErrors++
 
-		switch classify(ifStmt) {
+		switch classify(ifStmt) { //nolint: exhaustive // dont care
 		case errPropagate:
 			color.Green("Propagate err:\n")
 
@@ -205,7 +205,9 @@ func analyzeFiles(path string) (Report, error) {
 		}
 
 		if filepath.Ext(p) == ".go" && !match.Match(p, "*test.go") {
-			fileReport, err := analyzeFile(fset, p)
+			var fileReport Report
+
+			fileReport, err = analyzeFile(fset, p)
 			if err != nil {
 				return errors.Wrap(err, "analyze file")
 			}

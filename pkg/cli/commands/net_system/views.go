@@ -44,14 +44,6 @@ type model struct {
 	pingsTableData *gloss_utils.MappingData
 }
 
-func (r *model) helpView() string {
-	return fmt.Sprintf(
-		"\n %s %s",
-		r.spinner.View(),
-		r.help.ShortHelpView([]key.Binding{r.keymap.quit}),
-	)
-}
-
 func (r *model) View() string {
 	r.pingsTableData.RLocker().Lock()
 	defer r.pingsTableData.RLocker().Unlock()
@@ -89,4 +81,12 @@ func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
 
 func (r *model) Init() tea.Cmd {
 	return r.spinner.Tick
+}
+
+func (r *model) helpView() string {
+	return fmt.Sprintf(
+		"\n %s %s",
+		r.spinner.View(),
+		r.help.ShortHelpView([]key.Binding{r.keymap.quit}),
+	)
 }

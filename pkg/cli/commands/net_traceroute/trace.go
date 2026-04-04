@@ -37,14 +37,16 @@ func parseAddr(ctx context.Context, target string) (net.IP, error) {
 func (r *Service) traceRoute(ctx context.Context, dstIP net.IP) error {
 	icmpConn, err := icmp.ListenPacket("ip4:icmp", "0.0.0.0")
 	if err != nil {
-		return errors.Wrap(err, "listen for icmp packets, most likely you need to run it with sudo: sudo !!")
+		return errors.Wrap(err, "listen for icmp packets, most likely you need to run it with sudo")
 	}
 	defer icmpConn.Close()
 
 	r.icmpConn = icmpConn
 
 	for ttl := 1; ttl <= r.maxHops; ttl++ {
-		start, err := r.sendTrace(ctx, uint16(ttl))
+		var start time.Time
+
+		start, err = r.sendTrace(ctx, uint16(ttl))
 		if err != nil {
 			return errors.Wrap(err, "send trace")
 		}
@@ -100,7 +102,8 @@ func (r *Service) sendTrace(ctx context.Context, ttl uint16) (time.Time, error) 
 	v4udp := ipv4.NewPacketConn(udpConn)
 	defer v4udp.Close()
 
-	if err = v4udp.SetTTL(int(ttl)); err != nil {
+	err = v4udp.SetTTL(int(ttl))
+	if err != nil {
 		return time.Time{}, errors.Wrap(err, "udp set ttl")
 	}
 
@@ -124,6 +127,7 @@ func (r *Service) catchTrace(start time.Time, ttl uint16) traceResult {
 	err := r.icmpConn.SetReadDeadline(time.Now().Add(r.timeout))
 	if err != nil {
 		result.err = errors.Wrap(err, "icmp set read deadline")
+
 		return result
 	}
 
@@ -132,6 +136,7 @@ func (r *Service) catchTrace(start time.Time, ttl uint16) traceResult {
 
 	if err != nil {
 		result.err = errors.Wrap(err, "icmp read")
+
 		return result
 	}
 
@@ -140,6 +145,7 @@ func (r *Service) catchTrace(start time.Time, ttl uint16) traceResult {
 	msg, err := icmp.ParseMessage(ipv4.ICMPTypeEcho.Protocol(), buf[:n])
 	if err != nil {
 		result.err = errors.Wrap(err, "parse error")
+
 		return result
 	}
 

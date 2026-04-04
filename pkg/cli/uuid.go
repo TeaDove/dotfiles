@@ -29,6 +29,7 @@ func printStrings(command *cli.Command, fn func() string) {
 	count, err := strconv.Atoi(command.Args().First())
 	if err != nil || count <= 1 {
 		fmt.Print(fn())
+
 		return
 	}
 

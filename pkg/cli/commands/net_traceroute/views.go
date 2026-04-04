@@ -31,14 +31,6 @@ type model struct {
 	service        *Service
 }
 
-func (r *model) helpView() string {
-	return fmt.Sprintf(
-		"\n %s %s",
-		r.spinner.View(),
-		r.help.ShortHelpView([]key.Binding{r.keymap.quit}),
-	)
-}
-
 const (
 	colTTL      = "ttl"
 	colIP       = "ip"
@@ -49,6 +41,45 @@ const (
 )
 
 var tableCols = []string{colTTL, colIP, colRTT, colDomains, colLocation, colISP}
+
+func (r *model) View() string {
+	r.traceTableData.RLocker().Lock()
+	defer r.traceTableData.RLocker().Unlock()
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		r.target,
+		r.traceTable.String(),
+	) + r.helpView()
+}
+
+func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
+	switch msg := msgI.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q", "й":
+			return r, tea.Quit
+		}
+	default:
+		r.spinner, cmd = r.spinner.Update(msg)
+	}
+
+	return r, cmd
+}
+
+func (r *model) Init() tea.Cmd {
+	return r.spinner.Tick
+}
+
+func (r *model) helpView() string {
+	return fmt.Sprintf(
+		"\n %s %s",
+		r.spinner.View(),
+		r.help.ShortHelpView([]key.Binding{r.keymap.quit}),
+	)
+}
 
 func (r *model) updateTable() {
 	r.traceTableData.Locker().Lock()
@@ -92,35 +123,4 @@ func (r *model) updateTable() {
 			)
 		}
 	}
-}
-
-func (r *model) View() string {
-	r.traceTableData.RLocker().Lock()
-	defer r.traceTableData.RLocker().Unlock()
-
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		r.target,
-		r.traceTable.String(),
-	) + r.helpView()
-}
-
-func (r *model) Update(msgI tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-
-	switch msg := msgI.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q", "й":
-			return r, tea.Quit
-		}
-	default:
-		r.spinner, cmd = r.spinner.Update(msg)
-	}
-
-	return r, cmd
-}
-
-func (r *model) Init() tea.Cmd {
-	return r.spinner.Tick
 }
