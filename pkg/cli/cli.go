@@ -44,6 +44,17 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 				Action: CommandUUID,
 			},
 			{
+				Name:   "u7",
+				Usage:  "generates random uuid7",
+				Action: CommandUUID7,
+			},
+			{
+				Name:   "u7d",
+				Usage:  "parses uuid7",
+				Action: CommandUUID7Decode,
+				Flags:  []cli.Flag{verboseFlag},
+			},
+			{
 				Name:   "t",
 				Usage:  "generates save to use password",
 				Action: CommandText,
@@ -100,6 +111,7 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 				Name:   "sha",
 				Usage:  "hashes string as sha512",
 				Action: CommandSha,
+				Flags:  []cli.Flag{verboseFlag},
 			},
 			{
 				Name:   "md5",
