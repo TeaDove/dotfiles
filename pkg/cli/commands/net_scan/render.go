@@ -50,7 +50,7 @@ func (r *model) renderIPList() string {
 
 func (r *model) renderIP(ip *IPStats) []any {
 	items := make([]any, 0, 2)
-	items[0] = r.renderIPLine(ip)
+	items = append(items, r.renderIPLine(ip))
 
 	if len(ip.Ports) == 0 {
 		return items
