@@ -50,6 +50,7 @@ test -f /home/teadove/.ghcup/env; and set -gx PATH $HOME/.cabal/bin /home/teadov
 
 set PATH $HOME/.local/bin /usr/local/go/bin $HOME/go/bin $HOME/.cargo/bin $PATH $HOME/Library/Python/3.8/bin /opt/homebrew/bin $HOME/yandex-cloud/bin $HOME/ydb/bin $HOME/projects/flutter/bin $HOME/go/bin $HOME/go/bin/darwin_amd64 $HOME/.spoof-dpi/bin /opt/homebrew/opt/libpq/bin
 set HOMEBREW_NO_AUTO_UPDATE 1
+set -gx PATH $PATH $HOME/.krew/bin
 
 # Starship init
 starship init fish | source
