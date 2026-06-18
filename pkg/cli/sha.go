@@ -15,7 +15,7 @@ import (
 func CommandSha(_ context.Context, cmd *cli.Command) error {
 	text, err := utils.ReadFromPipeOrSTDIN()
 	if err != nil {
-		return errors.Wrap(err, "unable to read from stdin")
+		return errors.Wrap(err, "read from stdin")
 	}
 
 	hasher := sha512.New()

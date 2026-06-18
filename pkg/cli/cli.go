@@ -47,6 +47,13 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 				Name:   "u7",
 				Usage:  "generates random uuid7",
 				Action: CommandUUID7,
+				Flags:  []cli.Flag{verboseFlag},
+			},
+			{
+				Name:   "u7t",
+				Usage:  "generates random uuid7 from specific time",
+				Action: CommandUUID7Time,
+				Flags:  []cli.Flag{verboseFlag},
 			},
 			{
 				Name:   "u7d",

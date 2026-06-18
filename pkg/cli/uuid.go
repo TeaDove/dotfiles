@@ -24,15 +24,89 @@ func CommandUUID(_ context.Context, command *cli.Command) error {
 	return nil
 }
 
-func CommandUUID7(_ context.Context, command *cli.Command) error {
-	printStrings(command, func() string {
-		return uuid.Must(uuid.NewV7()).String()
+func CommandUUID7(_ context.Context, cmd *cli.Command) error {
+	printStrings(cmd, func() string {
+		u := uuid.Must(uuid.NewV7())
+
+		if !cmd.Bool(verboseFlag.Name) {
+			return u.String()
+		}
+
+		return verboseUUID(u)
 	})
 
 	return nil
 }
 
-func randomPartHexV7(u uuid.UUID) string {
+func CommandUUID7Time(_ context.Context, cmd *cli.Command) error {
+	const timeLayout = "2006-01-02T15:04:05"
+
+	uuidTime, err := time.Parse(timeLayout, cmd.Args().First())
+	if err != nil {
+		return errors.Wrapf(err, "parse, required format: %s, passed: %s", timeLayout, cmd.Args().First())
+	}
+
+	u := newV7FromTime(uuidTime)
+
+	if cmd.Bool(verboseFlag.Name) {
+		fmt.Print(verboseUUID(u))
+	} else {
+		fmt.Print(u.String())
+	}
+
+	return nil
+}
+
+func CommandUUID7Decode(_ context.Context, cmd *cli.Command) error {
+	text, err := utils.ReadFromPipeOrSTDIN()
+	if err != nil {
+		return errors.Wrap(err, "read from stdin or pipe")
+	}
+
+	if strings.TrimSpace(text) == "" {
+		return errors.New("empty input")
+	}
+
+	u, err := uuid.Parse(strings.TrimSpace(text))
+	if err != nil {
+		return errors.Wrap(err, "uuid parse")
+	}
+
+	if cmd.Bool(verboseFlag.Name) {
+		fmt.Print(verboseUUID(u))
+	} else {
+		t, r := time.Unix(u.Time().UnixTime()), extractRandomPartHexV7(u)
+		fmt.Printf("%s %s\n", t.String(), r)
+	}
+
+	return nil
+}
+
+func CommandText(_ context.Context, command *cli.Command) error {
+	printStrings(command, rand.Text)
+
+	return nil
+}
+
+func newV7FromTime(t time.Time) uuid.UUID {
+	u := uuid.New()
+
+	milli := t.UnixMilli()
+	seq := (t.UnixNano() - milli*1_000_000) >> 8
+
+	u[0] = byte(milli >> 40)
+	u[1] = byte(milli >> 32)
+	u[2] = byte(milli >> 24)
+	u[3] = byte(milli >> 16)
+	u[4] = byte(milli >> 8)
+	u[5] = byte(milli)
+	u[6] = 0x70 | byte(seq>>8)&0x0F
+	u[7] = byte(seq)
+
+	return u
+}
+
+func extractRandomPartHexV7(u uuid.UUID) string {
 	randA := (uint16(u[6]&0x0F) << 8) | uint16(u[7])
 	randB := uint64(u[8]&0x3F)<<56 |
 		uint64(u[9])<<48 |
@@ -48,39 +122,20 @@ func randomPartHexV7(u uuid.UUID) string {
 	return fmt.Sprintf("%019x", x)
 }
 
-func CommandUUID7Decode(_ context.Context, cmd *cli.Command) error {
-	text, err := utils.ReadFromPipeOrSTDIN()
-	if err != nil {
-		return errors.Wrap(err, "read from stdin or pipe")
-	}
+func verboseUUID(u uuid.UUID) string {
+	t, r := time.Unix(u.Time().UnixTime()), extractRandomPartHexV7(u)
 
-	u, err := uuid.Parse(strings.TrimSpace(text))
-	if err != nil {
-		return errors.Wrap(err, "uuid parse")
-	}
+	var out strings.Builder
+	fmt.Fprintf(&out, "input: %s\n", color.CyanString(u.String()))
+	fmt.Fprintf(&out, "time: %s\n", color.BlueString(t.String()))
+	fmt.Fprintf(&out, "time utc: %s\n", color.BlueString(t.UTC().String()))
+	fmt.Fprintf(&out, "random: %s\n", color.GreenString(r))
 
-	t, r := time.Unix(u.Time().UnixTime()), randomPartHexV7(u)
-
-	if cmd.Bool(verboseFlag.Name) {
-		fmt.Printf("input: %s\n", color.CyanString(u.String()))
-		fmt.Printf("time: %s\n", color.BlueString(t.String()))
-		fmt.Printf("time utc: %s\n", color.BlueString(t.UTC().String()))
-		fmt.Printf("random: %s\n", color.GreenString(r))
-	} else {
-		fmt.Printf("%s %s\n", t.String(), r)
-	}
-
-	return nil
+	return out.String()
 }
 
-func CommandText(_ context.Context, command *cli.Command) error {
-	printStrings(command, rand.Text)
-
-	return nil
-}
-
-func printStrings(command *cli.Command, fn func() string) {
-	count, err := strconv.Atoi(command.Args().First())
+func printStrings(cmd *cli.Command, fn func() string) {
+	count, err := strconv.Atoi(cmd.Args().First())
 	if err != nil || count <= 1 {
 		fmt.Print(fn())
 
@@ -92,5 +147,10 @@ func printStrings(command *cli.Command, fn func() string) {
 		v = append(v, fn())
 	}
 
-	fmt.Print(strings.Join(v, " ")) //nolint:forbidigo // is ok
+	sep := " "
+	if cmd.Bool(verboseFlag.Name) {
+		sep = "\n"
+	}
+
+	fmt.Print(strings.Join(v, sep)) //nolint:forbidigo // is ok
 }
