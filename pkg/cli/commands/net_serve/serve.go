@@ -20,8 +20,8 @@ func serve() error {
 			return errors.Wrap(err, "marshal resp")
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(bytes) //nolint: errcheck // no errors
-		w.WriteHeader(http.StatusOK)
 
 		return nil
 	}))
