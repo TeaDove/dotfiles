@@ -5,7 +5,7 @@ import (
 	"dotfiles/pkg/cli/commands/code"
 	"dotfiles/pkg/cli/commands/git"
 	"dotfiles/pkg/cli/commands/net_scan"
-	"dotfiles/pkg/cli/commands/net_sniff"
+	"dotfiles/pkg/cli/commands/net_serve"
 	"dotfiles/pkg/cli/commands/net_system"
 	"dotfiles/pkg/cli/commands/net_traceroute"
 	"dotfiles/pkg/cli/commands/watch"
@@ -103,9 +103,9 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 						Action: net_scan.Run,
 					},
 					{
-						Name:   "sniff",
-						Usage:  "sniff traffic!",
-						Action: net_sniff.Run,
+						Name:   "serve",
+						Usage:  "serve debug server on 0.0.0.0:8000",
+						Action: net_serve.Run,
 					},
 					{
 						Name:   "traceroute",
