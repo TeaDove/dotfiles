@@ -38,6 +38,11 @@ func CommandUUID7(_ context.Context, cmd *cli.Command) error {
 	return nil
 }
 
+var (
+	maxFlag = &cli.BoolFlag{Name: "max", Usage: "set uuid random to max bits"} //nolint:gochecknoglobals // is ok
+	minFlag = &cli.BoolFlag{Name: "min", Usage: "set uuid random to min bits"} //nolint:gochecknoglobals // is ok)
+)
+
 func CommandUUID7Time(_ context.Context, cmd *cli.Command) error {
 	const timeLayout = "2006-01-02T15:04:05"
 
@@ -46,7 +51,16 @@ func CommandUUID7Time(_ context.Context, cmd *cli.Command) error {
 		return errors.Wrapf(err, "parse, required format: %s, passed: %s", timeLayout, cmd.Args().First())
 	}
 
-	u := newV7FromTime(uuidTime)
+	var u uuid.UUID
+
+	switch {
+	case cmd.Bool(maxFlag.Name):
+		u = setV7time(uuid.Max, uuidTime)
+	case cmd.Bool(minFlag.Name):
+		u = setV7time(uuid.Nil, uuidTime)
+	default:
+		u = setV7time(uuid.New(), uuidTime)
+	}
 
 	if cmd.Bool(verboseFlag.Name) {
 		fmt.Print(verboseUUID(u))
@@ -88,9 +102,7 @@ func CommandText(_ context.Context, command *cli.Command) error {
 	return nil
 }
 
-func newV7FromTime(t time.Time) uuid.UUID {
-	u := uuid.New()
-
+func setV7time(u uuid.UUID, t time.Time) uuid.UUID {
 	milli := t.UnixMilli()
 	seq := (t.UnixNano() - milli*1_000_000) >> 8
 

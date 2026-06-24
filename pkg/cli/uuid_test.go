@@ -64,7 +64,7 @@ func TestNewV7FromTime(t *testing.T) {
 		t.Parallel()
 
 		input := time.Date(2025, 5, 5, 3, 3, 3, 0, time.UTC)
-		u := newV7FromTime(input)
+		u := setV7time(uuid.New(), input)
 
 		assert.Equal(t, uuid.Version(7), u.Version())
 		assert.Equal(t, uuid.RFC4122, u.Variant())
@@ -90,7 +90,7 @@ func TestNewV7FromTime(t *testing.T) {
 		t.Parallel()
 
 		input := time.Date(2025, 5, 5, 3, 3, 3, 123456789, time.UTC)
-		u := newV7FromTime(input)
+		u := setV7time(uuid.New(), input)
 
 		milli := input.UnixMilli()
 		seq := (input.UnixNano() - milli*1_000_000) >> 8
@@ -105,8 +105,8 @@ func TestNewV7FromTime(t *testing.T) {
 		t.Parallel()
 
 		input := time.Date(2026, 1, 15, 12, 30, 45, 987654321, time.UTC)
-		u1 := newV7FromTime(input)
-		u2 := newV7FromTime(input)
+		u1 := setV7time(uuid.New(), input)
+		u2 := setV7time(uuid.New(), input)
 
 		assert.Equal(t, u1[:8], u2[:8])
 	})
@@ -115,8 +115,8 @@ func TestNewV7FromTime(t *testing.T) {
 		t.Parallel()
 
 		input := time.Date(2026, 1, 15, 12, 30, 45, 0, time.UTC)
-		u1 := newV7FromTime(input)
-		u2 := newV7FromTime(input)
+		u1 := setV7time(uuid.New(), input)
+		u2 := setV7time(uuid.New(), input)
 
 		assert.NotEqual(t, u1[8:], u2[8:])
 	})
@@ -126,7 +126,7 @@ func TestVerboseUUID(t *testing.T) {
 	t.Parallel()
 
 	input := time.Date(2025, 5, 5, 3, 3, 3, 0, time.UTC)
-	u := newV7FromTime(input)
+	u := setV7time(uuid.New(), input)
 
 	out := verboseUUID(u)
 
