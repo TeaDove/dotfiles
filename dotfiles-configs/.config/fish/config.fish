@@ -33,7 +33,7 @@ function p
 end
 
 function kexec
-    kubectl exec -it $(kubectl get pod -o custom-columns=CONTAINER:.metadata.name | grep $argv[1]) -- /bin/bash
+    kubectl exec -it $(kubectl -n $argv[1] get pod -o custom-columns=CONTAINER:.metadata.name | grep $argv[2]) -- $argv[3..]
 end
 
 function envsource
