@@ -1,6 +1,6 @@
 #!/bin/bash
 
-brew install tmux git jql lsd dust lazygit fish zsh gopass 2fa
+brew install tmux git jql lsd dust lazygit fish zsh gopass 2fa curlie wget
 
 # Starship
 curl -sS https://starship.rs/install.sh | sh
