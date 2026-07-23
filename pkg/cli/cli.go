@@ -141,6 +141,11 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 				Usage:  "analyse code",
 				Action: code.Run,
 			},
+			{
+				Name:   "depii",
+				Usage:  "depersonalize string (uuid, alfanum20)",
+				Action: CommandDePII,
+			},
 		},
 	}
 

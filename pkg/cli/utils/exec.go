@@ -33,7 +33,11 @@ func ExecCommand(ctx context.Context, name string, args ...string) (string, erro
 }
 
 func ReadFromPipeOrSTDIN() (string, error) {
-	stat, _ := os.Stdin.Stat()
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return "", errors.Wrap(err, "stats")
+	}
+
 	if (stat.Mode() & os.ModeCharDevice) != 0 {
 		reader := bufio.NewReader(os.Stdin)
 
@@ -48,10 +52,40 @@ func ReadFromPipeOrSTDIN() (string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	buf := new(strings.Builder)
 
-	_, err := io.Copy(buf, reader)
+	_, err = io.Copy(buf, reader)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to copy from buf")
 	}
 
 	return buf.String(), nil
+}
+
+func ReadSTDINUntilEOF() (string, error) {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return "", errors.Wrap(err, "stats")
+	}
+
+	if (stat.Mode() & os.ModeCharDevice) == 0 {
+		return "", errors.Newf("bad mode: %d", stat.Mode())
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	var (
+		out  strings.Builder
+		text string
+	)
+
+	for {
+		text, err = reader.ReadString('\n')
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return out.String(), nil
+			}
+
+			return "", errors.Wrap(err, "read string")
+		}
+
+		out.WriteString(text)
+	}
 }

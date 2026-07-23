@@ -1,0 +1,106 @@
+package cli
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestDepii(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "simple uuid",
+			input:    "X-Request-ID: ef1bb310-6f06-40c7-a153-046683106cc5",
+			expected: "X-Request-ID: {UUID-0}",
+		},
+		{
+			name:     "same uuid twice",
+			input:    "ID1: ef1bb310-6f06-40c7-a153-046683106cc5 ID2: ef1bb310-6f06-40c7-a153-046683106cc5",
+			expected: "ID1: {UUID-0} ID2: {UUID-0}",
+		},
+		{
+			name:     "different uuids",
+			input:    "ID1: ef1bb310-6f06-40c7-a153-046683106cc5 ID2: a1234567-89ab-cdef-0123-456789abcdef",
+			expected: "ID1: {UUID-0} ID2: {UUID-1}",
+		},
+		{
+			name:     "uppercase uuid",
+			input:    "ID: EF1BB310-6F06-40C7-A153-046683106CC5",
+			expected: "ID: {UUID-0}",
+		},
+		{
+			name:     "same uuid different case",
+			input:    "ID1: ef1bb310-6f06-40c7-a153-046683106cc5 ID2: EF1BB310-6F06-40C7-A153-046683106CC5",
+			expected: "ID1: {UUID-0} ID2: {UUID-0}",
+		},
+		{
+			name:     "simple alfanum20",
+			input:    "token: abcdefghij0123456789",
+			expected: "token: {ALFANUM20-0}",
+		},
+		{
+			name:     "same alfanum20 twice",
+			input:    "token1: abcdefghij0123456789 token2: abcdefghij0123456789",
+			expected: "token1: {ALFANUM20-0} token2: {ALFANUM20-0}",
+		},
+		{
+			name:     "different alfanum20s",
+			input:    "token1: abcdefghij0123456789 token2: zyxwvutsrq9876543210",
+			expected: "token1: {ALFANUM20-0} token2: {ALFANUM20-1}",
+		},
+		{
+			name:     "mixed uuid and alfanum20",
+			input:    "request: ef1bb310-6f06-40c7-a153-046683106cc5 token: abcdefghij0123456789",
+			expected: "request: {UUID-0} token: {ALFANUM20-0}",
+		},
+		{
+			name:     "multiple of each",
+			input:    "req1: ef1bb310-6f06-40c7-a153-046683106cc5 tok1: abcdefghij0123456789 req2: a1234567-89ab-cdef-0123-456789abcdef tok2: zyxwvutsrq9876543210",
+			expected: "req1: {UUID-0} tok1: {ALFANUM20-0} req2: {UUID-1} tok2: {ALFANUM20-1}",
+		},
+		{
+			name:     "no pii",
+			input:    "hello world 123",
+			expected: "hello world 123",
+		},
+		{
+			name:     "uuid with surrounding text",
+			input:    "Request ID is ef1bb310-6f06-40c7-a153-046683106cc5 please",
+			expected: "Request ID is {UUID-0} please",
+		},
+		{
+			name:     "alfanum20 case sensitive",
+			input:    "token: abcdefghij0123456789 TOKEN: ABCDEFGHIJ0123456789",
+			expected: "token: {ALFANUM20-0} TOKEN: ABCDEFGHIJ0123456789",
+		},
+		{
+			name:     "alfanum20 exactly 20 chars",
+			input:    "x: 12345678901234567890",
+			expected: "x: {ALFANUM20-0}",
+		},
+		{
+			name:     "alfanum20 not triggered on 19 chars",
+			input:    "x: 1234567890123456789",
+			expected: "x: 1234567890123456789",
+		},
+		{
+			name:     "alfanum20 not triggered on 21 chars",
+			input:    "x: 123456789012345678901",
+			expected: "x: 123456789012345678901",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := depii(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
