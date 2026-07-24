@@ -30,13 +30,21 @@ func depii(input string) string {
 	return input
 }
 
+func padReplacement(original, replacement string) string {
+	if len(replacement) >= len(original) {
+		return replacement
+	}
+
+	return replacement + strings.Repeat(" ", len(original)-len(replacement))
+}
+
 func replaceAlfaNum20(input string) string {
 	counter := make(map[string]int)
 	total := 0
 	reg := regexp.MustCompile(`(?:[^a-z0-9]|^)[a-z0-9]{20}(?:[^a-z0-9]|$)`)
-	return reg.ReplaceAllStringFunc(input, func(match string) string {
+	return reg.ReplaceAllStringFunc(input, func(v string) string {
 		var prefix, suffix string
-		id := match
+		id := v
 
 		if len(id) > 0 && !isAlphaNum(rune(id[0])) {
 			prefix = string(id[0])
@@ -48,12 +56,13 @@ func replaceAlfaNum20(input string) string {
 		}
 
 		if idx, exists := counter[id]; exists {
-			return fmt.Sprintf("%s{ALFANUM20-%d}%s", prefix, idx, suffix)
+			return padReplacement(v, fmt.Sprintf("%s{ALFANUM20-%d}%s", prefix, idx, suffix))
 		}
+
 		idx := total
 		counter[id] = idx
 		total++
-		return fmt.Sprintf("%s{ALFANUM20-%d}%s", prefix, idx, suffix)
+		return padReplacement(v, fmt.Sprintf("%s{ALFANUM20-%d}%s", prefix, idx, suffix))
 	})
 }
 
@@ -65,15 +74,16 @@ func replaceUUID(input string) string {
 	counter := make(map[string]int)
 	total := 0
 	reg := regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
-	return reg.ReplaceAllStringFunc(input, func(uuid string) string {
-		lowerUUID := strings.ToLower(uuid)
+	return reg.ReplaceAllStringFunc(input, func(v string) string {
+		lowerUUID := strings.ToLower(v)
 		if idx, exists := counter[lowerUUID]; exists {
-			return fmt.Sprintf("{UUID-%d}", idx)
+			return padReplacement(v, fmt.Sprintf("{UUID-%d}", idx))
 		}
+
 		idx := total
 		counter[lowerUUID] = idx
 		total++
-		return fmt.Sprintf("{UUID-%d}", idx)
+		return padReplacement(v, fmt.Sprintf("{UUID-%d}", idx))
 	})
 }
 
@@ -82,14 +92,15 @@ func replaceLongDomains(input string) string {
 	total := 0
 	reg := regexp.MustCompile(`[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?){2,}`)
 
-	return reg.ReplaceAllStringFunc(input, func(match string) string {
-		lowerDomain := strings.ToLower(match)
+	return reg.ReplaceAllStringFunc(input, func(v string) string {
+		lowerDomain := strings.ToLower(v)
 		if idx, exists := counter[lowerDomain]; exists {
-			return fmt.Sprintf("{DOMAIN-%d}", idx)
+			return padReplacement(v, fmt.Sprintf("{DOMAIN-%d}", idx))
 		}
+
 		idx := total
 		counter[lowerDomain] = idx
 		total++
-		return fmt.Sprintf("{DOMAIN-%d}", idx)
+		return padReplacement(v, fmt.Sprintf("{DOMAIN-%d}", idx))
 	})
 }
