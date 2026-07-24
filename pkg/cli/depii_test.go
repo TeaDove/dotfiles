@@ -99,6 +99,56 @@ func TestDepiiMultiline(t *testing.T) {
 			input:    "Line 1: ef1bb310-6f06-40c7-a153-046683106cc5 with token abcdefghij0123456789\nLine 2: ef1bb310-6f06-40c7-a153-046683106cc5 same UUID, token zyxwvutsrq9876543210\nUUID: a1234567-89ab-cdef-0123-456789abcdef",
 			expected: "Line 1: {UUID-0} with token {ALFANUM20-0}\nLine 2: {UUID-0} same UUID, token {ALFANUM20-1}\nUUID: {UUID-1}",
 		},
+		{
+			name:     "long domain 3 parts",
+			input:    "api.mts.ru",
+			expected: "{DOMAIN-0}",
+		},
+		{
+			name:     "long domain 4 parts",
+			input:    "console.yandex.cloud",
+			expected: "{DOMAIN-0}",
+		},
+		{
+			name:     "short domain 2 parts not replaced",
+			input:    "ya.ru google.com",
+			expected: "ya.ru google.com",
+		},
+		{
+			name:     "same domain twice",
+			input:    "api.mts.ru and api.mts.ru",
+			expected: "{DOMAIN-0} and {DOMAIN-0}",
+		},
+		{
+			name:     "different domains",
+			input:    "api.mts.ru console.yandex.cloud",
+			expected: "{DOMAIN-0} {DOMAIN-1}",
+		},
+		{
+			name:     "domain case insensitive",
+			input:    "API.MTS.RU and api.mts.ru",
+			expected: "{DOMAIN-0} and {DOMAIN-0}",
+		},
+		{
+			name:     "domain with hyphen",
+			input:    "api.my-server.ru",
+			expected: "{DOMAIN-0}",
+		},
+		{
+			name:     "4 domains",
+			input:    "x.api.my-server.ru",
+			expected: "{DOMAIN-0}",
+		},
+		{
+			name:     "mixed uuid, alfanum20, and domain",
+			input:    "Request to api.mts.ru with ID ef1bb310-6f06-40c7-a153-046683106cc5 and token abcdefghij0123456789",
+			expected: "Request to {DOMAIN-0} with ID {UUID-0} and token {ALFANUM20-0}",
+		},
+		{
+			name:     "url",
+			input:    "https://api.my-server.ru/index.html",
+			expected: "https://{DOMAIN-0}/index.html",
+		},
 	}
 
 	for _, tt := range tests {

@@ -25,6 +25,7 @@ func CommandDePII(_ context.Context, _ *cli.Command) error {
 func depii(input string) string {
 	input = replaceUUID(input)
 	input = replaceAlfaNum20(input)
+	input = replaceLongDomains(input)
 
 	return input
 }
@@ -56,6 +57,10 @@ func replaceAlfaNum20(input string) string {
 	})
 }
 
+func isAlphaNum(r rune) bool {
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')
+}
+
 func replaceUUID(input string) string {
 	counter := make(map[string]int)
 	total := 0
@@ -72,6 +77,19 @@ func replaceUUID(input string) string {
 	})
 }
 
-func isAlphaNum(r rune) bool {
-	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')
+func replaceLongDomains(input string) string {
+	counter := make(map[string]int)
+	total := 0
+	reg := regexp.MustCompile(`[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?){2,}`)
+
+	return reg.ReplaceAllStringFunc(input, func(match string) string {
+		lowerDomain := strings.ToLower(match)
+		if idx, exists := counter[lowerDomain]; exists {
+			return fmt.Sprintf("{DOMAIN-%d}", idx)
+		}
+		idx := total
+		counter[lowerDomain] = idx
+		total++
+		return fmt.Sprintf("{DOMAIN-%d}", idx)
+	})
 }
