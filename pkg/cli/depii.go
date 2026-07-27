@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v3"
 )
 
@@ -18,6 +19,7 @@ func CommandDePII(_ context.Context, _ *cli.Command) error {
 	}
 
 	result := depii(input)
+	color.Cyan("════════════════════")
 	fmt.Print(result)
 	return nil
 }
