@@ -1,0 +1,43 @@
+# Global user preferences
+
+These rules apply to every project I work on (work and personal). Language-specific
+sections at the bottom apply only to that language.
+
+## Language
+
+- All artifacts — code, comments, READMEs, docs, commit messages — in English.
+- Chat replies: answer in the language I started the conversation in.
+
+## Working style
+
+- Minimal diff: solve the task by changing as little code as possible. Smaller
+  changes are easier to review and less likely to introduce bugs. Don't refactor or
+  reformat unrelated code unless asked.
+
+---
+
+## Golang (only for Go projects)
+
+### Definition of done
+
+After every code change, before reporting the task as complete, you **must**:
+
+1. `go build ./...` — confirm it compiles.
+2. `go test ./...` (or the relevant packages) — confirm tests pass.
+
+Do not skip these steps, and don't rely on CI to catch what you missed.
+
+### Code style
+
+- Packages, files: lowercase + layer suffix (`userrepo`, `eventservice`), not (`user-service`, `event-service`)
+- Errors should always be wrapped
+- Functions ~80 lines max; return early on errors
+- Always use the explicit two-line form. Never combine assignment and `nil` check in one `if` statement
+- Never mute parse errors from database rows or external input. Always propagate them.
+
+### Comments
+
+- Comment shared utilities (godoc style, like stdlib).
+- Comment workarounds/hacks so others don't "fix" them.
+- Comment confusing legacy code. If new code needs comments to be understood — rewrite it clearer.
+- Do not add comments to obvious code (`// increment counter` above `counter++`).
