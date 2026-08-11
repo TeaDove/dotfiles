@@ -31,6 +31,7 @@ Do not skip these steps, and don't rely on CI to catch what you missed.
 
 - Packages, files: lowercase + layer suffix (`userrepo`, `eventservice`), not (`user-service`, `event-service`)
 - Errors should always be wrapped
+- Name error variables `err`, unless that would cause shadowing or hide a wrapped/outer error you still need — only then use a qualified name (e.g. `jsonErr`)
 - Functions ~80 lines max; return early on errors
 - Always use the explicit two-line form. Never combine assignment and `nil` check in one `if` statement
 - Never mute parse errors from database rows or external input. Always propagate them.

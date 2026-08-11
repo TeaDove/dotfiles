@@ -2,7 +2,7 @@ package cli
 
 import (
 	"context"
-	"dotfiles/pkg/cli/utils"
+	"dotfiles/pkg/cli/utils/systemutils"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -71,7 +71,7 @@ func CommandInstall(_ context.Context, _ *cli.Command) error {
 }
 
 func CommandUpdate(ctx context.Context, _ *cli.Command) error {
-	_, err := utils.ExecCommand(
+	_, err := systemutils.ExecCommand(
 		ctx,
 		"bash",
 		"-c",

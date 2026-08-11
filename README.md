@@ -19,11 +19,11 @@ DESCRIPTION:
 COMMANDS:
    install  install all dotfiles, i.e. fish config
    update   updates this executable
+   l        tail stdin, save to /tmp/ulogs/{date}.logs, live regex filter
    u        generates random uuid
    t        generates save to use password
-   l        locates service by ip or domains from http://ip-api.com/json/
    g        git utils
-   net      net utils
+   net      net utils (net l: locates service by ip or domain)
    sha      hashes string as sha512
    watch    like unix watch, but better
    ss       starship config swap

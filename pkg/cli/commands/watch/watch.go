@@ -2,7 +2,7 @@ package watch
 
 import (
 	"context"
-	"dotfiles/pkg/cli/utils"
+	"dotfiles/pkg/cli/utils/systemutils"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -64,7 +64,7 @@ func (r *Watch) Run(ctx context.Context, cmd *cli.Command) error {
 
 	commands := cmd.Args().Slice()
 	if len(commands) == 0 {
-		command, err := utils.ReadFromPipeOrSTDIN()
+		command, err := systemutils.ReadFromPipeOrSTDIN()
 		if err != nil {
 			return errors.Wrap(err, "at least one command is required from pipe, stdin or args")
 		}

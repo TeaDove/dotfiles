@@ -2,7 +2,7 @@ package cli
 
 import (
 	"context"
-	"dotfiles/pkg/http_supplier"
+	"dotfiles/pkg/cli/utils/httputils"
 	"fmt"
 	"net"
 	"strings"
@@ -19,7 +19,7 @@ func CommandLocateByIP(ctx context.Context, command *cli.Command) error {
 
 	ipOrDomain := command.Args().First()
 
-	domainLocation, err := http_supplier.New().LocateByIP(ctx, ipOrDomain)
+	domainLocation, err := httputils.New().LocateByIP(ctx, ipOrDomain)
 	if err != nil {
 		return errors.Wrap(err, "get resp")
 	}

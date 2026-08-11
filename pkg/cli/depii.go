@@ -2,7 +2,7 @@ package cli
 
 import (
 	"context"
-	"dotfiles/pkg/cli/utils"
+	"dotfiles/pkg/cli/utils/systemutils"
 	"fmt"
 	"regexp"
 	"strings"
@@ -13,7 +13,7 @@ import (
 )
 
 func CommandDePII(_ context.Context, _ *cli.Command) error {
-	input, err := utils.ReadSTDINUntilEOF()
+	input, err := systemutils.ReadSTDINUntilEOF()
 	if err != nil {
 		return errors.Wrap(err, "read from stdin or pipe")
 	}

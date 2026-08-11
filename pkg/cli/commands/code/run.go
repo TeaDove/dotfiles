@@ -2,7 +2,7 @@ package code
 
 import (
 	"context"
-	"dotfiles/pkg/cli/gloss_utils"
+	"dotfiles/pkg/cli/utils/glossutils"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -85,7 +85,7 @@ func drawTable(report *Report) *table.Table {
 	}
 
 	tableCols := []string{colDescription, colTitle, colCount}
-	tableData := gloss_utils.NewMappingData(tableCols...)
+	tableData := glossutils.NewMappingData(tableCols...)
 
 	for _, row := range rows {
 		percent := 100 * float64(row.Count) / float64(report.TotalErrors)

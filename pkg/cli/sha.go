@@ -3,7 +3,7 @@ package cli
 import (
 	"context"
 	"crypto/sha512"
-	"dotfiles/pkg/cli/utils"
+	"dotfiles/pkg/cli/utils/systemutils"
 	"encoding/hex"
 	"fmt"
 
@@ -13,7 +13,7 @@ import (
 )
 
 func CommandSha(_ context.Context, cmd *cli.Command) error {
-	text, err := utils.ReadFromPipeOrSTDIN()
+	text, err := systemutils.ReadFromPipeOrSTDIN()
 	if err != nil {
 		return errors.Wrap(err, "read from stdin")
 	}

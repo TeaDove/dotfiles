@@ -3,7 +3,7 @@ package cli
 import (
 	"context"
 	"crypto/md5" //nolint: gosec // as expected
-	"dotfiles/pkg/cli/utils"
+	"dotfiles/pkg/cli/utils/systemutils"
 	"fmt"
 
 	"github.com/cockroachdb/errors"
@@ -13,7 +13,7 @@ import (
 )
 
 func CommandMD5UUID(_ context.Context, cmd *cli.Command) error {
-	text, err := utils.ReadFromPipeOrSTDIN()
+	text, err := systemutils.ReadFromPipeOrSTDIN()
 	if err != nil {
 		return errors.Wrap(err, "read from stdin")
 	}

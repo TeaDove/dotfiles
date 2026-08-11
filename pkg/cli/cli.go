@@ -4,10 +4,11 @@ import (
 	"context"
 	"dotfiles/pkg/cli/commands/code"
 	"dotfiles/pkg/cli/commands/git"
-	"dotfiles/pkg/cli/commands/net_scan"
-	"dotfiles/pkg/cli/commands/net_serve"
-	"dotfiles/pkg/cli/commands/net_system"
-	"dotfiles/pkg/cli/commands/net_traceroute"
+	"dotfiles/pkg/cli/commands/logs"
+	"dotfiles/pkg/cli/commands/netscan"
+	"dotfiles/pkg/cli/commands/netserve"
+	"dotfiles/pkg/cli/commands/netsystem"
+	"dotfiles/pkg/cli/commands/nettraceroute"
 	"dotfiles/pkg/cli/commands/watch"
 	"os"
 	"runtime"
@@ -39,6 +40,11 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 				Action: CommandUpdate,
 			},
 			{
+				Name:   "l",
+				Usage:  "tail stdin, save to /tmp/ulogs/{date}.logs, live regex filter",
+				Action: logs.Run,
+			},
+			{
 				Name:   "u",
 				Usage:  "generates random uuid",
 				Action: CommandUUID,
@@ -67,11 +73,6 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 				Action: CommandText,
 			},
 			{
-				Name:   "l",
-				Usage:  "locates service by ip or domain from http://ip-api.com/json/",
-				Action: CommandLocateByIP,
-			},
-			{
 				Name:  "g",
 				Usage: "git utils",
 				Commands: []*cli.Command{
@@ -95,22 +96,27 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 					{
 						Name:   "system",
 						Usage:  "display information about this machine",
-						Action: net_system.Run,
+						Action: netsystem.Run,
 					},
 					{
 						Name:   "scan",
 						Usage:  "display information about local networks",
-						Action: net_scan.Run,
+						Action: netscan.Run,
 					},
 					{
 						Name:   "serve",
 						Usage:  "serve debug server on 0.0.0.0:8000",
-						Action: net_serve.Run,
+						Action: netserve.Run,
 					},
 					{
 						Name:   "traceroute",
 						Usage:  "pretty traceroute",
-						Action: net_traceroute.Run,
+						Action: nettraceroute.Run,
+					},
+					{
+						Name:   "l",
+						Usage:  "locates service by ip or domain from http://ip-api.com/json/",
+						Action: CommandLocateByIP,
 					},
 				},
 			},
