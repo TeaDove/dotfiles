@@ -4,7 +4,6 @@ import (
 	"context"
 	"dotfiles/pkg/cli/commands/code"
 	"dotfiles/pkg/cli/commands/git"
-	"dotfiles/pkg/cli/commands/logs"
 	"dotfiles/pkg/cli/commands/netscan"
 	"dotfiles/pkg/cli/commands/netserve"
 	"dotfiles/pkg/cli/commands/netsystem"
@@ -38,11 +37,6 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 				Name:   "update",
 				Usage:  "updates this executable",
 				Action: CommandUpdate,
-			},
-			{
-				Name:   "l",
-				Usage:  "tail stdin, save to /tmp/ulogs/{date}.logs, live regex filter",
-				Action: logs.Run,
 			},
 			{
 				Name:   "u",
