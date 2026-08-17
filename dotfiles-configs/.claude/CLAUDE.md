@@ -36,6 +36,22 @@ Do not skip these steps, and don't rely on CI to catch what you missed.
 - Always use the explicit two-line form. Never combine assignment and `nil` check in one `if` statement
 - Never mute parse errors from database rows or external input. Always propagate them.
 
+
+### `new` with arbitrary expressions (Go 1.26)
+
+`new` now accepts any addressable expression, not just a type name. Use this to take the address of a computed value inline:
+
+```go
+// Before Go 1.26 — needed a temporary variable
+t := loc.Time()
+field = &t
+
+// Go 1.26 — inline is fine
+field = new(loc.Time())
+```
+
+Do **not** "fix" these into temporary-variable form — that is a regression, not an improvement.
+
 ### Comments
 
 - Comment shared utilities (godoc style, like stdlib).
