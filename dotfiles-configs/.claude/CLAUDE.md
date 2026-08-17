@@ -30,6 +30,7 @@ Do not skip these steps, and don't rely on CI to catch what you missed.
 ### Code style
 
 - Packages, files: lowercase + layer suffix (`userrepo`, `eventservice`), not (`user-service`, `event-service`)
+- Prefer long variable names, e.g. `queue := NewQueue()`, not `q := NewQueue()`, with exceptions like `ctx`, `i` (in loops), etc.
 - Errors should always be wrapped
 - Name error variables `err`, unless that would cause shadowing or hide a wrapped/outer error you still need — only then use a qualified name (e.g. `jsonErr`)
 - Functions ~80 lines max; return early on errors
@@ -37,24 +38,64 @@ Do not skip these steps, and don't rely on CI to catch what you missed.
 - Never mute parse errors from database rows or external input. Always propagate them.
 
 
+### Comments
+Never add comments in code, with only the following exceptions: 
+
+#### Comment workarounds/hacks that others couldn't guess, so they don't "fix" them
+Start these comments with `NOFIX:`, e.g.:
+```go
+type User struct{
+    // NOFIX: "nam" is a typo, but clients are already using it and we don't want to introduce breaking changes
+    Name string `json:"nam"`
+}
+```
+
+#### Comment confusing legacy code. If new code needs comments to be understood — rewrite it to be clearer
+Start these comments with `LEGACY:`, and add `TODO:` if applicable, e.g.:
+```go
+// LEGACY: the frontend, for some reason, sends the `left` point in the JSON object under the key `right` and vice versa, so we need to swap them.
+// TODO: fix the confusing frontend/backend names.
+leftPoint, rightPoint = rightPoint, leftPoint
+```
+
+#### Never add a comment in any other case
+
+Bad:
+```go
+// QueueFanout is a Queue that fans every write out to several Queue (e.g. a Kafka and a local JSONL file)
+type QueueFanout struct {
+  queues []Queue
+}
+```
+
+Bad:
+```go
+// SaveMetricPoint writes the record to every queue; it does not stop on the
+// first error, so one failing destination never starves the others.
+func (f *QueueFanout) Send(ctx context.Context, record Record) error {
+	var errs []error
+	for _, q := range f.queues {
+		err := q.Send(ctx, record)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+	
+	return errors.Join(errs...)
+}
+```
+
 ### `new` with arbitrary expressions (Go 1.26)
 
-`new` now accepts any addressable expression, not just a type name. Use this to take the address of a computed value inline:
+`new` now accepts any expression, not just a type name. Use this to take the address of a computed value inline:
 
 ```go
 // Before Go 1.26 — needed a temporary variable
-t := loc.Time()
-field = &t
+name := "John"
+field = &name
 
 // Go 1.26 — inline is fine
-field = new(loc.Time())
+field = new("John")
 ```
 
 Do **not** "fix" these into temporary-variable form — that is a regression, not an improvement.
-
-### Comments
-
-- Comment shared utilities (godoc style, like stdlib).
-- Comment workarounds/hacks so others don't "fix" them.
-- Comment confusing legacy code. If new code needs comments to be understood — rewrite it clearer.
-- Do not add comments to obvious code (`// increment counter` above `counter++`).

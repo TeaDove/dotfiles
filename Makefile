@@ -11,6 +11,5 @@ test:
 	go tool gotestsum --format-hide-empty-pkg -- ./... --race
 
 install:
-	rm ~/.local/bin/u || true
 	$(GO) install u.go
 	u install
