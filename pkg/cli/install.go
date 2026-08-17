@@ -60,6 +60,15 @@ func CommandInstall(_ context.Context, _ *cli.Command) error {
 		return errors.Wrap(err, "remove old files")
 	}
 
+	// TODO(teadove): some target configs must be MERGED, not overwritten.
+	// e.g. ~/.claude/settings.json holds per-machine values (model, theme) that
+	// differ across hosts, yet parts of it — like the Claude Code hook
+	// registration that wires ~/.claude/hooks/notify.sh — should be shared via
+	// dotfiles. Blindly CopyFS-ing a tracked settings.json would clobber the
+	// local per-machine keys; that is why it is intentionally NOT tracked today.
+	// Solution: keep an explicit list of "merge" configs and, for those, deep-
+	// merge the tracked fragment into the existing file (go-json, or shell out
+	// to jq: `jq -s '.[0] * .[1]'`) instead of copying, preserving local keys.
 	err = os.CopyFS(homeDir, os.DirFS(dofilesPath))
 	if err != nil {
 		return errors.Wrap(err, "copy temp files")
