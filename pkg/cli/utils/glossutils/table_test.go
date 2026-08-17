@@ -3,7 +3,7 @@ package glossutils
 import (
 	"testing"
 
-	"github.com/teadove/teasutils/utils/test_utils"
+	"github.com/teadove/teasutils/utils/testutils"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
@@ -27,5 +27,5 @@ func TestUnit_GlossUtils_NewMappingData_Ok(t *testing.T) {
 	tableData.SetMappingRow("artem", M{"name": "artem", "age": "25", "gender": "male"})
 	tableData.DeleteRow("masha")
 
-	test_utils.Pprint(tableStyle.String())
+	testutils.Debug(tableStyle.String())
 }

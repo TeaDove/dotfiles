@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/teadove/teasutils/utils/time_utils"
+	"github.com/teadove/teasutils/utils/timeutils"
 )
 
 const (
@@ -72,7 +72,7 @@ func (r *Service) pingsView(ctx context.Context) {
 					avg = time.Duration(uint64(totalDur) / success)
 
 					r.model.pingsTableData.Locker().Lock()
-					r.model.pingsTableData.Set(pingColDur, address, time_utils.RoundDuration(avg))
+					r.model.pingsTableData.Set(pingColDur, address, timeutils.RoundDuration(avg))
 					r.model.pingsTableData.Set(pingColSucFail, address, fmt.Sprintf("%d/%d", success, failed))
 					r.model.pingsTableData.Locker().Unlock()
 

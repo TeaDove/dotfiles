@@ -12,7 +12,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 	"github.com/fatih/color"
-	"github.com/teadove/teasutils/utils/time_utils"
+	"github.com/teadove/teasutils/utils/timeutils"
 )
 
 type keymap struct {
@@ -100,7 +100,7 @@ func (r *model) updateTable() {
 
 		r.traceTableData.Set(colTTL, ttlString, ttlString)
 		r.traceTableData.Set(colIP, ttlString, hop.peer.String())
-		r.traceTableData.Set(colRTT, ttlString, time_utils.RoundDuration(hop.rtt))
+		r.traceTableData.Set(colRTT, ttlString, timeutils.RoundDuration(hop.rtt))
 
 		if hop.domains.Err == nil {
 			r.traceTableData.Set(colDomains, ttlString, hop.domains.Ok)

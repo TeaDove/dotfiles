@@ -10,7 +10,7 @@ import (
 	"unicode"
 
 	"github.com/cockroachdb/errors"
-	"github.com/teadove/teasutils/utils/redact_utils"
+	"github.com/teadove/teasutils/utils/redactutils"
 )
 
 func (r *Service) protoDetection(ctx context.Context, host string, port uint16) string {
@@ -48,7 +48,7 @@ func stripServer(server string) string {
 		return -1
 	}, server)
 
-	return redact_utils.TrimSized(server, 70)
+	return redactutils.TrimSized(server, 70)
 }
 
 func (r *Service) tryHTTP(ctx context.Context, proto string, host string, port uint16) (string, error) {

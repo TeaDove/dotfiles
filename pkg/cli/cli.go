@@ -34,11 +34,6 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 				Action: CommandInstall,
 			},
 			{
-				Name:   "update",
-				Usage:  "updates this executable",
-				Action: CommandUpdate,
-			},
-			{
 				Name:   "u",
 				Usage:  "generates random uuid",
 				Action: CommandUUID,
