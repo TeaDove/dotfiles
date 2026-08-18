@@ -8,7 +8,7 @@ description: "Use after finishing code on a feature branch, before running a rev
 ## Usage
 
 ```
-/specgen                    # compare current branch against merge-base with master (fallback: main)
+/specgen                    # review only what this branch adds over its base branch (master, fallback main)
 /specgen <base-branch>      # compare against an explicit base branch/ref instead
 /specgen --save[=<path>]    # also write the recap to a markdown file (default: SPEC.md in repo root)
 ```
@@ -41,10 +41,14 @@ recap is a draft they will edit themselves, not a claim of ground truth.
 ## Hard constraints
 
 - **Read-only.** Never edit files, stage, commit, or push. This is a reporting skill, not an implementation one.
+- **VCS-agnostic — never assume git.** Read history and diffs through whatever version control the repo
+  uses; big monorepos ship their own VCS and their own LLM instructions for it (for example `arc`).
+  Think in terms of actions ("the history this branch adds", "the diff against the base"), and let the
+  repo's own tooling/instructions supply the exact commands.
 - **Ticket-level abstraction, not a changelog.** The recap describes the problem/goal and, in general terms,
   what kind of solution was applied — never "with the precision of files": no file paths, no
-  package/function/test names, no line-level inventory. If a section would otherwise read like `git diff
-  --stat` with commentary, it's too detailed — rewrite it one level up (what capability/behavior changed,
+  package/function/test names, no line-level inventory. If a section would otherwise read like a
+  per-file change summary with commentary, it's too detailed — rewrite it one level up (what capability/behavior changed,
   not where).
 - **Ground everything in the diff**, even though the wording stays abstract. Read enough of the diff and
   surrounding context (via `Read`, not guessing) to correctly state the problem and the shape of the fix.
@@ -66,24 +70,25 @@ recap is a draft they will edit themselves, not a claim of ground truth.
 ### 1. Resolve the base ref
 - Default to `master`; if it doesn't exist, fall back to `main`; if neither exists, ask the user.
 - If the user passed an explicit base, use that instead without asking.
-- Compute `git merge-base <base> HEAD` — always diff from the merge-base, not the base branch tip, so
-  the recap only covers what this branch actually added.
+- Diff from the point where this branch diverged from the base, not from the base branch tip, so the
+  recap only covers what this branch actually added. Use the repository's own version-control tooling to
+  find that divergence point and produce the diff — do not assume git.
 
 ### 2. Get the shape of the change first
-- `git log <merge-base>..HEAD --oneline` — commit history on the branch.
-- `git diff --stat <merge-base>..HEAD` — files touched, purely to budget how you read the diff in step 3.
+- Get the commit history this branch adds over the base — a one-line-per-commit list.
+- Get a per-file change summary (files touched), purely to budget how you read the diff in step 3.
   This is internal bookkeeping only — none of these numbers belong in the final recap.
 
 ### 3. Read the diff
-- `git diff <merge-base>..HEAD`.
+- Get the full diff of what this branch adds over the base.
 - For a large diff (rule of thumb: over ~1500 changed lines or ~30 files), don't read it as one blob —
   go file-by-file or directory-by-directory, and summarize each group before moving to the next, to avoid
   losing the smaller changes among the large ones.
 - Where a diff hunk is not self-explanatory (e.g. a changed condition, a new field with no context), open
   the file with `Read` to understand the surrounding function/struct rather than guessing from the `+`/`-`
   lines alone.
-- Pure renames/moves with no content change (check the `git status` from context or `git diff --find-renames`)
-  should be collapsed into a single mention, not itemized file by file.
+- Pure renames/moves with no content change (the VCS status usually flags these) should be collapsed
+  into a single mention, not itemized file by file.
 
 ### 4. Group changes by independent goal, not by file order
 Look for the natural problem/goal boundaries in the diff — e.g. "a bug where X" / "add capability Y" /
