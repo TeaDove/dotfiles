@@ -2,6 +2,7 @@ package httputils
 
 import (
 	"context"
+	"dotfiles/pkg/cli/utils/closeutils"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -37,7 +38,7 @@ func (r *Supplier) LocateByIP(ctx context.Context, ip string) (DomainLocationRes
 	if err != nil {
 		return DomainLocationResp{}, errors.Wrap(err, "get resp")
 	}
-	defer resp.Body.Close()
+	defer closeutils.MustClose(resp.Body)
 
 	var domainLocation DomainLocationResp
 

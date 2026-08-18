@@ -2,6 +2,7 @@ package netscan
 
 import (
 	"context"
+	"dotfiles/pkg/cli/utils/closeutils"
 	"fmt"
 	"net/http"
 	"slices"
@@ -61,7 +62,7 @@ func (r *Service) tryHTTP(ctx context.Context, proto string, host string, port u
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	defer resp.Body.Close()
+	defer closeutils.MustClose(resp.Body)
 
 	return serverInHeaders(resp.Header), nil
 }
@@ -86,7 +87,7 @@ func (r *Service) tryTCP(ctx context.Context, host string, port uint16) (string,
 		return "", errors.WithStack(err)
 	}
 
-	defer conn.Close()
+	defer closeutils.MustClose(conn)
 
 	err = conn.SetDeadline(time.Now().Add(500 * time.Millisecond))
 	if err != nil {

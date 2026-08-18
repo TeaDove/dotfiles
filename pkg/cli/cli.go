@@ -4,6 +4,7 @@ import (
 	"context"
 	"dotfiles/pkg/cli/commands/code"
 	"dotfiles/pkg/cli/commands/git"
+	"dotfiles/pkg/cli/commands/logs"
 	"dotfiles/pkg/cli/commands/netscan"
 	"dotfiles/pkg/cli/commands/netserve"
 	"dotfiles/pkg/cli/commands/netsystem"
@@ -35,8 +36,9 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 			},
 			{
 				Name:   "l",
-				Usage:  "reads stdin and writes it to stdout unchanged",
-				Action: CommandL,
+				Usage:  "reads stdin, colorizes it to stdout and saves raw lines to /tmp/ulog/{date}.txt (--no-save to skip)",
+				Action: logs.Run,
+				Flags:  []cli.Flag{logs.NoSaveFlag},
 			},
 			{
 				Name:   "u",

@@ -2,6 +2,7 @@ package nettraceroute
 
 import (
 	"context"
+	"dotfiles/pkg/cli/utils/closeutils"
 	"dotfiles/pkg/cli/utils/httputils"
 	"net"
 	"slices"
@@ -39,7 +40,7 @@ func (r *Service) traceRoute(ctx context.Context, dstIP net.IP) error {
 	if err != nil {
 		return errors.Wrap(err, "listen for icmp packets, most likely you need to run it with sudo")
 	}
-	defer icmpConn.Close()
+	defer closeutils.MustClose(icmpConn)
 
 	r.icmpConn = icmpConn
 
@@ -97,10 +98,10 @@ func (r *Service) sendTrace(ctx context.Context, ttl uint16) (time.Time, error) 
 	if err != nil {
 		return time.Time{}, errors.Wrap(err, "udp4 listen packet")
 	}
-	defer udpConn.Close()
+	defer closeutils.MustClose(udpConn)
 
 	v4udp := ipv4.NewPacketConn(udpConn)
-	defer v4udp.Close()
+	defer closeutils.MustClose(v4udp)
 
 	err = v4udp.SetTTL(int(ttl))
 	if err != nil {

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"dotfiles/pkg/cli/utils/closeutils"
 	"encoding/json"
 	"io"
 	"io/fs"
@@ -94,7 +95,7 @@ func overwriteFile(src, dst string, mode fs.FileMode) error {
 	if err != nil {
 		return errors.Wrap(err, "open src")
 	}
-	defer in.Close()
+	defer closeutils.MustClose(in)
 
 	out, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode)
 	if err != nil {

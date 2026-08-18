@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"context"
+	"dotfiles/pkg/cli/utils/closeutils"
 	"fmt"
 	"io"
 	"io/fs"
@@ -124,14 +125,14 @@ func copyFile(src, dest string) error {
 		return errors.Wrap(err, "open source file")
 	}
 
-	defer srcFile.Close()
+	defer closeutils.MustClose(srcFile)
 
 	destFile, err := os.Create(dest)
 	if err != nil {
 		return errors.Wrap(err, "create dest file")
 	}
 
-	defer destFile.Close()
+	defer closeutils.MustClose(destFile)
 
 	_, err = io.Copy(destFile, srcFile)
 	if err != nil {

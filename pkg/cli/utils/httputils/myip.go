@@ -2,6 +2,7 @@ package httputils
 
 import (
 	"context"
+	"dotfiles/pkg/cli/utils/closeutils"
 	"io"
 	"net"
 	"net/http"
@@ -19,7 +20,7 @@ func (r *Supplier) MyIP(ctx context.Context) (net.IP, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch ip")
 	}
-	defer resp.Body.Close()
+	defer closeutils.MustClose(resp.Body)
 
 	if resp.StatusCode >= http.StatusBadRequest {
 		return nil, errors.Newf("bad status code: %d", resp.StatusCode)

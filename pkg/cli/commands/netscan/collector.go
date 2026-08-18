@@ -2,6 +2,7 @@ package netscan
 
 import (
 	"context"
+	"dotfiles/pkg/cli/utils/closeutils"
 	"fmt"
 	"iter"
 	netstd "net"
@@ -194,7 +195,7 @@ func (r *Service) scanPort(
 		return
 	}
 
-	defer conn.Close()
+	defer closeutils.MustClose(conn)
 
 	server := r.protoDetection(ctx, ip.String(), port)
 
