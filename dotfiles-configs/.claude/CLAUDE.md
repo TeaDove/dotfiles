@@ -14,6 +14,16 @@ sections at the bottom apply only to that language.
   changes are easier to review and less likely to introduce bugs. Don't refactor or
   reformat unrelated code unless asked.
 
+## Rules, linters, CI/CD
+
+- Never break CI/CD checks, linter rules, or the conventions in this file. You may
+  bypass a rule (e.g. add a `//nolint` directive, disable a check, skip a gate) ONLY
+  when I explicitly allow it for that case, or when that exact rule is already listed
+  among documented exceptions (in this file or other README/DOCS/CLAUDE.md).
+- Default to the strictest interpretation of every rule. For example, global
+  variables are forbidden unless I explicitly say otherwise. When a rule blocks you,
+  ask me instead of silencing or working around it on your own.
+
 ## SVN
 
 - In SVN repositories, NEVER perform mutating actions: do not create branches, do not

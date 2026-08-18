@@ -53,7 +53,7 @@ func NewLogParser() *LogParser {
 	}
 }
 
-func Run(_ context.Context, cmd *cli.Command) error {
+func Run(ctx context.Context, cmd *cli.Command) error {
 	noSave := cmd.Bool(NoSaveFlag.Name)
 
 	var (
@@ -62,35 +62,46 @@ func Run(_ context.Context, cmd *cli.Command) error {
 	)
 
 	if !noSave {
-		err := os.MkdirAll(logDir, 0o755)
-		if err != nil {
-			return errors.Wrap(err, "make log dir")
+		mkdirErr := os.MkdirAll(logDir, 0o755)
+		if mkdirErr != nil {
+			return errors.Wrap(mkdirErr, "make log dir")
 		}
 
 		logPath = filepath.Join(logDir, time.Now().Format("2006-01-02-15-04")+".txt")
 
-		logFile, err := os.Create(logPath)
-		if err != nil {
-			return errors.Wrap(err, "create log file")
+		createdFile, createErr := os.Create(logPath)
+		if createErr != nil {
+			return errors.Wrap(createErr, "create log file")
 		}
-		defer closeutils.MustClose(logFile)
+		defer closeutils.MustClose(createdFile)
 
-		logWriter = logFile
+		logWriter = createdFile
 	}
 
-	err := NewLogParser().colorize(os.Stdin, os.Stdout, logWriter)
-	if err != nil {
-		return errors.Wrap(err, "colorize")
+	done := make(chan error, 1)
+	go func() {
+		done <- NewLogParser().colorize(os.Stdin, os.Stdout, logWriter)
+	}()
+
+	var err error
+	select {
+	case err = <-done:
+	case <-ctx.Done():
+		err = ctx.Err()
 	}
 
 	if !noSave {
 		color.HiCyan("\nstdout saved to %s\n", logPath)
 	}
 
+	if err != nil {
+		return errors.Wrap(err, "colorize")
+	}
+
 	return nil
 }
 
-func (parser *LogParser) colorize(reader io.Reader, stdout io.Writer, logFile io.Writer) error {
+func (r *LogParser) colorize(reader io.Reader, stdout io.Writer, logFile io.Writer) error {
 	bufReader := bufio.NewReader(reader)
 
 	for {
@@ -103,7 +114,7 @@ func (parser *LogParser) colorize(reader io.Reader, stdout io.Writer, logFile io
 				}
 			}
 
-			_, writeErr := io.WriteString(stdout, parser.prettifyLine(line))
+			_, writeErr := io.WriteString(stdout, r.prettifyLine(line))
 			if writeErr != nil {
 				return errors.Wrap(writeErr, "write to stdout")
 			}
@@ -119,15 +130,15 @@ func (parser *LogParser) colorize(reader io.Reader, stdout io.Writer, logFile io
 	}
 }
 
-func (parser *LogParser) prettifyLine(line string) string {
+func (r *LogParser) prettifyLine(line string) string {
 	trimmed := strings.TrimSuffix(line, "\n")
 
-	parsedLog, ok := parser.parse(trimmed)
+	parsedLog, ok := r.parse(trimmed)
 	if !ok {
 		return line
 	}
 
-	levelColor, ok := parser.levelColors[parsedLog.level]
+	levelColor, ok := r.levelColors[parsedLog.level]
 	if !ok {
 		return line
 	}
@@ -137,15 +148,15 @@ func (parser *LogParser) prettifyLine(line string) string {
 		suffix = "\n"
 	}
 
-	coloredCaller := color.New(parser.callerColor).Sprint(parsedLog.caller)
+	coloredCaller := color.New(r.callerColor).Sprint(parsedLog.caller)
 	coloredLevel := color.New(levelColor).Sprintf("%s:", parsedLog.level)
-	coloredMessage := parser.colorizeTags(parsedLog.message)
+	coloredMessage := r.colorizeTags(parsedLog.message)
 
 	return fmt.Sprintf("%s %s %s %s%s", parsedLog.time, coloredCaller, coloredLevel, coloredMessage, suffix)
 }
 
-func (parser *LogParser) parse(line string) (Log, bool) {
-	matches := parser.lineRegexp.FindStringSubmatch(line)
+func (r *LogParser) parse(line string) (Log, bool) {
+	matches := r.lineRegexp.FindStringSubmatch(line)
 	if matches == nil {
 		return Log{}, false
 	}
@@ -153,17 +164,17 @@ func (parser *LogParser) parse(line string) (Log, bool) {
 	return Log{time: matches[1], caller: matches[2], level: matches[3], message: matches[4]}, true
 }
 
-func (parser *LogParser) colorizeTags(message string) string {
+func (r *LogParser) colorizeTags(message string) string {
 	var builder strings.Builder
 
 	rest := message
 	for {
-		matches := parser.tagRegexp.FindStringSubmatch(rest)
+		matches := r.tagRegexp.FindStringSubmatch(rest)
 		if matches == nil {
 			break
 		}
 
-		builder.WriteString(color.New(parser.tagColor).Sprint(matches[1]))
+		builder.WriteString(color.New(r.tagColor).Sprint(matches[1]))
 		builder.WriteString(matches[2])
 		rest = rest[len(matches[0]):]
 	}
