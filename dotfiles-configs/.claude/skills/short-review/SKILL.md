@@ -97,7 +97,7 @@ description, then a newline, then the full description.
 ```
 {{ Error type (functional, spelling, conventions, etc.) }}
 {{ 🟥 high: | 🟨 medium: | 🟩 low: }}
-{{ index }} {{ file:line }}: {{ short description }}:
+{{ index }}. {{ file:line }}: {{ short description }}:
   {{ full description }}
 ```
 
