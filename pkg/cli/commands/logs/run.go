@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"dotfiles/pkg/cli/utils/closeutils"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -20,15 +21,36 @@ const logDir = "/tmp/ulog"
 
 var NoSaveFlag = &cli.BoolFlag{Name: "no-save", Usage: "do not save log to /tmp/ulog"} //nolint:gochecknoglobals // is ok
 
-var logLineRegexp = regexp.MustCompile(`^\d{4}\.\d{2}\.\d{2} (\d{2}:\d{2}:\d{2})\.\d+ (\[[^\]]*\]) ([A-Z]): (.*)$`) //nolint:gochecknoglobals,lll // is ok
+type Log struct {
+	time    string
+	caller  string
+	level   string
+	message string
+}
 
-var levelColors = map[string]color.Attribute{ //nolint:gochecknoglobals // is ok
-	"D": color.FgHiBlack,
-	"I": color.FgGreen,
-	"W": color.FgYellow,
-	"E": color.FgRed,
-	"P": color.FgHiRed,
-	"F": color.FgHiRed,
+type LogParser struct {
+	lineRegexp  *regexp.Regexp
+	tagRegexp   *regexp.Regexp
+	levelColors map[string]color.Attribute
+	callerColor color.Attribute
+	tagColor    color.Attribute
+}
+
+func NewLogParser() *LogParser {
+	return &LogParser{
+		lineRegexp: regexp.MustCompile(`^\d{4}\.\d{2}\.\d{2} (\d{2}:\d{2}:\d{2})\.\d+ (\[[^\]]*\]) ([A-Z]): (.*)$`),
+		tagRegexp:  regexp.MustCompile(`^(\[[^\]]*=[^\]]*\])(\s*)`),
+		levelColors: map[string]color.Attribute{
+			"D": color.FgHiBlack,
+			"I": color.FgGreen,
+			"W": color.FgYellow,
+			"E": color.FgRed,
+			"P": color.FgHiRed,
+			"F": color.FgHiRed,
+		},
+		callerColor: color.FgHiCyan,
+		tagColor:    color.FgHiBlack,
+	}
 }
 
 func Run(_ context.Context, cmd *cli.Command) error {
@@ -56,7 +78,7 @@ func Run(_ context.Context, cmd *cli.Command) error {
 		logWriter = logFile
 	}
 
-	err := colorize(os.Stdin, os.Stdout, logWriter)
+	err := NewLogParser().colorize(os.Stdin, os.Stdout, logWriter)
 	if err != nil {
 		return errors.Wrap(err, "colorize")
 	}
@@ -68,7 +90,7 @@ func Run(_ context.Context, cmd *cli.Command) error {
 	return nil
 }
 
-func colorize(reader io.Reader, stdout io.Writer, logFile io.Writer) error {
+func (parser *LogParser) colorize(reader io.Reader, stdout io.Writer, logFile io.Writer) error {
 	bufReader := bufio.NewReader(reader)
 
 	for {
@@ -81,7 +103,7 @@ func colorize(reader io.Reader, stdout io.Writer, logFile io.Writer) error {
 				}
 			}
 
-			_, writeErr := io.WriteString(stdout, prettifyLine(line))
+			_, writeErr := io.WriteString(stdout, parser.prettifyLine(line))
 			if writeErr != nil {
 				return errors.Wrap(writeErr, "write to stdout")
 			}
@@ -97,17 +119,15 @@ func colorize(reader io.Reader, stdout io.Writer, logFile io.Writer) error {
 	}
 }
 
-func prettifyLine(line string) string {
+func (parser *LogParser) prettifyLine(line string) string {
 	trimmed := strings.TrimSuffix(line, "\n")
 
-	matches := logLineRegexp.FindStringSubmatch(trimmed)
-	if matches == nil {
+	parsedLog, ok := parser.parse(trimmed)
+	if !ok {
 		return line
 	}
 
-	timePart, caller, level, message := matches[1], matches[2], matches[3], matches[4]
-
-	levelColor, ok := levelColors[level]
+	levelColor, ok := parser.levelColors[parsedLog.level]
 	if !ok {
 		return line
 	}
@@ -117,9 +137,38 @@ func prettifyLine(line string) string {
 		suffix = "\n"
 	}
 
-	coloredCaller := color.New(color.FgHiCyan).Sprint(caller)
-	coloredLevel := color.New(levelColor).Sprintf("%s:", level)
+	coloredCaller := color.New(parser.callerColor).Sprint(parsedLog.caller)
+	coloredLevel := color.New(levelColor).Sprintf("%s:", parsedLog.level)
+	coloredMessage := parser.colorizeTags(parsedLog.message)
 
-	// TODO(teadove): через fmt.Sprintf
-	return timePart + " " + coloredCaller + " " + coloredLevel + " " + message + suffix
+	return fmt.Sprintf("%s %s %s %s%s", parsedLog.time, coloredCaller, coloredLevel, coloredMessage, suffix)
+}
+
+func (parser *LogParser) parse(line string) (Log, bool) {
+	matches := parser.lineRegexp.FindStringSubmatch(line)
+	if matches == nil {
+		return Log{}, false
+	}
+
+	return Log{time: matches[1], caller: matches[2], level: matches[3], message: matches[4]}, true
+}
+
+func (parser *LogParser) colorizeTags(message string) string {
+	var builder strings.Builder
+
+	rest := message
+	for {
+		matches := parser.tagRegexp.FindStringSubmatch(rest)
+		if matches == nil {
+			break
+		}
+
+		builder.WriteString(color.New(parser.tagColor).Sprint(matches[1]))
+		builder.WriteString(matches[2])
+		rest = rest[len(matches[0]):]
+	}
+
+	builder.WriteString(rest)
+
+	return builder.String()
 }
