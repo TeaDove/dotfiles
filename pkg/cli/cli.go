@@ -34,6 +34,11 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 				Action: CommandInstall,
 			},
 			{
+				Name:   "l",
+				Usage:  "reads stdin and writes it to stdout unchanged",
+				Action: CommandL,
+			},
+			{
 				Name:   "u",
 				Usage:  "generates random uuid",
 				Action: CommandUUID,

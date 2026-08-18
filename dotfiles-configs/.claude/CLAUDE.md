@@ -14,6 +14,12 @@ sections at the bottom apply only to that language.
   changes are easier to review and less likely to introduce bugs. Don't refactor or
   reformat unrelated code unless asked.
 
+## SVN
+
+- In SVN repositories, NEVER perform mutating actions: do not create branches, do not
+  commit, do not open PRs, and do not offer or suggest doing any of these. I handle
+  all of that myself.
+
 ---
 
 ## Golang (only for Go projects)
