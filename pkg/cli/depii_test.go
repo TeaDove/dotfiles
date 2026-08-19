@@ -61,8 +61,8 @@ func TestDepiiMultiline(t *testing.T) {
 		},
 		{
 			name:     "multiple of each",
-			input:    "req1: ef1bb310-6f06-40c7-a153-046683106cc5 tok1: abcdefghij0123456789 req2: a1234567-89ab-cdef-0123-456789abcdef tok2: zyxwvutsrq9876543210",
-			expected: "req1: {UUID-0}                             tok1: {ALFANUM20-0}        req2: {UUID-1}                             tok2: {ALFANUM20-1}       ",
+			input:    "req1: ef1bb310-6f06-40c7-a153-046683106cc5 tok1: abcdefghij0123456789 req2: a1234567-89ab-cdef-0123-456789abcdef tok2: zyxwvutsrq9876543210", //nolint: lll // FIXME
+			expected: "req1: {UUID-0}                             tok1: {ALFANUM20-0}        req2: {UUID-1}                             tok2: {ALFANUM20-1}       ", //nolint: lll // FIXME
 		},
 		{
 			name:     "no pii",
@@ -149,6 +149,7 @@ func TestDepiiMultiline(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			result := depii(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})

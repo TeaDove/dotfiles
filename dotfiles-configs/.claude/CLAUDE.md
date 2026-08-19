@@ -55,7 +55,7 @@ Do not skip these steps, and don't rely on CI to catch what you missed.
 
 
 ### Comments
-Never add comments in code, with only the following exceptions: 
+Never add comments in code, with only the following exceptions:
 
 #### Comment workarounds/hacks that others couldn't guess, so they don't "fix" them
 Start these comments with `NOFIX:`, e.g.:
@@ -96,7 +96,7 @@ func (f *QueueFanout) Send(ctx context.Context, record Record) error {
 			errs = append(errs, err)
 		}
 	}
-	
+
 	return errors.Join(errs...)
 }
 ```

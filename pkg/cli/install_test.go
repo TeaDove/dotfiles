@@ -11,7 +11,11 @@ import (
 )
 
 func TestDeepMerge(t *testing.T) {
+	t.Parallel()
+
 	t.Run("fragment adds keys and preserves local ones", func(t *testing.T) {
+		t.Parallel()
+
 		dst := map[string]any{"model": "opus", "theme": "dark"}
 		src := map[string]any{"hooks": map[string]any{"Stop": []any{"x"}}}
 
@@ -23,6 +27,8 @@ func TestDeepMerge(t *testing.T) {
 	})
 
 	t.Run("src wins on shared scalar key", func(t *testing.T) {
+		t.Parallel()
+
 		dst := map[string]any{"model": "old"}
 		src := map[string]any{"model": "new"}
 
@@ -32,6 +38,8 @@ func TestDeepMerge(t *testing.T) {
 	})
 
 	t.Run("nested objects merge key-by-key", func(t *testing.T) {
+		t.Parallel()
+
 		dst := map[string]any{"hooks": map[string]any{"Stop": []any{"s"}}}
 		src := map[string]any{"hooks": map[string]any{"Notification": []any{"n"}}}
 
@@ -43,6 +51,8 @@ func TestDeepMerge(t *testing.T) {
 	})
 
 	t.Run("arrays are replaced, not appended", func(t *testing.T) {
+		t.Parallel()
+
 		dst := map[string]any{"list": []any{"a", "b"}}
 		src := map[string]any{"list": []any{"c"}}
 
@@ -52,21 +62,26 @@ func TestDeepMerge(t *testing.T) {
 	})
 
 	t.Run("dst-only key survives", func(t *testing.T) {
+		t.Parallel()
+
 		dst := map[string]any{"keep": 1.0}
 		src := map[string]any{"add": 2.0}
 
 		got := deepMerge(dst, src)
 
-		assert.Equal(t, 1.0, got["keep"])
-		assert.Equal(t, 2.0, got["add"])
+		assert.InDelta(t, 1.0, got["keep"], 0.001)
+		assert.InDelta(t, 2.0, got["add"], 0.001)
 	})
 }
 
 func TestMergeJSONFile(t *testing.T) {
+	t.Parallel()
+
 	fragment := `{"hooks":{"Stop":[{"cmd":"notify"}]}}`
 
 	writeFile := func(t *testing.T, dir, name, content string) string {
 		t.Helper()
+
 		p := filepath.Join(dir, name)
 		require.NoError(t, os.WriteFile(p, []byte(content), 0o644))
 
@@ -75,8 +90,10 @@ func TestMergeJSONFile(t *testing.T) {
 
 	readJSON := func(t *testing.T, path string) map[string]any {
 		t.Helper()
+
 		data, err := os.ReadFile(path)
 		require.NoError(t, err)
+
 		var m map[string]any
 		require.NoError(t, json.Unmarshal(data, &m))
 
@@ -84,6 +101,8 @@ func TestMergeJSONFile(t *testing.T) {
 	}
 
 	t.Run("existing target keeps local keys and gains fragment", func(t *testing.T) {
+		t.Parallel()
+
 		dir := t.TempDir()
 		src := writeFile(t, dir, "fragment.json", fragment)
 		dst := writeFile(t, dir, "settings.json", `{"model":"opus","theme":"dark"}`)
@@ -97,6 +116,8 @@ func TestMergeJSONFile(t *testing.T) {
 	})
 
 	t.Run("re-running is idempotent", func(t *testing.T) {
+		t.Parallel()
+
 		dir := t.TempDir()
 		src := writeFile(t, dir, "fragment.json", fragment)
 		dst := writeFile(t, dir, "settings.json", `{"model":"opus"}`)
@@ -113,6 +134,8 @@ func TestMergeJSONFile(t *testing.T) {
 	})
 
 	t.Run("missing target writes fragment verbatim", func(t *testing.T) {
+		t.Parallel()
+
 		dir := t.TempDir()
 		src := writeFile(t, dir, "fragment.json", fragment)
 		dst := filepath.Join(dir, "settings.json")

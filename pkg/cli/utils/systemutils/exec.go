@@ -1,4 +1,4 @@
-package systemutils //nolint: revive // refactor after new methods
+package systemutils
 
 import (
 	"bufio"
@@ -41,7 +41,9 @@ func ReadFromPipeOrSTDIN() (string, error) {
 	if (stat.Mode() & os.ModeCharDevice) != 0 {
 		reader := bufio.NewReader(os.Stdin)
 
-		text, err := reader.ReadString('\n')
+		var text string
+
+		text, err = reader.ReadString('\n')
 		if err != nil {
 			return "", errors.Wrap(err, "unable to read from stdin")
 		}
@@ -71,6 +73,7 @@ func ReadSTDINUntilEOF() (string, error) {
 	}
 
 	reader := bufio.NewReader(os.Stdin)
+
 	var (
 		out  strings.Builder
 		text string

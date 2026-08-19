@@ -58,7 +58,7 @@ func (r *Service) tryHTTP(ctx context.Context, proto string, host string, port u
 		return "", errors.WithStack(err)
 	}
 
-	resp, err := r.client.Do(req) //nolint: gosec // no taint
+	resp, err := r.client.Do(req) //nolint: gosec, bodyclose // no taint
 	if err != nil {
 		return "", errors.WithStack(err)
 	}

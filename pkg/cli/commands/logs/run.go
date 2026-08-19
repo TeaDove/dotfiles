@@ -4,12 +4,9 @@ import (
 	"bufio"
 	"context"
 	"dotfiles/pkg/cli/utils/closeutils"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -19,42 +16,16 @@ import (
 
 const logDir = "/tmp/ulog"
 
-var NoSaveFlag = &cli.BoolFlag{Name: "no-save", Usage: "do not save log to /tmp/ulog"} //nolint:gochecknoglobals // is ok
-
-type Log struct {
-	time    string
-	caller  string
-	level   string
-	message string
-}
-
-type LogParser struct {
-	lineRegexp  *regexp.Regexp
-	tagRegexp   *regexp.Regexp
-	levelColors map[string]color.Attribute
-	callerColor color.Attribute
-	tagColor    color.Attribute
-}
-
-func NewLogParser() *LogParser {
-	return &LogParser{
-		lineRegexp: regexp.MustCompile(`^\d{4}\.\d{2}\.\d{2} (\d{2}:\d{2}:\d{2})\.\d+ (\[[^\]]*\]) ([A-Z]): (.*)$`),
-		tagRegexp:  regexp.MustCompile(`^(\[[^\]]*=[^\]]*\])(\s*)`),
-		levelColors: map[string]color.Attribute{
-			"D": color.FgHiBlack,
-			"I": color.FgGreen,
-			"W": color.FgYellow,
-			"E": color.FgRed,
-			"P": color.FgHiRed,
-			"F": color.FgHiRed,
-		},
-		callerColor: color.FgHiCyan,
-		tagColor:    color.FgHiBlack,
-	}
-}
+//nolint:gochecknoglobals // is ok
+var NoSaveFlag = &cli.BoolFlag{Name: "no-save", Usage: "do not save log to /tmp/ulog"}
 
 func Run(ctx context.Context, cmd *cli.Command) error {
 	noSave := cmd.Bool(NoSaveFlag.Name)
+
+	formatter, err := NewLogFormatter(cmd.Bool("v"))
+	if err != nil {
+		return errors.Wrap(err, "new log formatter")
+	}
 
 	var (
 		logWriter io.Writer
@@ -79,11 +50,11 @@ func Run(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	done := make(chan error, 1)
+
 	go func() {
-		done <- NewLogParser().colorize(os.Stdin, os.Stdout, logWriter)
+		done <- colorize(formatter, os.Stdin, os.Stdout, logWriter)
 	}()
 
-	var err error
 	select {
 	case err = <-done:
 	case <-ctx.Done():
@@ -101,20 +72,20 @@ func Run(ctx context.Context, cmd *cli.Command) error {
 	return nil
 }
 
-func (r *LogParser) colorize(reader io.Reader, stdout io.Writer, logFile io.Writer) error {
+func colorize(formatter *LogFormatter, reader io.Reader, stdout io.Writer, logFile io.Writer) error {
 	bufReader := bufio.NewReader(reader)
 
 	for {
 		line, err := bufReader.ReadString('\n')
 		if len(line) > 0 {
 			if logFile != nil {
-				_, writeErr := io.WriteString(logFile, line)
+				_, writeErr := io.WriteString(logFile, line) //nolint: gosec // no taint
 				if writeErr != nil {
 					return errors.Wrap(writeErr, "write to log file")
 				}
 			}
 
-			_, writeErr := io.WriteString(stdout, r.prettifyLine(line))
+			_, writeErr := io.WriteString(stdout, formatter.format(line)) //nolint: gosec // no taint
 			if writeErr != nil {
 				return errors.Wrap(writeErr, "write to stdout")
 			}
@@ -128,58 +99,4 @@ func (r *LogParser) colorize(reader io.Reader, stdout io.Writer, logFile io.Writ
 			return errors.Wrap(err, "read line")
 		}
 	}
-}
-
-func (r *LogParser) prettifyLine(line string) string {
-	trimmed := strings.TrimSuffix(line, "\n")
-
-	parsedLog, ok := r.parse(trimmed)
-	if !ok {
-		return line
-	}
-
-	levelColor, ok := r.levelColors[parsedLog.level]
-	if !ok {
-		return line
-	}
-
-	suffix := ""
-	if strings.HasSuffix(line, "\n") {
-		suffix = "\n"
-	}
-
-	coloredCaller := color.New(r.callerColor).Sprint(parsedLog.caller)
-	coloredLevel := color.New(levelColor).Sprintf("%s:", parsedLog.level)
-	coloredMessage := r.colorizeTags(parsedLog.message)
-
-	return fmt.Sprintf("%s %s %s %s%s", parsedLog.time, coloredCaller, coloredLevel, coloredMessage, suffix)
-}
-
-func (r *LogParser) parse(line string) (Log, bool) {
-	matches := r.lineRegexp.FindStringSubmatch(line)
-	if matches == nil {
-		return Log{}, false
-	}
-
-	return Log{time: matches[1], caller: matches[2], level: matches[3], message: matches[4]}, true
-}
-
-func (r *LogParser) colorizeTags(message string) string {
-	var builder strings.Builder
-
-	rest := message
-	for {
-		matches := r.tagRegexp.FindStringSubmatch(rest)
-		if matches == nil {
-			break
-		}
-
-		builder.WriteString(color.New(r.tagColor).Sprint(matches[1]))
-		builder.WriteString(matches[2])
-		rest = rest[len(matches[0]):]
-	}
-
-	builder.WriteString(rest)
-
-	return builder.String()
 }

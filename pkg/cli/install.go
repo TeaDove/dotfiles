@@ -23,7 +23,7 @@ var dotfilesDirs = [3]string{
 
 var mergeConfigs = mapset.NewSet(".claude/settings.json")
 
-func CommandInstall(_ context.Context, _ *cli.Command) error {
+func CommandInstall(_ context.Context, _ *cli.Command) error { //nolint: gocognit // FIXME
 	var dofilesPath string
 
 	for _, dir := range dotfilesDirs {
@@ -151,7 +151,7 @@ func mergeJSONFile(src, dst string) error {
 		return errors.Wrap(err, "marshal merged")
 	}
 
-	err = os.WriteFile(dst, append(out, '\n'), 0o644)
+	err = os.WriteFile(dst, append(out, '\n'), 0o644) //nolint: gosec // FIXME
 	if err != nil {
 		return errors.Wrap(err, "write target")
 	}

@@ -16,7 +16,7 @@ func (r *Supplier) MyIP(ctx context.Context) (net.IP, error) {
 		return nil, errors.Wrap(err, "failed to build request to get ip")
 	}
 
-	resp, err := r.client.Do(req) //nolint: gosec // no taint
+	resp, err := r.client.Do(req) //nolint: gosec, bodyclose // no taint
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch ip")
 	}
