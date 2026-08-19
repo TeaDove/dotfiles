@@ -78,7 +78,7 @@ per block).
 
 ```
 {{ Error type (functional, spelling, conventions, etc.) }}
-{{ 🟥 high: | 🟨 medium: | 🟩 low: }}
+{{ 🟥 high | 🟨 medium | 🟩 low }}
 {{ index }}. {{ file:line }}: {{ short description }}:
   {{ full description }}
 ```
@@ -87,19 +87,19 @@ Example:
 
 ```
 Functional
-🟥 high:
-1 `pkg/cli/install.go:153`: target overwritten instead of merged:
+🟥 high
+1. `pkg/cli/install.go:153`: target overwritten instead of merged:
   When a key is missing in dst the value is taken from src, but an existing hooks
   array is replaced wholesale — confirm this is intended on re-runs.
 
 Conventions
-🟨 medium:
-2 `pkg/cli/install.go:92`: comment outside the allowed NOFIX/LEGACY set:
+🟨 medium
+2. `pkg/cli/install.go:92`: comment outside the allowed NOFIX/LEGACY set:
   CLAUDE.md forbids comments except NOFIX:/LEGACY: — this godoc should be removed.
 
 Spelling
-🟩 low:
-3 `dotfiles-configs/.claude/CLAUDE.md:44`: typo "imposible":
+🟩 low
+3. `dotfiles-configs/.claude/CLAUDE.md:44`: typo "imposible":
   Should be "impossible".
 ```
 
