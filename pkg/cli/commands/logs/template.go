@@ -13,11 +13,11 @@ import (
 const (
 	timeLayout      = "2006.01.02 15:04:05.000000"
 	tagColor        = color.FgHiBlack
-	defaultTemplate = `{{ toTimestamp .Time "15:04:05" }} {{ colorHiCyan .Caller }} ` +
+	defaultTemplate = `{{ colorHiBlack (toTimestamp .Time "15:04:05") }} {{ colorHiWhite .Caller }} ` +
 		`{{ levelColor (printf "%s:" .Level) }} {{ colorTags .Message }}`
-	verboseTemplate = `{{ toTimestamp .Time "2006.01.02 15:04:05.00" }} {{ colorHiCyan .Caller }} ` +
+	verboseTemplate = `{{ colorHiBlack (toTimestamp .Time "2006.01.02 15:04:05.00") }} {{ colorHiWhite .Caller }} ` +
 		`{{ levelColor (printf "%s:" .Level) }}{{ with leadingTags .Message }} {{ . }}{{ end }}` + "\n" +
-		`{{ messageBody .Message }}`
+		`{{ colorWhite (messageBody .Message) }}`
 )
 
 var (
@@ -25,8 +25,8 @@ var (
 	tagRegexp   = regexp.MustCompile(`^(\[[^\]]*=[^\]]*\])(\s*)`)
 	levelColors = map[string]color.Attribute{
 		"D": color.FgHiBlack,
-		"I": color.FgGreen,
-		"W": color.FgYellow,
+		"I": color.FgHiGreen,
+		"W": color.FgHiYellow,
 		"E": color.FgRed,
 		"P": color.FgHiRed,
 		"F": color.FgHiRed,
@@ -122,6 +122,7 @@ func templateFuncs() template.FuncMap {
 		"colorMagenta": color.MagentaString,
 		"colorCyan":    color.CyanString,
 		"colorWhite":   color.WhiteString,
+		"colorHiWhite": color.HiWhiteString,
 		"colorHiBlack": color.HiBlackString,
 		"colorHiCyan":  color.HiCyanString,
 	}
@@ -196,7 +197,7 @@ func colorTags(message string) string {
 		rest = rest[len(matches[0]):]
 	}
 
-	builder.WriteString(rest)
+	builder.WriteString(color.WhiteString(rest))
 
 	return builder.String()
 }
