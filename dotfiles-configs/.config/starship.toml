@@ -4,7 +4,8 @@ right_format = """$username$hostname$git_branch$git_status$cmd_duration"""
 
 [directory]
 format = "[$path]($style)[$read_only]($read_only_style) "
-truncation_length = -1
+truncation_length = 3
+fish_style_pwd_dir_length = 1
 style = "#fb4934 bold"
 truncate_to_repo = true
 
