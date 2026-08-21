@@ -23,7 +23,7 @@ var (
 	lineRegexp = regexp.MustCompile(
 		`^(\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}\.\d+) (\[[^\]]*\]) ([A-Z]): ((?:\[[^\]]*=[^\]]*\] *)*)(.*)$`,
 	)
-	argRegexp   = regexp.MustCompile(`[A-Za-z][A-Za-z0-9_]*=`)
+	argRegexp   = regexp.MustCompile(`[A-Za-z][A-Za-z0-9_\-]*=`)
 	tealColor   = color.RGB(0x42, 0x9B, 0x9C)
 	levelColors = map[string]color.Attribute{
 		"D": color.FgHiBlack,

@@ -43,6 +43,24 @@ function sss
     .
 end
 
+function cbox
+    set -l proj (pwd)
+    docker run -it --rm \
+        --cap-add=NET_ADMIN --cap-add=NET_RAW \
+        -v $proj:$proj \
+        -v claude-box-go-mod:/go/pkg/mod \
+        -v claude-box-go-build:/home/dev/.cache/go-build \
+        -v claude-box-pip:/home/dev/.cache/pip \
+        -v claude-box-precommit:/home/dev/.cache/pre-commit \
+        -v claude-box-home:/home/dev/.claude \
+        -v $HOME/.claude/CLAUDE.md:/home/dev/.claude/CLAUDE.md:ro \
+        -v $HOME/.claude/skills:/home/dev/.claude/skills:ro \
+        -v $HOME/.claude/projects:/home/dev/.claude/projects \
+        -w $proj \
+        claude-box \
+        bash -c "sudo /usr/local/bin/init-firewall.sh && exec claude --dangerously-skip-permissions $argv"
+end
+
 # set     prefix=/opt/homebrew
 set gnubin_path "$(find -L "/opt/homebrew/opt" -name gnubin | sort | tr '\n' :)"
 

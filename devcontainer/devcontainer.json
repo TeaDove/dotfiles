@@ -1,0 +1,22 @@
+{
+  "name": "claude-box",
+  "image": "claude-box",
+  "remoteUser": "dev",
+  "runArgs": [
+    "--cap-add=NET_ADMIN",
+    "--cap-add=NET_RAW"
+  ],
+  "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
+  "workspaceFolder": "${localWorkspaceFolder}",
+  "mounts": [
+    "source=claude-box-go-mod,target=/go/pkg/mod,type=volume",
+    "source=claude-box-go-build,target=/home/dev/.cache/go-build,type=volume",
+    "source=claude-box-pip,target=/home/dev/.cache/pip,type=volume",
+    "source=claude-box-precommit,target=/home/dev/.cache/pre-commit,type=volume",
+    "source=claude-box-home,target=/home/dev/.claude,type=volume",
+    "source=${localEnv:HOME}/.claude/CLAUDE.md,target=/home/dev/.claude/CLAUDE.md,type=bind,readonly",
+    "source=${localEnv:HOME}/.claude/skills,target=/home/dev/.claude/skills,type=bind,readonly",
+    "source=${localEnv:HOME}/.claude/projects,target=/home/dev/.claude/projects,type=bind"
+  ],
+  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh"
+}

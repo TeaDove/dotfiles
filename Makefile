@@ -1,4 +1,4 @@
-.PHONY: ckeck install upload
+.PHONY: ckeck install upload cbox-build
 
 PKG_VERSION ?= $(shell cat VERSION)
 PKG_OUTPUT ?= build/u
@@ -13,3 +13,6 @@ test:
 install:
 	$(GO) install u.go
 	u install
+
+cbox-build:
+	docker build -t claude-box devcontainer
