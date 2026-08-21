@@ -81,6 +81,17 @@ iptables -P INPUT DROP
 iptables -P OUTPUT DROP
 iptables -P FORWARD DROP
 
+if command -v ip6tables >/dev/null 2>&1 && ip6tables -L >/dev/null 2>&1; then
+  ip6tables -F 2>/dev/null || true
+  ip6tables -A INPUT  -i lo -j ACCEPT
+  ip6tables -A OUTPUT -o lo -j ACCEPT
+  ip6tables -A INPUT  -m state --state ESTABLISHED,RELATED -j ACCEPT
+  ip6tables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+  ip6tables -P INPUT DROP
+  ip6tables -P OUTPUT DROP
+  ip6tables -P FORWARD DROP
+fi
+
 echo "Firewall configured. Verifying..."
 if curl -s --max-time 5 https://api.anthropic.com >/dev/null 2>&1; then
   echo "OK: api.anthropic.com reachable"
@@ -88,10 +99,14 @@ else
   echo "WARNING: api.anthropic.com NOT reachable"
 fi
 if curl -s --max-time 5 https://example.com >/dev/null 2>&1; then
-  echo "ERROR: example.com reachable — allowlist is NOT restricting traffic; refusing to continue"
+  echo "ERROR: example.com reachable over IPv4 — allowlist is NOT restricting traffic; refusing to continue"
   exit 1
 fi
-echo "OK: example.com blocked as expected"
+if curl -6 -s --max-time 5 https://example.com >/dev/null 2>&1; then
+  echo "ERROR: example.com reachable over IPv6 — allowlist is NOT restricting v6 traffic; refusing to continue"
+  exit 1
+fi
+echo "OK: example.com blocked as expected (IPv4 + IPv6)"
 
 ( while true; do sleep "$REFRESH_INTERVAL"; resolve_domains; done ) >/dev/null 2>&1 &
 disown || true
