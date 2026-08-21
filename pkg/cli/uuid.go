@@ -4,15 +4,16 @@ import (
 	"context"
 	"crypto/rand"
 	"dotfiles/pkg/cli/utils/systemutils"
+	"encoding/binary"
 	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
 	"time"
+	"uuid"
 
 	"github.com/cockroachdb/errors"
 	"github.com/fatih/color"
-	"github.com/google/uuid"
 	"github.com/urfave/cli/v3"
 )
 
@@ -26,7 +27,7 @@ func CommandUUID(_ context.Context, command *cli.Command) error {
 
 func CommandUUID7(_ context.Context, cmd *cli.Command) error {
 	printStrings(cmd, func() string {
-		u := uuid.Must(uuid.NewV7())
+		u := uuid.NewV7()
 
 		if !cmd.Bool(verboseFlag.Name) {
 			return u.String()
@@ -55,9 +56,9 @@ func CommandUUID7Time(_ context.Context, cmd *cli.Command) error {
 
 	switch {
 	case cmd.Bool(maxFlag.Name):
-		u = setV7time(uuid.Max, uuidTime)
+		u = setV7time(uuid.Max(), uuidTime)
 	case cmd.Bool(minFlag.Name):
-		u = setV7time(uuid.Nil, uuidTime)
+		u = setV7time(uuid.Nil(), uuidTime)
 	default:
 		u = setV7time(uuid.New(), uuidTime)
 	}
@@ -89,7 +90,7 @@ func CommandUUID7Decode(_ context.Context, cmd *cli.Command) error {
 	if cmd.Bool(verboseFlag.Name) {
 		fmt.Print(verboseUUID(u))
 	} else {
-		t, r := time.Unix(u.Time().UnixTime()), extractRandomPartHexV7(u)
+		t, r := extractTimePartV7(u), extractRandomPartHexV7(u)
 		fmt.Printf("%s %s\n", t.String(), r)
 	}
 
@@ -134,12 +135,22 @@ func extractRandomPartHexV7(u uuid.UUID) string {
 	return fmt.Sprintf("%019x", x)
 }
 
+func extractTimePartV7(u uuid.UUID) time.Time {
+	// based on: https://github.com/google/uuid/blob/master/time.go#L22
+	v := binary.BigEndian.Uint64(u[:8])
+	sec := int64((v >> 16) * 10000)
+	nsec := (sec % 10000000) * 100
+	sec /= 10000000
+
+	return time.Unix(sec, nsec).UTC()
+}
+
 func verboseUUID(u uuid.UUID) string {
-	t, r := time.Unix(u.Time().UnixTime()), extractRandomPartHexV7(u)
+	t, r := extractTimePartV7(u), extractRandomPartHexV7(u)
 
 	var out strings.Builder
 	fmt.Fprintf(&out, "input: %s\n", color.CyanString(u.String()))
-	fmt.Fprintf(&out, "time: %s\n", color.BlueString(t.String()))
+	fmt.Fprintf(&out, "time: %s\n", color.BlueString(t.Local().String()))
 	fmt.Fprintf(&out, "time utc: %s\n", color.BlueString(t.UTC().String()))
 	fmt.Fprintf(&out, "random: %s\n", color.GreenString(r))
 

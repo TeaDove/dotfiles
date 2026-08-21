@@ -5,10 +5,10 @@ import (
 	"crypto/md5" //nolint: gosec // as expected
 	"dotfiles/pkg/cli/utils/systemutils"
 	"fmt"
+	"uuid"
 
 	"github.com/cockroachdb/errors"
 	"github.com/fatih/color"
-	"github.com/google/uuid"
 	"github.com/urfave/cli/v3"
 )
 

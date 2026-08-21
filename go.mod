@@ -1,6 +1,6 @@
 module dotfiles
 
-go 1.26
+go 1.27
 
 require (
 	github.com/charmbracelet/bubbles v1.0.0
@@ -10,10 +10,9 @@ require (
 	github.com/deckarep/golang-set/v2 v2.9.0
 	github.com/endobit/oui v0.7.0
 	github.com/fatih/color v1.19.0
-	github.com/google/uuid v1.6.0
 	github.com/mostlygeek/arp v0.0.0-20170424181311-541a2129847a
 	github.com/shirou/gopsutil/v4 v4.26.7
-	github.com/stretchr/testify v1.12.0
+	github.com/stretchr/testify v1.12.1
 	github.com/teadove/netports v0.0.6
 	github.com/teadove/teasutils/utils v1.0.1
 	github.com/tidwall/match v1.2.0
@@ -50,7 +49,7 @@ require (
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
-	github.com/mattn/go-runewidth v0.0.27 // indirect
+	github.com/mattn/go-runewidth v0.0.28 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
@@ -68,6 +67,7 @@ require (
 	github.com/xo/terminfo v1.0.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.mongodb.org/mongo-driver v1.17.9 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/mod v0.40.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/term v0.45.0 // indirect

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+	"uuid"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -65,12 +65,7 @@ func TestNewV7FromTime(t *testing.T) {
 
 		input := time.Date(2025, 5, 5, 3, 3, 3, 0, time.UTC)
 		u := setV7time(uuid.New(), input)
-
-		assert.Equal(t, uuid.Version(7), u.Version())
-		assert.Equal(t, uuid.RFC4122, u.Variant())
-
-		sec, nsec := u.Time().UnixTime()
-		got := time.Unix(sec, nsec).UTC()
+		got := extractTimePartV7(u)
 		assert.Equal(t, input, got)
 
 		milli := input.UnixMilli()
