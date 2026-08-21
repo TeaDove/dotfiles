@@ -102,3 +102,11 @@ func TestFormatVerbose(t *testing.T) {
 		})
 	}
 }
+
+func TestArgRegexp(t *testing.T) {
+	t.Parallel()
+
+	found := argRegexp.FindAllString("Job completed, elapsed=20m, total=200, deleted=1", -1)
+
+	assert.Equal(t, []string{"elapsed=", "total=", "deleted="}, found)
+}

@@ -12,17 +12,19 @@ import (
 
 const (
 	timeLayout      = "2006.01.02 15:04:05.000000"
-	tagColor        = color.FgHiBlack
 	defaultTemplate = `{{ colorHiBlack (toTimestamp .Time "15:04:05") }} {{ colorHiWhite .Caller }} ` +
-		`{{ levelColor (printf "%s:" .Level) }} {{ colorTags .Message }}`
+		`{{ levelColor (printf "%s:" .Level) }} {{ if .Tags }}{{ colorHiBlack .Tags }}{{ end }}{{ colorBody .Body }}`
 	verboseTemplate = `{{ colorHiBlack (toTimestamp .Time "2006.01.02 15:04:05.00") }} {{ colorHiWhite .Caller }} ` +
-		`{{ levelColor (printf "%s:" .Level) }}{{ with leadingTags .Message }} {{ . }}{{ end }}` + "\n" +
-		`{{ colorWhite (messageBody .Message) }}`
+		`{{ levelColor (printf "%s:" .Level) }}{{ if .Tags }} {{ colorHiBlack (trimSpace .Tags) }}{{ end }}` + "\n" +
+		`{{ colorBody .Body }}`
 )
 
 var (
-	lineRegexp  = regexp.MustCompile(`^(\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}\.\d+) (\[[^\]]*\]) ([A-Z]): (.*)$`)
-	tagRegexp   = regexp.MustCompile(`^(\[[^\]]*=[^\]]*\])(\s*)`)
+	lineRegexp = regexp.MustCompile(
+		`^(\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}\.\d+) (\[[^\]]*\]) ([A-Z]): ((?:\[[^\]]*=[^\]]*\] *)*)(.*)$`,
+	)
+	argRegexp   = regexp.MustCompile(`[A-Za-z][A-Za-z0-9_]*=`)
+	tealColor   = color.RGB(0x42, 0x9B, 0x9C)
 	levelColors = map[string]color.Attribute{
 		"D": color.FgHiBlack,
 		"I": color.FgHiGreen,
@@ -34,11 +36,12 @@ var (
 )
 
 type Log struct {
-	Time    time.Time
-	Caller  string
-	Level   string
-	Message string
-	Line    string
+	Time   time.Time
+	Caller string
+	Level  string
+	Tags   string
+	Body   string
+	Line   string
 }
 
 type LogFormatter struct {
@@ -99,11 +102,12 @@ func parseLog(line string) (Log, bool) {
 	}
 
 	return Log{
-		Time:    parsedTime,
-		Caller:  matches[2],
-		Level:   matches[3],
-		Message: matches[4],
-		Line:    line,
+		Time:   parsedTime,
+		Caller: matches[2],
+		Level:  matches[3],
+		Tags:   matches[4],
+		Body:   matches[5],
+		Line:   line,
 	}, true
 }
 
@@ -111,9 +115,7 @@ func templateFuncs() template.FuncMap {
 	return template.FuncMap{
 		"toTimestamp":  toTimestamp,
 		"levelColor":   levelColorFunc,
-		"colorTags":    colorTags,
-		"leadingTags":  leadingTags,
-		"messageBody":  messageBody,
+		"trimSpace":    strings.TrimSpace,
 		"colorBlack":   color.BlackString,
 		"colorRed":     color.RedString,
 		"colorGreen":   color.GreenString,
@@ -125,7 +127,29 @@ func templateFuncs() template.FuncMap {
 		"colorHiWhite": color.HiWhiteString,
 		"colorHiBlack": color.HiBlackString,
 		"colorHiCyan":  color.HiCyanString,
+		"colorTeal":    tealColor.SprintFunc(),
+		"colorBody":    colorBody,
 	}
+}
+
+func colorBody(body string) string {
+	var builder strings.Builder
+
+	last := 0
+	for _, loc := range argRegexp.FindAllStringIndex(body, -1) {
+		if loc[0] > last {
+			builder.WriteString(color.WhiteString(body[last:loc[0]]))
+		}
+
+		builder.WriteString(tealColor.Sprint(body[loc[0]:loc[1]]))
+		last = loc[1]
+	}
+
+	if last < len(body) {
+		builder.WriteString(color.WhiteString(body[last:]))
+	}
+
+	return builder.String()
 }
 
 func toTimestamp(value any, layout string, timezone ...string) (string, error) {
@@ -180,56 +204,4 @@ func levelColorFunc(level string) string {
 	}
 
 	return color.New(attr).Sprint(level)
-}
-
-func colorTags(message string) string {
-	var builder strings.Builder
-
-	rest := message
-	for {
-		matches := tagRegexp.FindStringSubmatch(rest)
-		if matches == nil {
-			break
-		}
-
-		builder.WriteString(color.New(tagColor).Sprint(matches[1]))
-		builder.WriteString(matches[2])
-		rest = rest[len(matches[0]):]
-	}
-
-	builder.WriteString(color.WhiteString(rest))
-
-	return builder.String()
-}
-
-func leadingTags(message string) string {
-	var builder strings.Builder
-
-	rest := message
-	for {
-		matches := tagRegexp.FindStringSubmatch(rest)
-		if matches == nil {
-			break
-		}
-
-		builder.WriteString(color.New(tagColor).Sprint(matches[1]))
-		builder.WriteString(matches[2])
-		rest = rest[len(matches[0]):]
-	}
-
-	return strings.TrimRight(builder.String(), " ")
-}
-
-func messageBody(message string) string {
-	rest := message
-	for {
-		matches := tagRegexp.FindStringSubmatch(rest)
-		if matches == nil {
-			break
-		}
-
-		rest = rest[len(matches[0]):]
-	}
-
-	return rest
 }
