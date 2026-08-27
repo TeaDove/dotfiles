@@ -149,17 +149,6 @@ Start these comments with `LEGACY:`, and add `TODO:` if applicable, e.g.:
 leftPoint, rightPoint = rightPoint, leftPoint
 ```
 
-#### Never add a message in tests
-Bad:
-```go
-require.Equal(t, id, user.ID, "user ID should be the same as passed ID")
-```
-
-Good:
-```go
-require.Equal(t, id, user.ID)
-```
-
 #### Never add a comment in any other case
 
 Bad:
@@ -201,3 +190,56 @@ field = new("John")
 ```
 
 Do **not** "fix" these into temporary-variable form — that is a regression, not an improvement.
+
+### Tests
+
+- Use `t.Context()`, not `context.Background()`.
+- Always call `t.Parallel()` (and `tt.Parallel()` inside subtests).
+- Never pass a message to an assertion.
+
+Bad:
+```go
+require.Equal(t, id, user.ID, "user ID should be the same as passed ID")
+```
+
+Good:
+```go
+require.Equal(t, id, user.ID)
+```
+
+- Group several related cases into one table-driven test:
+```go
+func TestAvg(t *testing.T) {
+    t.Parallel()
+
+    testCases := []struct {
+        name string
+        arr  []int
+        exp  float64
+    }{
+        {
+            name: "same numbers",
+            arr:  []int{2, 2, 2},
+            exp:  2,
+        },
+        {
+            name: "simple 3",
+            arr:  []int{1, 2, 3},
+            exp:  2,
+        },
+        {
+            name: "negative values",
+            arr:  []int{-2, 0, 2},
+            exp:  0,
+        },
+    }
+
+    for _, tc := range testCases {
+        t.Run(tc.name, func(tt *testing.T) {
+            tt.Parallel()
+
+            require.InDelta(tt, tc.exp, avg(tc.arr), 0.00001)
+        })
+    }
+}
+```
