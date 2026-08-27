@@ -1,6 +1,6 @@
 #!/bin/bash
 
-brew install tmux git jql lsd dust lazygit fish zsh gopass 2fa curlie wget cloc curlie tree neovim bat lolcat kitty terraform
+brew install tmux git jql yq lsd dust lazygit fish zsh gopass 2fa curlie wget cloc curlie tree neovim bat lolcat kitty terraform graphviz
 
 # Starship
 curl -sS https://starship.rs/install.sh | sh
