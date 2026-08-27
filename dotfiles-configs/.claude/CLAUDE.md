@@ -149,6 +149,26 @@ Start these comments with `LEGACY:`, and add `TODO:` if applicable, e.g.:
 leftPoint, rightPoint = rightPoint, leftPoint
 ```
 
+#### Never add a comment in tests
+Bad:
+```go
+// Arrange
+id := newID()
+
+// Act: get user
+user := getUser(t.Context(), id)
+
+// Assert: check user id
+require.Equal(t, user.ID, id, "user ID should be the same as passed ID")
+```
+Good:
+```go
+id := newID()
+user := getUser(t.Context(), id)
+
+require.Equal(t, user.ID, id)
+```
+
 #### Never add a comment in any other case
 
 Bad:

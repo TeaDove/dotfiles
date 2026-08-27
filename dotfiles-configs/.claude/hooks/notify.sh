@@ -29,9 +29,18 @@ fi
 [ -z "$title" ] && title="$dir"
 
 case "$event" in
-  stop)         headline="Task done";          sound="Hero" ;;
-  notification) headline="Need you attention";  sound="Hero" ;;
-  *)            headline="Claude Code";         sound="Hero" ;;
+stop)
+  headline="Task done"
+  sound="Hero"
+  ;;
+notification)
+  headline="Need you attention"
+  sound="Hero"
+  ;;
+*)
+  headline="Claude Code"
+  sound="Hero"
+  ;;
 esac
 
 # AppleScript strings are double-quoted; strip characters that would break out.
@@ -41,4 +50,4 @@ title_bar="$(sanitize "Claude · $headline")"
 dir="$(sanitize "$dir")"
 
 osascript -e "display notification \"$body\" with title \"$title_bar\" subtitle \"$dir\" sound name \"$sound\"" 2>/dev/null || true
-goteleout "$title_bar in ($dir) about \"$body\""
+# goteleout "$title_bar in ($dir) about \"$body\""
