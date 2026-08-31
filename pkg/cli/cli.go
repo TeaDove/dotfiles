@@ -9,6 +9,7 @@ import (
 	"dotfiles/pkg/cli/commands/netserve"
 	"dotfiles/pkg/cli/commands/netsystem"
 	"dotfiles/pkg/cli/commands/nettraceroute"
+	"dotfiles/pkg/cli/commands/sdd"
 	"dotfiles/pkg/cli/commands/watch"
 	"os"
 	"runtime"
@@ -147,6 +148,12 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 				Name:   "depii",
 				Usage:  "depersonalize string (uuid, alfanum20)",
 				Action: CommandDePII,
+			},
+			{
+				Name:   "sdd",
+				Usage:  "spec-driven development orchestrator: dotfiles sdd <spec-file>",
+				Action: sdd.Run,
+				Flags:  []cli.Flag{verboseFlag},
 			},
 		},
 	}

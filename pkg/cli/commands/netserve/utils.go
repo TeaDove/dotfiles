@@ -12,7 +12,7 @@ func handle(fn func(w http.ResponseWriter, r *http.Request) error) func(w http.R
 		err := fn(w, r)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, `{"error": %s}`, err.Error()) //nolint: gosec // no taint
+			fmt.Fprintf(w, `{"error": %s}`, err.Error())
 			fmt.Printf("%s: %s\n", color.RedString("Unexpected error in http handler"), err.Error())
 		}
 	}
