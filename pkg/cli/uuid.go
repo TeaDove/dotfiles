@@ -150,7 +150,7 @@ func verboseUUID(u uuid.UUID) string {
 
 	var out strings.Builder
 	fmt.Fprintf(&out, "input: %s\n", color.CyanString(u.String()))
-	fmt.Fprintf(&out, "time: %s\n", color.BlueString(t.Local().String()))
+	fmt.Fprintf(&out, "time: %s\n", color.BlueString(t.Local().String())) //nolint:gosmopolitan // FIXME
 	fmt.Fprintf(&out, "time utc: %s\n", color.BlueString(t.UTC().String()))
 	fmt.Fprintf(&out, "random: %s\n", color.GreenString(r))
 
