@@ -79,13 +79,13 @@ func colorize(formatter *LogFormatter, reader io.Reader, stdout io.Writer, logFi
 		line, err := bufReader.ReadString('\n')
 		if len(line) > 0 {
 			if logFile != nil {
-				_, writeErr := io.WriteString(logFile, line) //nolint: gosec // no taint
+				_, writeErr := io.WriteString(logFile, line)
 				if writeErr != nil {
 					return errors.Wrap(writeErr, "write to log file")
 				}
 			}
 
-			_, writeErr := io.WriteString(stdout, formatter.format(line)) //nolint: gosec // no taint
+			_, writeErr := io.WriteString(stdout, formatter.format(line))
 			if writeErr != nil {
 				return errors.Wrap(writeErr, "write to stdout")
 			}

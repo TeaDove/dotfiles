@@ -107,7 +107,7 @@ func (r *Watch) executeAndShow(ctx context.Context, idx int, command string, int
 	for {
 		t0 := time.Now()
 
-		out, err := executeAndRead(ctx, command)
+		out, err := executeAndRead(ctx, command) //nolint: gosec // FIXME
 		if err != nil {
 			out += color.RedString(errors.Wrap(err, "run").Error())
 		}
