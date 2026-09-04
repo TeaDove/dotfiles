@@ -115,6 +115,7 @@ After every code change, before reporting the task as complete, you **must**:
 
 1. `go build ./...` — confirm it compiles.
 2. `go test ./...` (or the relevant packages) — confirm tests pass.
+3. `golangci-lint run ./...` / `pre-commit run -a` - confirm lints work.
 
 Do not skip these steps, and don't rely on CI to catch what you missed.
 
