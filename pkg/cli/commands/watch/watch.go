@@ -107,6 +107,8 @@ func (r *Watch) executeAndShow(ctx context.Context, idx int, command string, int
 	for {
 		t0 := time.Now()
 
+		// TODO(teadove): запускать через bash -c, но учитывать, что могут быть переданы кавычки
+		// Короче сделать так, чтобы работало u watch 'host teadove.space | sort'
 		out, err := executeAndRead(ctx, command) //nolint: gosec // FIXME
 		if err != nil {
 			out += color.RedString(errors.Wrap(err, "run").Error())
