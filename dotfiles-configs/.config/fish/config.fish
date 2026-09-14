@@ -15,32 +15,14 @@ alias b="bpython"
 alias s='source .venv/bin/activate.fish'
 alias mac-unquarantine='xattr -d com.apple.quarantine'
 
-alias speed='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -B'
-
 alias jup='cd ~/projects/jup && python3.14 -m jupyterlab ; cd -'
 alias jup-darwin='cd ~/projects/jup && python3.14 -m jupyterlab --app-dir=/opt/homebrew/share/jupyter/lab ; cd -'
 alias ljup='python3.14 -m jupyterlab'
 alias ljup-darwin='python3.14 -m jupyterlab --app-dir=/opt/homebrew/share/jupyter/lab'
 alias cloc-git='cloc (git ls-tree -r master --name-only)'
 
-alias kubectl="kubecolor"
-alias kwatch='u watch -i=1s "kubecolor --force-colors config view --minify -o jsonpath={..namespace}" "kubecolor --force-colors get deployments -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas" "kubecolor --force-colors get statefulset -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[*].image,READY_REPLICAS:.status.readyReplicas" "kubecolor --force-colors get pods"'
-alias ass="mkdir -p ~/.local/agent-sandbox && cd ~/.local/agent-sandbox && claude --model Haiku ; cd -"
-
 function p
     ps aux | head -n 1 && ps aux | grep -v grep --color=auto | grep $argv
-end
-
-function kexec
-    kubectl exec -it $(kubectl -n $argv[1] get pod -o custom-columns=CONTAINER:.metadata.name | grep $argv[2]) -- $argv[3..]
-end
-
-function envsource
-    . (sed 's/^/export /' .env | psub)
-end
-
-function sss
-    .
 end
 
 function cbox
