@@ -15,6 +15,7 @@ alias b="bpython"
 alias speed='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -B'
 alias d='dust'
 alias s='source .venv/bin/activate'
+alias tm='tmux new-session -A -s main'
 
 function p () { ps aux | head -n 1 && ps aux | grep -v grep --color=auto | grep $argv }
 export PATH=$HOME/.local/bin:/usr/local/go/bin:$HOME/.cargo/bin:/opt/homebrew/bin:$HOME/go/bin:$PATH

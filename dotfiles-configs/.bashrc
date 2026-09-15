@@ -32,6 +32,7 @@ fi
 alias ll='ls -la --color=always 2&>/dev/null || ls -laG --color=always'
 alias l='ls -l --color=always 2&>/dev/null || ls -lG --color=always'
 alias s='source .venv/bin/activate'
+alias tm='tmux new-session -A -s main'
 
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases

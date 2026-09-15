@@ -14,6 +14,7 @@ alias d='dust'
 alias b="bpython"
 alias s='source .venv/bin/activate.fish'
 alias mac-unquarantine='xattr -d com.apple.quarantine'
+alias tm='tmux new-session -A -s main'
 
 alias jup='cd ~/projects/jup && python3.14 -m jupyterlab ; cd -'
 alias jup-darwin='cd ~/projects/jup && python3.14 -m jupyterlab --app-dir=/opt/homebrew/share/jupyter/lab ; cd -'
