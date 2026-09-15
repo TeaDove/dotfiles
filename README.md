@@ -1,40 +1,12 @@
-# Install
-
+## Cheat sheet
+### Kitty term fix
 ```shell
-curl -s https://raw.githubusercontent.com/teadove/dotfiles/master/install.py | python3 -B
+infocmp -x xterm-kitty | pssh 2a02:6b8:c02:901:0:fce0:0:2af  'tic -x -o ~/.terminfo /dev/stdin'
 ```
 
-# Features
-CLI utils
+## Install
+
 ```shell
-NAME:
-   dotfiles - A new cli application
-
-USAGE:
-   dotfiles [global options] [command [command options]]
-
-DESCRIPTION:
-   set of useful command
-
-COMMANDS:
-   install  install all dotfiles, i.e. fish config
-   update   updates this executable
-   l        tail stdin, save to /tmp/ulogs/{date}.logs, live regex filter
-   u        generates random uuid
-   t        generates save to use password
-   g        git utils
-   net      net utils (net l: locates service by ip or domain)
-   sha      hashes string as sha512
-   watch    like unix watch, but better
-   ss       starship config swap
-   code     analyse code
-   help, h  Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   -v          verbose info
-   --help, -h  show help
+git clone https://github.com/teadove/dotfiles
+make install
 ```
-
-i.e. `u net scan`
-
-![img.png](img.png)
