@@ -12,6 +12,8 @@ snap install lsd
 
 curl -sS https://starship.rs/install.sh | sh
 
+go install github.com/teadove/goteleout@latest
+
 git config --global credential.helper store
 
 chsh -s $(which fish)

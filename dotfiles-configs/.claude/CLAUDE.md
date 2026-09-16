@@ -107,28 +107,12 @@ If a review turns up nothing, output no blocks and just write `No issues found`.
 
 ---
 
-## Golang (only for Go projects)
-
-### Definition of done
-
-After every code change, before reporting the task as complete, you **must**:
-
-1. `go build ./...` — confirm it compiles.
-2. `go test ./...` (or the relevant packages) — confirm tests pass.
-3. `golangci-lint run ./...` / `pre-commit run -a` - confirm lints work.
-
-Do not skip these steps, and don't rely on CI to catch what you missed.
+## General (all languages)
 
 ### Code style
 
-- Packages, files: lowercase + layer suffix (`userrepo`, `eventservice`), not (`user-service`, `event-service`)
-- Prefer long variable names, e.g. `queue := NewQueue()`, not `q := NewQueue()`, with exceptions like `ctx`, `i` (in loops), etc.
-- Errors should always be wrapped
-- Name error variables `err`, unless that would cause shadowing or hide a wrapped/outer error you still need — only then use a qualified name (e.g. `jsonErr`)
 - Functions ~80 lines max; return early on errors
-- Always use the explicit two-line form. Never combine assignment and `nil` check in one `if` statement
-- Never mute parse errors from database rows or external input. Always propagate them.
-
+- Never mute parse errors from database rows or external input. Always propagate them or log.
 
 ### Comments
 Never add comments in code, with only the following exceptions:
@@ -152,30 +136,44 @@ leftPoint, rightPoint = rightPoint, leftPoint
 
 #### Never add a comment in any other case
 
-Bad:
-```go
-// QueueFanout is a Queue that fans every write out to several Queue (e.g. a Kafka and a local JSONL file)
-type QueueFanout struct {
-  queues []Queue
-}
-```
+## Python (only for Python projects)
 
-Bad:
-```go
-// SaveMetricPoint writes the record to every queue; it does not stop on the
-// first error, so one failing destination never starves the others.
-func (f *QueueFanout) Send(ctx context.Context, record Record) error {
-	var errs []error
-	for _, q := range f.queues {
-		err := q.Send(ctx, record)
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}
+### Definition of done
 
-	return errors.Join(errs...)
-}
-```
+After every code change, before reporting the task as complete, you **must** run whatever the project ships:
+
+1. Run the code — confirm it executes.
+2. Run the tests (e.g. `pytest`) — confirm they pass.
+3. Run the formatters/linters (`ruff`, `black`, `pre-commit run -a`, depending on the project) — confirm they pass.
+
+Do not skip these steps, and don't rely on CI to catch what you missed.
+
+### Code style
+
+- Always annotate types.
+- When working with JSON, always use pydantic.
+- Define classes with `@dataclass`.
+- In `.ipynb` notebooks: keep all imports in a single cell at the very top of the file; put all settings (e.g. chart colors) in the second cell.
+
+## Golang (only for Go projects)
+
+### Definition of done
+
+After every code change, before reporting the task as complete, you **must**:
+
+1. `go build ./...` — confirm it compiles.
+2. `go test ./...` (or the relevant packages) — confirm tests pass.
+3. `golangci-lint run ./...` / `pre-commit run -a` - confirm lints work.
+
+Do not skip these steps, and don't rely on CI to catch what you missed.
+
+### Code style
+
+- Packages, files: lowercase + layer suffix (`userrepo`, `eventservice`), not (`user-service`, `event-service`)
+- Prefer long variable names, e.g. `queue := NewQueue()`, not `q := NewQueue()`, with exceptions like `ctx`, `i` (in loops), etc.
+- Errors should always be wrapped
+- Name error variables `err`, unless that would cause shadowing or hide a wrapped/outer error you still need — only then use a qualified name (e.g. `jsonErr`)
+- Always use the explicit two-line form. Never combine assignment and `nil` check in one `if` statement
 
 ### `new` with arbitrary expressions (Go 1.26)
 
@@ -197,11 +195,6 @@ Do **not** "fix" these into temporary-variable form — that is a regression, no
 - Use `t.Context()`, not `context.Background()`.
 - Always call `t.Parallel()` (and `tt.Parallel()` inside subtests).
 - Never pass a message to an assertion.
-
-Bad:
-```go
-require.Equal(t, id, user.ID, "user ID should be the same as passed ID")
-```
 
 Good:
 ```go
