@@ -115,26 +115,43 @@ If a review turns up nothing, output no blocks and just write `No issues found`.
 - Never mute parse errors from database rows or external input. Always propagate them or log.
 
 ### Comments
-Never add comments in code, with only the following exceptions:
 
-#### Comment workarounds/hacks that others couldn't guess, so they don't "fix" them
-Start these comments with `NOFIX:`, e.g.:
+Do not write comments. The only allowed forms are `NOFIX:` and `LEGACY:` (below). Everything else is
+forbidden, however idiomatic it looks.
+
+**Before you type a comment (`//`, `/* */`, `#`, or a Python docstring `"""..."""`), stop.** If it does
+not start with `NOFIX:` or `LEGACY:` — and is not a compiler directive (`//go:...`) or an existing
+`//nolint:...` — do not write it.
+
+**Forbidden, even though language tooling/linters expect them:**
+- doc comments on packages/modules, types/classes, funcs/methods, fields, constants — *including exported/public ones* (godoc in Go, docstrings in Python);
+- "what it does" / "why we do this" explanations, rationale, design notes, summaries;
+- section headers, banners, dividers;
+- commented-out code;
+- `TODO`/`FIXME`/`XXX` — a `TODO:` is allowed only appended to a `NOFIX:`/`LEGACY:` line.
+
+If code needs a comment to be understood, rename or split it until it doesn't. Explanation belongs in the
+commit message or the ticket, not the source. A godoc comment (even on an exported symbol) is a violation
+here, not an exception. Do not smuggle an explanation in by labelling it `NOFIX:`.
+
+#### `NOFIX:` — a workaround a reader would otherwise "fix" and break
+It MUST name the concrete wrong fix and why it breaks. If you cannot name the specific misfix, it is not a
+NOFIX — delete it. It is not a license to explain code.
 ```go
 type User struct{
-    // NOFIX: "nam" is a typo, but clients are already using it and we don't want to introduce breaking changes
+    // NOFIX: "nam" is a typo, but clients already use it; renaming to "name" is a breaking API change.
     Name string `json:"nam"`
 }
 ```
 
-#### Comment confusing legacy code. If new code needs comments to be understood — rewrite it to be clearer
-Start these comments with `LEGACY:`, and add `TODO:` if applicable, e.g.:
+#### `LEGACY:` — flag existing confusing legacy code you did not write and cannot change now
+New code never gets a LEGACY comment — rewrite it to be clear instead. Add `TODO:` on the next line if a
+follow-up is warranted, e.g.:
 ```go
-// LEGACY: the frontend, for some reason, sends the `left` point in the JSON object under the key `right` and vice versa, so we need to swap them.
+// LEGACY: the frontend sends the `left` point in the JSON object under the key `right` and vice versa, so we swap them.
 // TODO: fix the confusing frontend/backend names.
 leftPoint, rightPoint = rightPoint, leftPoint
 ```
-
-#### Never add a comment in any other case
 
 ## Python (only for Python projects)
 
