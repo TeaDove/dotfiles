@@ -24,6 +24,14 @@ sections at the bottom apply only to that language.
   variables are forbidden unless I explicitly say otherwise. When a rule blocks you,
   ask me instead of silencing or working around it on your own.
 
+## Version control
+
+- Use any VCS (git, SVN, etc.) **read-only**. Reading history and state is always
+  allowed: status, log, diff, blame, show, listing branches, inspecting commits, etc.
+- Mutating the repository is FORBIDDEN: do not commit, push, pull, fetch, rebase, merge,
+  create/switch/delete branches, stash, cherry-pick, reset, tag, or open PRs — and do not
+  offer or suggest doing any of these. I handle all of that myself.
+
 ## SVN
 
 - In SVN repositories, NEVER perform mutating actions: do not create branches, do not
@@ -44,8 +52,8 @@ the Hard constraints and Output format below are shared and authoritative for bo
   ESLint/Prettier configs, etc.). Review against *those* rules, not generic taste. A finding that
   contradicts the project's own stated convention is itself a bug in the review.
 - **VCS-agnostic — never assume git.** Gather and describe changes through whatever version control the
-  repository uses. Big monorepos ship their own VCS and their own LLM/contributor instructions for it
-  (for example `arc`); follow those. Do not hardcode a specific tool's commands — think in terms of the
+  repository uses. Big monorepos ship their own VCS and their own LLM/contributor instructions for it;
+  follow those. Do not hardcode a specific tool's commands — think in terms of the
   *actions* ("list the changed files", "get the diff for the reviewed scope"), and let the repo's own
   tooling/instructions supply the exact commands. If you cannot tell how to read changes, check the
   repo's contributor/LLM guidance rather than guessing.
