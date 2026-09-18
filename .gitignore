@@ -3,3 +3,4 @@
 u-*
 build
 dotfiles-configs/.config/starship-secret.toml
+dotfiles-configs/.claude/skills/secret-*
