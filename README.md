@@ -4,6 +4,12 @@
 infocmp -x xterm-kitty | pssh 2a02:6b8:c02:901:0:fce0:0:2af  'tic -x -o ~/.terminfo /dev/stdin'
 ```
 
+### Linux decrypt
+```shell
+ecryptfs-mount-private
+exec zsh
+```
+
 ## Install
 
 ```shell
