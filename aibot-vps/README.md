@@ -12,5 +12,6 @@ cp ssh/config.example ssh/config
 ssh-keyscan -p <port> <home-endpoint> > ssh/known_hosts
 chown -R 1000:1000 data workspace secrets ssh/known_hosts
 
+docker compose run --rm claude claude
 docker compose up -d
 ```
