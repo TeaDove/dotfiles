@@ -164,7 +164,8 @@ leftPoint, rightPoint = rightPoint, leftPoint
 
 ## Language-specific rules
 
-Read the matching file before working in that language; it applies on top of everything above:
+Read the matching file before working in that language; it applies on top of everything above.
+When starting a new project, also read [NEWPROJECTS.md](NEWPROJECTS.md) (reference project, layout).
 
 - Python: [PYTHON.md](PYTHON.md) — preferred stack, definition of done, code style.
 - Go: [GO.md](GO.md) — preferred stack, definition of done, code style, tests.

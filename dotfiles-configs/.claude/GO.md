@@ -1,6 +1,7 @@
 # Go rules
 
-These rules apply only to Go projects, on top of the general rules in [CLAUDE.md](CLAUDE.md).
+These rules apply only to Go projects, on top of the general rules in [CLAUDE.md](CLAUDE.md)
+and, for new projects, [NEWPROJECTS.md](NEWPROJECTS.md).
 
 ## Preferred stack
 
@@ -10,6 +11,13 @@ These rules apply only to Go projects, on top of the general rules in [CLAUDE.md
   - `fiber` for HTTP — take the setup from https://github.com/TeaDove/teasutils/tree/master/fiberutils
   - `gorm` for database access — take the setup from https://github.com/TeaDove/teasutils/tree/master/serviceutils/dbutils
   - `zerolog` for logging — take the setup from https://github.com/TeaDove/teasutils/tree/master/serviceutils/loggerutils
+  - Error wrapping: `github.com/cockroachdb/errors` (`errors.Wrap`, `errors.Wrapf`).
+  - CLI: `github.com/urfave/cli`.
+  - Dependency injection: by hand, no DI framework.
+  - Validation: `github.com/go-playground/validator`.
+  - Configuration and secrets: `github.com/caarlos0/env`.
+  - Layout: sources in `internal/`; `cmd/` only when there are several entry points; `pkg/` only
+    for a library that someone else uses or will use. Modules follow [NEWPROJECTS.md](NEWPROJECTS.md).
 
 ## Definition of done
 

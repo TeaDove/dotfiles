@@ -1,6 +1,7 @@
 # Python rules
 
-These rules apply only to Python projects, on top of the general rules in [CLAUDE.md](CLAUDE.md).
+These rules apply only to Python projects, on top of the general rules in [CLAUDE.md](CLAUDE.md)
+and, for new projects, [NEWPROJECTS.md](NEWPROJECTS.md).
 
 ## Preferred stack
 
@@ -12,6 +13,14 @@ These rules apply only to Python projects, on top of the general rules in [CLAUD
   - `fastapi` for HTTP APIs
   - `pydantic` for models, validation and settings
   - `uv` for dependency and environment management
+  - Python 3.14
+  - Logging: the standard `logging` module.
+  - HTTP client: `httpx`.
+  - Linting and formatting: `ruff`.
+  - Configuration and secrets: `pydantic-settings`.
+  - Data modelling: DTOs are pydantic models, database models are SQLAlchemy models, everything
+    else (services, repositories, etc.) is a `@dataclass`.
+  - Layout: sources live in `src/`; modules follow [NEWPROJECTS.md](NEWPROJECTS.md).
 
 ## Definition of done
 
