@@ -1,5 +1,5 @@
 data/
 workspace/
-secrets/
+#secrets/
 ssh/config
 ssh/known_hosts
