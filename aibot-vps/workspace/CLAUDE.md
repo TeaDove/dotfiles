@@ -37,3 +37,18 @@ Rules:
   cron jobs — they must not depend on this container being alive.
 - SSH hosts are defined in `~/.ssh/config`; more remote hosts may be added there later —
   the same rules apply to them.
+
+# GitHub
+
+A GitHub token for a dedicated bot account is stored in this container at
+`/run/secrets/github_token`. Never print or echo it, and never embed it in remote URLs
+(it would leak into `.git/config` and shell history). Set it up on the Raspberry once via
+the `gh` CLI (install it there first if missing):
+
+```bash
+ssh raspberry 'gh auth login --with-token && gh auth setup-git' < /run/secrets/github_token
+```
+
+After that, plain `git` and `gh` on the Raspberry are authenticated persistently. If you
+commit, set the bot account's `user.name`/`user.email` in git config on the Raspberry
+first.

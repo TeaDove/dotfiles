@@ -8,7 +8,8 @@ touch ssh/known_hosts
 ssh-keygen -t ed25519 -N "" -C claude-vps -f secrets/raspberry_ed25519
 ssh-copy-id -i secrets/raspberry_ed25519.pub -p <port> teadove@<home-endpoint>
  printf '%s' '<raspberry-sudo-password>' > secrets/raspberry_sudo_pass
-chmod 600 secrets/raspberry_sudo_pass
+ printf '%s' '<github-token>' > secrets/github_token
+chmod 600 secrets/raspberry_sudo_pass secrets/github_token
 
 cp ssh/config.example ssh/config
 ssh-keyscan -p <port> <home-endpoint> > ssh/known_hosts

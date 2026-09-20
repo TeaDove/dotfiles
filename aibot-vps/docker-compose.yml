@@ -14,6 +14,7 @@ services:
     secrets:
       - raspberry_key
       - raspberry_sudo_pass
+      - github_token
     cap_drop:
       - ALL
     security_opt:
@@ -30,3 +31,5 @@ secrets:
     file: ./secrets/raspberry_ed25519
   raspberry_sudo_pass:
     file: ./secrets/raspberry_sudo_pass
+  github_token:
+    file: ./secrets/github_token
