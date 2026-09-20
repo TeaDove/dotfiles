@@ -158,6 +158,10 @@ After that, plain `git` and `gh` on the Raspberry are authenticated persistently
 creating commits, ensure the dedicated bot account's `user.name` and `user.email` are
 configured.
 
+The private `TeaDove/junk` repository may be used for your work, e.g. as the home for
+new code and small projects that have no repository of their own. It is already cloned
+on the Raspberry at `~/junk`, and the bot account has push access to it.
+
 # Secrets
 
 Secrets are provided under `/run/secrets` and may also be copied into `~/.ssh/keys` by the
