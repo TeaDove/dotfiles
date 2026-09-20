@@ -104,7 +104,17 @@ bindkey -e
 WORDCHARS=${WORDCHARS//[\/.=-]}
 
 if (( $+commands[fzf] )); then
-    source <(fzf --zsh)
+    fzf_integration=$(fzf --zsh 2>/dev/null)
+    if [[ -n $fzf_integration ]]; then
+        eval $fzf_integration
+    else
+        for fzf_script in /usr/share/doc/fzf/examples/{key-bindings,completion}.zsh /usr/share/fzf/{key-bindings,completion}.zsh; do
+            if [[ -r $fzf_script ]]; then
+                source $fzf_script
+            fi
+        done
+    fi
+    unset fzf_integration fzf_script
 fi
 
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#BD93F9'
