@@ -1,0 +1,29 @@
+services:
+  claude:
+    build: .
+    restart: unless-stopped
+    init: true
+    volumes:
+      - ./data/claude:/home/claude/.claude
+      - ./workspace:/workspace
+      - ./ssh/config:/home/claude/.ssh/config:ro
+      - ./ssh/known_hosts:/home/claude/.ssh/known_hosts
+      - ../dotfiles-configs/.claude/CLAUDE.md:/home/claude/.claude/CLAUDE.md:ro
+      - ../dotfiles-configs/.claude/skills:/home/claude/.claude/skills:ro
+      - ../dotfiles-configs/.claude/agents:/home/claude/.claude/agents:ro
+    secrets:
+      - raspberry_key
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -x claude >/dev/null"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+secrets:
+  raspberry_key:
+    file: ./secrets/raspberry_ed25519

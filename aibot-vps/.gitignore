@@ -1,0 +1,5 @@
+data/
+workspace/
+secrets/
+ssh/config
+ssh/known_hosts
