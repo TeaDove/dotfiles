@@ -6,7 +6,9 @@ cd dotfiles/aibot-vps
 mkdir -p data/claude workspace secrets
 touch ssh/known_hosts
 ssh-keygen -t ed25519 -N "" -C claude-vps -f secrets/raspberry_ed25519
-ssh-copy-id -i secrets/raspberry_ed25519.pub -p <port> claude@<home-endpoint>
+ssh-copy-id -i secrets/raspberry_ed25519.pub -p <port> teadove@<home-endpoint>
+ printf '%s' '<raspberry-sudo-password>' > secrets/raspberry_sudo_pass
+chmod 600 secrets/raspberry_sudo_pass
 
 cp ssh/config.example ssh/config
 ssh-keyscan -p <port> <home-endpoint> > ssh/known_hosts

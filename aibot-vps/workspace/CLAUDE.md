@@ -11,9 +11,21 @@ ssh raspberry
 ssh raspberry '<command>'
 ```
 
-On the Raspberry you have full administrative access and full trust: passwordless `sudo`,
-Docker, systemd, cron, installing packages — all allowed without asking. It is a
-disposable host dedicated to your tasks.
+On the Raspberry you connect as user `teadove` and have full administrative access and
+full trust: `sudo`, Docker, systemd, cron, installing packages — all allowed without
+asking. It is a disposable host dedicated to your tasks.
+
+`sudo` on the Raspberry asks for a password. It is stored in this container at
+`/run/secrets/raspberry_sudo_pass`. Never print or echo the password; feed it to
+`sudo -S` over stdin:
+
+```bash
+ssh raspberry 'sudo -S -p "" whoami' < /run/secrets/raspberry_sudo_pass
+```
+
+For a sequence of root commands, prefer a single `sudo -S` invocation running a script,
+or refresh the sudo timestamp first (`sudo -S -v`) and then run plain `sudo` commands
+within the same ssh session.
 
 Rules:
 

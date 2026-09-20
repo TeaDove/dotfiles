@@ -13,6 +13,7 @@ services:
       - ../dotfiles-configs/.claude/agents:/home/claude/.claude/agents:ro
     secrets:
       - raspberry_key
+      - raspberry_sudo_pass
     cap_drop:
       - ALL
     security_opt:
@@ -27,3 +28,5 @@ services:
 secrets:
   raspberry_key:
     file: ./secrets/raspberry_ed25519
+  raspberry_sudo_pass:
+    file: ./secrets/raspberry_sudo_pass

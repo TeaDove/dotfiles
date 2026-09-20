@@ -1,6 +1,6 @@
 Host raspberry
     HostName raspberry.example.com
     Port 22
-    User claude
+    User teadove
     IdentityFile /home/claude/.ssh/keys/raspberry_key
     IdentitiesOnly yes
