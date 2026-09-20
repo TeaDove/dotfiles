@@ -18,4 +18,4 @@ go install github.com/teadove/goteleout@latest
 
 git config --global credential.helper store
 
-chsh -s $(which fish)
+chsh -s $(which zsh)

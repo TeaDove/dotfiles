@@ -14,4 +14,4 @@ pip3 install pre-commit --break-system-packages
 go install rsc.io/2fa@latest
 go install github.com/teadove/goteleout@latest
 
-chsh -s $(which fish)
+chsh -s /bin/zsh
