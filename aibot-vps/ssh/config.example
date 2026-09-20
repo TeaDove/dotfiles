@@ -4,3 +4,10 @@ Host raspberry
     User teadove
     IdentityFile /home/claude/.ssh/keys/raspberry_key
     IdentitiesOnly yes
+
+Host worker-pc
+    HostName raspberry.example.com
+    Port 2223
+    User teadove-aibot
+    IdentityFile /home/claude/.ssh/keys/worker_pc_key
+    IdentitiesOnly yes

@@ -48,8 +48,9 @@ Before using it:
 1. Check whether `ssh worker-pc` is already reachable.
 2. If it is already reachable, assume a human may have powered it on and may currently be
    using it. Do not shut it down when your task finishes.
-3. If it is not reachable, wake it through the Raspberry using the configured Wake-on-LAN
-   mechanism, wait for SSH to become available, and remember that you powered it on.
+3. If it is not reachable, wake it through the Raspberry via Wake-on-LAN (see "Worker PC
+   lifecycle" in DOCS.md), wait for SSH to become available, and remember that you
+   powered it on.
 4. If and only if you powered it on for this task, shut it down after all work and data
    transfers are complete.
 

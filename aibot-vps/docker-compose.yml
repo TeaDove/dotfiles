@@ -13,6 +13,7 @@ services:
       - ../dotfiles-configs/.claude/agents:/home/claude/.claude/agents:ro
     secrets:
       - raspberry_key
+      - worker_pc_key
       - raspberry_sudo_pass
       - github_token
       - openai_api_key
@@ -31,6 +32,8 @@ services:
 secrets:
   raspberry_key:
     file: ./secrets/raspberry_ed25519
+  worker_pc_key:
+    file: ./secrets/worker_pc_ed25519
   raspberry_sudo_pass:
     file: ./secrets/raspberry_sudo_pass
   github_token:
