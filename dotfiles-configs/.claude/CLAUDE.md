@@ -19,7 +19,7 @@ sections at the bottom apply only to that language.
 - Never break CI/CD checks, linter rules, or the conventions in this file. You may
   bypass a rule (e.g. add a `//nolint` directive, disable a check, skip a gate) ONLY
   when I explicitly allow it for that case, or when that exact rule is already listed
-  among documented exceptions (in this file or other README/DOCS/CLAUDE.md).
+  among documented exceptions (in this file or other README/DOCS/CLAUDE.md/AGENTS.md).
 - Default to the strictest interpretation of every rule. For example, global
   variables are forbidden unless I explicitly say otherwise. When a rule blocks you,
   ask me instead of silencing or working around it on your own.
@@ -46,9 +46,9 @@ the Hard constraints and Output format below are shared and authoritative for bo
 
 ### Hard constraints
 
-- **Read the rules first.** Before reviewing a single line, read every `CLAUDE.md` that applies (repo
-  root and any nested ones under the changed paths), plus any conventions the repo ships —
-  `CONVENTIONS*`, `CONTRIBUTING*`, `AGENTS.md`, and linter configs (`.golangci.yml`, `.editorconfig`,
+- **Read the rules first.** Before reviewing a single line, read every `CLAUDE.md`/`AGENTS.md` that
+  applies (repo root and any nested ones under the changed paths), plus any conventions the repo ships —
+  `CONVENTIONS*`, `CONTRIBUTING*`, and linter configs (`.golangci.yml`, `.editorconfig`,
   ESLint/Prettier configs, etc.). Review against *those* rules, not generic taste. A finding that
   contradicts the project's own stated convention is itself a bug in the review.
 - **VCS-agnostic — never assume git.** Gather and describe changes through whatever version control the
@@ -59,7 +59,7 @@ the Hard constraints and Output format below are shared and authoritative for bo
   repo's contributor/LLM guidance rather than guessing.
 - **Read-only.** Never edit, stage, commit, or push. A review only reports. Do not "helpfully" fix
   anything — the user fixes it themselves after reading the findings.
-- **Ground every finding in the actual change.** Read the surrounding code with `Read` (not just the
+- **Ground every finding in the actual change.** Read the surrounding code (not just the
   changed hunk) before claiming something is wrong — enough context to be sure the issue is real and
   the line reference is correct. Do not invent problems to fill the list; an empty list is a valid,
   good result.
@@ -68,7 +68,8 @@ the Hard constraints and Output format below are shared and authoritative for bo
   a long list padded with maybes.
 - **Respect the project's comment/style rules.** In this user's Go projects, for example, comments are
   forbidden except `NOFIX:`/`LEGACY:` — so "missing doc comment" is NOT a valid finding here, and an
-  added non-`NOFIX`/`LEGACY` comment IS one. Always defer to the loaded CLAUDE.md over defaults.
+  added non-`NOFIX`/`LEGACY` comment IS one. Always defer to the loaded CLAUDE.md/AGENTS.md over
+  defaults.
 - **Output language:** English — the user reads the report (rather than editing it) and prefers English
   for reviews, so write the whole report, including every finding, in English.
 - **Keep it short.** Terse descriptions, no preamble, no restating the diff. The user wants the list,
@@ -103,7 +104,7 @@ Functional
 Conventions
 🟨 medium
 2. `pkg/cli/install.go:92`: comment outside the allowed NOFIX/LEGACY set:
-  CLAUDE.md forbids comments except NOFIX:/LEGACY: — this godoc should be removed.
+  CLAUDE.md/AGENTS.md forbids comments except NOFIX:/LEGACY: — this godoc should be removed.
 
 Spelling
 🟩 low

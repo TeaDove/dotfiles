@@ -1,6 +1,6 @@
 ---
 name: short-review
-description: "Short review of the uncommitted changes in the working copy relative to the current commit: modified files plus new/untracked files. Reviews functionality/bugs/correctness first, then standards, patterns, and conventions. Always reads CLAUDE.md and any project conventions before reviewing. VCS-agnostic — never assumes git; gathers changes via whatever version control the repo uses. Trigger phrases: 'сделай короткое ревью', 'отревьюй незакоммиченные изменения', 'короткое ревью', 'short review', '/short-review'. Read-only: reports a grouped list of findings and never edits, stages, or commits."
+description: "Short review of the uncommitted changes in the working copy relative to the current commit: modified files plus new/untracked files. Reviews functionality/bugs/correctness first, then standards, patterns, and conventions. Always reads CLAUDE.md/AGENTS.md and any project conventions before reviewing. VCS-agnostic — never assumes git; gathers changes via whatever version control the repo uses. Trigger phrases: 'сделай короткое ревью', 'отревьюй незакоммиченные изменения', 'короткое ревью', 'short review', '/short-review'. Read-only: reports a grouped list of findings and never edits, stages, or commits."
 ---
 
 # /short-review
@@ -25,13 +25,13 @@ functional bug matters more than a style nit, and the report must reflect that o
 
 ## Hard constraints
 
-See **Code review → Hard constraints** in `CLAUDE.md` — they are shared across all review skills and
+See **Code review → Hard constraints** in `CLAUDE.md`/`AGENTS.md` — they are shared across all review skills and
 authoritative here. Scope for this skill is the uncommitted changes vs the current commit (see Usage).
 
 ## Steps
 
 ### 1. Load the conventions
-- Read the applicable `CLAUDE.md` file(s) and any repo conventions/linter configs (see Hard
+- Read the applicable `CLAUDE.md`/`AGENTS.md` file(s) and any repo conventions/linter configs (see Hard
   constraints). Hold these as the review checklist.
 
 ### 2. Gather the uncommitted changes
@@ -45,7 +45,7 @@ authoritative here. Scope for this skill is the uncommitted changes vs the curre
 ### 3. Review pass 1 — functionality (highest priority)
 Look for bugs, logic errors, wrong conditions, off-by-one, nil/undefined access, unhandled or muted
 errors, missed edge cases, broken invariants, concurrency issues, incorrect results, and anything that
-makes the code not do what it clearly intends. Open the relevant files with `Read` to confirm.
+makes the code not do what it clearly intends. Open and read the relevant files to confirm.
 
 ### 4. Review pass 2 — standards, patterns, conventions
 Only after pass 1: check against the loaded conventions — naming, structure, error wrapping, function
@@ -64,6 +64,6 @@ covers only uncommitted changes against the current commit.
 
 ## Output format
 
-See **Code review → Output format** in `CLAUDE.md` — the grouped, impact-ordered report format is
+See **Code review → Output format** in `CLAUDE.md`/`AGENTS.md` — the grouped, impact-ordered report format is
 shared across all review skills. If a review turns up nothing, output no blocks and just write
 `No issues found`.

@@ -1,6 +1,6 @@
 ---
 name: sdd
-description: "Spec-Driven Development (SDD) orchestrator, implemented purely as a Claude skill (no external tool). Drives a full workflow from a specification file: strictly validate the spec, plan, implement, verify with the project's own tests/linters, then review in a FRESH independent subagent, and fix-loop until approved or blocked. The spec is the source of truth; missing product decisions stop the run with BLOCKED instead of being invented. Trigger phrases: '/sdd', 'запусти sdd', 'sdd <spec-file>', 'spec-driven development', 'реализуй по спеке через sdd'."
+description: "Spec-Driven Development (SDD) orchestrator, implemented purely as an agent skill (no external tool). Drives a full workflow from a specification file: strictly validate the spec, plan, implement, verify with the project's own tests/linters, then review in a FRESH independent agent, and fix-loop until approved or blocked. The spec is the source of truth; missing product decisions stop the run with BLOCKED instead of being invented. Trigger phrases: '/sdd', 'запусти sdd', 'sdd <spec-file>', 'spec-driven development', 'реализуй по спеке через sdd'."
 ---
 
 # /sdd — Spec-Driven Development
@@ -11,9 +11,11 @@ description: "Spec-Driven Development (SDD) orchestrator, implemented purely as 
 /sdd <path-to-spec-file>
 ```
 
-You (Claude) are the orchestrator. Drive the whole workflow yourself, in this context, using your
+You are the orchestrator. Drive the whole workflow yourself, in this context, using your
 normal tools. The ONLY step that must run in a separate, fresh context is the independent review —
-launch it with the `Task` tool (`subagent_type: sdd-reviewer`).
+launch it as a fresh, isolated agent (in Claude Code: the `Task` tool with
+`subagent_type: sdd-reviewer`; in Codex: a separate `codex exec` run given the instructions from
+`~/.codex/agents/sdd-reviewer.md`).
 
 If no spec path is given, ask for one and stop.
 
@@ -27,7 +29,7 @@ If no spec path is given, ask for one and stop.
   implementation support. No opportunistic unrelated refactoring or cleanup.
 - **Verification is mandatory.** Passing review is not enough — the project's tests/linters/build must
   pass.
-- **Review must be independent** — a fresh subagent that never sees your implementation reasoning.
+- **Review must be independent** — a fresh agent that never sees your implementation reasoning.
 - **Safety.** Never commit, push, create branches, or run destructive VCS commands. Never discard the
   user's pre-existing uncommitted changes. Operate on the current working tree.
 - **Bounded.** At most **5** independent review iterations. Verification/fix retries are also bounded
@@ -99,7 +101,8 @@ unrelated refactoring. If a genuine product decision is missing, STOP with `BLOC
 ### 4. Verify (mandatory)
 
 Determine the project's real verification commands from its own config (Makefile, Taskfile, justfile,
-package.json, pyproject.toml, go.mod, `.github/workflows/*`, README, CLAUDE.md) — prefer what CI or the
+package.json, pyproject.toml, go.mod, `.github/workflows/*`, README, CLAUDE.md/AGENTS.md) — prefer what
+CI or the
 documented dev workflow uses. Run them (tests, linters, static analysis, build, race detector where
 appropriate). Distinguish:
 
@@ -111,7 +114,9 @@ Do not report success if a required verification step could not actually be perf
 
 ### 5. Independent review (FRESH context — required)
 
-Launch the `Task` tool with `subagent_type: sdd-reviewer`. Give it ONLY: the spec file path, the repo,
+Launch the reviewer as a fresh, isolated agent (in Claude Code: the `Task` tool with
+`subagent_type: sdd-reviewer`; in Codex: a separate `codex exec` run given the instructions from
+`~/.codex/agents/sdd-reviewer.md`). Give it ONLY: the spec file path, the repo,
 and an instruction to review the current working-tree changes (diff) against the spec. Do **not** pass
 your implementation reasoning, plan, or a self-summary — the reviewer must judge the repository state
 itself. Expect a structured verdict: `APPROVED` / `REJECTED` / `BLOCKED`, with findings classified by

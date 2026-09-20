@@ -51,7 +51,7 @@ tell what you meant here" — so the bar for acting is high.
   or ripple beyond the local change without you being confident it's correct and complete. When acting
   would require broad risky edits, treat it as unresolved and say why.
 - **Minimal diff.** Change as little as possible to satisfy each TODO. Don't refactor or reformat
-  unrelated code. Follow every rule in the applicable `CLAUDE.md` (comment policy, naming, error
+  unrelated code. Follow every rule in the applicable `CLAUDE.md`/`AGENTS.md` (comment policy, naming, error
   wrapping, tests, etc.).
 - **Remove the TODO you resolved.** When a TODO is fixed, delete its comment line — its job is done.
   Leave untouched every TODO you did not resolve.
@@ -61,7 +61,7 @@ tell what you meant here" — so the bar for acting is high.
 ## Steps
 
 ### 1. Load the conventions
-- Read the applicable `CLAUDE.md` file(s) (repo root and any nested under the changed paths) and any
+- Read the applicable `CLAUDE.md`/`AGENTS.md` file(s) (repo root and any nested under the changed paths) and any
   repo conventions/linter configs. Hold these as the rules for both the fixes and the DoD.
 
 ### 2. Resolve the scope and collect the TODOs
@@ -71,7 +71,7 @@ tell what you meant here" — so the bar for acting is high.
   under no VCS at all, fall back to every TODO and tell the user (see Hard constraints).
 - Get the diff for that scope and find every **added** line that introduces a `TODO` marker
   (`// TODO:`, `# TODO:`, `TODO(...)`, etc. — match the languages in the repo).
-- For each TODO, `Read` the surrounding code (not just the diff hunk) to understand what it refers to.
+- For each TODO, read the surrounding code (not just the diff hunk) to understand what it refers to.
 - If the branch added no TODOs, say so and stop.
 
 ### 3. Triage each TODO
@@ -90,7 +90,7 @@ each item as `file:line` + one line) so they can see up front which TODOs will b
 
 ### 5. Run the Definition of Done
 Only if you changed code. Run the project's Definition of Done for the affected languages and make it
-pass — see **Definition of done** in the global `CLAUDE.md` for the per-language gates (e.g. Go: build,
+pass — see **Definition of done** in the global `CLAUDE.md`/`AGENTS.md` for the per-language gates (e.g. Go: build,
 tests, linters). If a fix breaks the DoD and you can't cleanly resolve it, revert that one fix and move
 the TODO to the unresolved list with the failure as the reason. Never leave the tree broken.
 

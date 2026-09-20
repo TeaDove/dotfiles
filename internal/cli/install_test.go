@@ -74,6 +74,82 @@ func TestDeepMerge(t *testing.T) {
 	})
 }
 
+func TestCodexPath(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name string
+		rel  string
+		exp  string
+		ok   bool
+	}{
+		{
+			name: "settings ignored",
+			rel:  ".claude/settings.json",
+			exp:  "",
+			ok:   false,
+		},
+		{
+			name: "hooks ignored",
+			rel:  ".claude/hooks/notify.sh",
+			exp:  "",
+			ok:   false,
+		},
+		{
+			name: "claude md renamed to agents md",
+			rel:  ".claude/CLAUDE.md",
+			exp:  ".codex/AGENTS.md",
+			ok:   true,
+		},
+		{
+			name: "skill becomes prompt",
+			rel:  ".claude/skills/short-review/SKILL.md",
+			exp:  ".codex/prompts/short-review.md",
+			ok:   true,
+		},
+		{
+			name: "other claude files mirrored",
+			rel:  ".claude/agents/sdd-reviewer.md",
+			exp:  ".codex/agents/sdd-reviewer.md",
+			ok:   true,
+		},
+		{
+			name: "non claude files skipped",
+			rel:  ".config/fish/config.fish",
+			exp:  "",
+			ok:   false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(tt *testing.T) {
+			tt.Parallel()
+
+			got, ok := codexPath(tc.rel)
+
+			assert.Equal(tt, tc.ok, ok)
+			assert.Equal(tt, tc.exp, got)
+		})
+	}
+}
+
+func TestInstallCodexFile(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	src := filepath.Join(dir, "SKILL.md")
+	content := "Read every CLAUDE.md/AGENTS.md that applies.\n"
+	require.NoError(t, os.WriteFile(src, []byte(content), 0o644))
+
+	dst := filepath.Join(dir, "nested", "prompt.md")
+	require.NoError(t, installCodexFile(src, dst, 0o644))
+
+	got, err := os.ReadFile(dst)
+	require.NoError(t, err)
+
+	assert.Equal(t, content, string(got))
+}
+
 func TestMergeJSONFile(t *testing.T) {
 	t.Parallel()
 

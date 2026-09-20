@@ -1,6 +1,6 @@
 ---
 name: long-review
-description: "Long review of a whole branch relative to its base branch (master/main/the repo default), not just the uncommitted working copy: every commit the branch adds on top of the base. Reviews functionality/bugs/correctness first, then standards, patterns, and conventions. When the branch maps to a ticket and a ticket-system MCP (Jira, Linear, GitHub Issues, etc.) is connected, also reads the ticket and checks the branch against its goal — flagging scope creep and missed requirements. Always reads CLAUDE.md and any project conventions before reviewing. VCS-agnostic — never assumes git; gathers changes via whatever version control the repo uses. Trigger phrases: 'сделай длинное ревью', 'отревьюй всю ветку', 'ревью ветки относительно мастера', 'long review', '/long-review'. Read-only: reports a grouped list of findings and never edits, stages, or commits."
+description: "Long review of a whole branch relative to its base branch (master/main/the repo default), not just the uncommitted working copy: every commit the branch adds on top of the base. Reviews functionality/bugs/correctness first, then standards, patterns, and conventions. When the branch maps to a ticket and a ticket-system MCP (Jira, Linear, GitHub Issues, etc.) is connected, also reads the ticket and checks the branch against its goal — flagging scope creep and missed requirements. Always reads CLAUDE.md/AGENTS.md and any project conventions before reviewing. VCS-agnostic — never assumes git; gathers changes via whatever version control the repo uses. Trigger phrases: 'сделай длинное ревью', 'отревьюй всю ветку', 'ревью ветки относительно мастера', 'long review', '/long-review'. Read-only: reports a grouped list of findings and never edits, stages, or commits."
 ---
 
 # /long-review
@@ -37,7 +37,7 @@ requirements that were missed are findings in their own right.
 
 ## Hard constraints
 
-See **Code review → Hard constraints** in `CLAUDE.md` — they are shared across all review skills and
+See **Code review → Hard constraints** in `CLAUDE.md`/`AGENTS.md` — they are shared across all review skills and
 authoritative here. Scope for this skill is the whole branch vs its base branch (see Usage). Two
 scope-specific additions:
 
@@ -82,7 +82,7 @@ a ticket.
 ## Steps
 
 ### 1. Load the conventions
-- Read the applicable `CLAUDE.md` file(s) and any repo conventions/linter configs (see Hard
+- Read the applicable `CLAUDE.md`/`AGENTS.md` file(s) and any repo conventions/linter configs (see Hard
   constraints). Hold these as the review checklist.
 
 ### 2. Resolve the base and gather the branch changes
@@ -105,7 +105,7 @@ closing line only if a tracker was expected but unreachable.
 ### 3. Review pass 1 — functionality (highest priority)
 Look for bugs, logic errors, wrong conditions, off-by-one, nil/undefined access, unhandled or muted
 errors, missed edge cases, broken invariants, concurrency issues, incorrect results, and anything that
-makes the code not do what it clearly intends. Open the relevant files with `Read` to confirm — and
+makes the code not do what it clearly intends. Open and read the relevant files to confirm — and
 because the scope is larger than one working copy, also watch for cross-file/cross-commit issues:
 inconsistent changes to a caller and its callee, a rename applied in some places but not others, dead
 code left behind by a mid-branch pivot.
@@ -120,7 +120,7 @@ size, forbidden/allowed comments, formatting, established patterns in the surrou
 spelling/grammar in strings, docs, and identifiers.
 
 ### 5. Emit the report
-Produce the grouped report described in **Output format** in `CLAUDE.md`. Order the whole report by
+Produce the grouped report described in **Output format** in `CLAUDE.md`/`AGENTS.md`. Order the whole report by
 impact: functional/correctness findings before convention/style ones, and within one block `high`
 before `medium` before `low`. The finding index is global and continuous across all blocks (it does
 not reset per block).
@@ -132,7 +132,7 @@ against; if it was expected (a ticket id was found) but the tracker was unreacha
 
 ## Output format
 
-See **Code review → Output format** in `CLAUDE.md` — the grouped, impact-ordered report format is
+See **Code review → Output format** in `CLAUDE.md`/`AGENTS.md` — the grouped, impact-ordered report format is
 shared across all review skills. If a review turns up nothing, output no blocks and just write
 `No issues found`.
 
