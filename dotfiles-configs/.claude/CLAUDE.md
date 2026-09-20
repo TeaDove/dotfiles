@@ -1,7 +1,7 @@
 # Global user preferences
 
 These rules apply to every project I work on (work and personal). Language-specific
-sections at the bottom apply only to that language.
+rules live in separate files linked at the bottom and apply only to that language.
 
 ## Language
 
@@ -162,104 +162,9 @@ follow-up is warranted, e.g.:
 leftPoint, rightPoint = rightPoint, leftPoint
 ```
 
-## Python (only for Python projects)
+## Language-specific rules
 
-### Definition of done
+Read the matching file before working in that language; it applies on top of everything above:
 
-After every code change, before reporting the task as complete, you **must** run whatever the project ships:
-
-1. Run the code — confirm it executes.
-2. Run the tests (e.g. `pytest`) — confirm they pass.
-3. Run the formatters/linters (`ruff`, `black`, `pre-commit run -a`, depending on the project) — confirm they pass.
-
-Do not skip these steps, and don't rely on CI to catch what you missed.
-
-### Code style
-
-- Always annotate types.
-- When working with JSON, always use pydantic.
-- Define classes with `@dataclass`.
-- In `.ipynb` notebooks: keep all imports in a single cell at the very top of the file; put all settings (e.g. chart colors) in the second cell.
-
-## Golang (only for Go projects)
-
-### Definition of done
-
-After every code change, before reporting the task as complete, you **must**:
-
-1. `go build ./...` — confirm it compiles.
-2. `go test ./...` (or the relevant packages) — confirm tests pass.
-3. `golangci-lint run ./...` / `pre-commit run -a` - confirm lints work.
-
-Do not skip these steps, and don't rely on CI to catch what you missed.
-
-### Code style
-
-- Packages, files: lowercase + layer suffix (`userrepo`, `eventservice`), not (`user-service`, `event-service`)
-- Prefer long variable names, e.g. `queue := NewQueue()`, not `q := NewQueue()`, with exceptions like `ctx`, `i` (in loops), etc.
-- Errors should always be wrapped
-- Name error variables `err`, unless that would cause shadowing or hide a wrapped/outer error you still need — only then use a qualified name (e.g. `jsonErr`)
-- Always use the explicit two-line form. Never combine assignment and `nil` check in one `if` statement
-
-### `new` with arbitrary expressions (Go 1.26)
-
-`new` now accepts any expression, not just a type name. Use this to take the address of a computed value inline:
-
-```go
-// Before Go 1.26 — needed a temporary variable
-name := "John"
-field = &name
-
-// Go 1.26 — inline is fine
-field = new("John")
-```
-
-Do **not** "fix" these into temporary-variable form — that is a regression, not an improvement.
-
-### Tests
-
-- Use `t.Context()`, not `context.Background()`.
-- Always call `t.Parallel()` (and `tt.Parallel()` inside subtests).
-- Never pass a message to an assertion.
-
-Good:
-```go
-require.Equal(t, id, user.ID)
-```
-
-- Group several related cases into one table-driven test:
-```go
-func TestAvg(t *testing.T) {
-    t.Parallel()
-
-    testCases := []struct {
-        name string
-        arr  []int
-        exp  float64
-    }{
-        {
-            name: "same numbers",
-            arr:  []int{2, 2, 2},
-            exp:  2,
-        },
-        {
-            name: "simple 3",
-            arr:  []int{1, 2, 3},
-            exp:  2,
-        },
-        {
-            name: "negative values",
-            arr:  []int{-2, 0, 2},
-            exp:  0,
-        },
-    }
-
-    for _, tc := range testCases {
-        t.Run(tc.name, func(tt *testing.T) {
-            tt.Parallel()
-
-            require.InDelta(tt, tc.exp, avg(tc.arr), 0.00001)
-        })
-    }
-}
-```
+- Python: [PYTHON.md](PYTHON.md) — preferred stack, definition of done, code style.
+- Go: [GO.md](GO.md) — preferred stack, definition of done, code style, tests.
