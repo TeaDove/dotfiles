@@ -58,6 +58,10 @@ if missing):
 ssh raspberry 'wakeonlan <WORKER_MAC>'
 ```
 
+The worker's MAC address is deliberately not written here — it is stored in your memory,
+recall it from there. Exact hardware specs of the Raspberry and `worker-pc` are in memory
+as well.
+
 Then poll until SSH is up (boot takes a minute or two):
 
 ```bash
