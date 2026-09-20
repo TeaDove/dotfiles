@@ -79,3 +79,13 @@ curl "https://teadove.space:7999/proxy/telegram-bot/$TELEGRAM_BOT_TOKEN/sendMess
 For SDKs, point the base URL at the proxy, e.g.
 `OPENAI_BASE_URL=https://teadove.space:7999/proxy/openai/v1`, and for Telegram bot
 libraries set the API base URL to the proxy instead of `api.telegram.org`.
+
+To message the user in Telegram, prefer the `goteleout` utility over calling the Bot API
+yourself — it is already installed and configured on the Raspberry to reach the user:
+
+```bash
+ssh raspberry 'goteleout Task done!'
+```
+
+For example, when asked "notify me in Telegram when the task is done", running that
+command on completion is enough.
