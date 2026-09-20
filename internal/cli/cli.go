@@ -1,0 +1,160 @@
+package cli
+
+import (
+	"context"
+	"dotfiles/internal/cli/commands/code"
+	"dotfiles/internal/cli/commands/git"
+	"dotfiles/internal/cli/commands/logs"
+	"dotfiles/internal/cli/commands/netscan"
+	"dotfiles/internal/cli/commands/netserve"
+	"dotfiles/internal/cli/commands/netsystem"
+	"dotfiles/internal/cli/commands/nettraceroute"
+	"dotfiles/internal/cli/commands/watch"
+	"os"
+	"runtime"
+
+	"github.com/cockroachdb/errors"
+	"github.com/urfave/cli/v3"
+)
+
+var verboseFlag = &cli.BoolFlag{Name: "v", Usage: "verbose info"} //nolint:gochecknoglobals // is ok
+
+func Run(ctx context.Context) error { //nolint: funlen // Is presentation builder
+	if runtime.GOOS == "windows" {
+		return errors.New("go fuck yourself with windows OS")
+	}
+
+	cmd := &cli.Command{
+		Name:        "dotfiles",
+		Description: "set of useful command",
+		Flags:       []cli.Flag{verboseFlag},
+		Commands: []*cli.Command{
+			{
+				Name:   "install",
+				Usage:  "install all dotfiles, i.e. fish config",
+				Action: CommandInstall,
+			},
+			{
+				Name:   "l",
+				Usage:  "reads stdin, colorizes it to stdout and saves raw lines to /tmp/ulog/{date}.txt",
+				Action: logs.Run,
+				Flags:  []cli.Flag{logs.NoSaveFlag, verboseFlag},
+			},
+			{
+				Name:   "u",
+				Usage:  "generates random uuid",
+				Action: CommandUUID,
+			},
+			{
+				Name:   "u7",
+				Usage:  "generates random uuid7",
+				Action: CommandUUID7,
+				Flags:  []cli.Flag{verboseFlag},
+			},
+			{
+				Name:   "u7t",
+				Usage:  "generates random uuid7 from specific time",
+				Action: CommandUUID7Time,
+				Flags:  []cli.Flag{verboseFlag, minFlag, maxFlag},
+			},
+			{
+				Name:   "u7d",
+				Usage:  "parses uuid7",
+				Action: CommandUUID7Decode,
+				Flags:  []cli.Flag{verboseFlag},
+			},
+			{
+				Name:   "t",
+				Usage:  "generates save to use password",
+				Action: CommandText,
+			},
+			{
+				Name:  "g",
+				Usage: "git utils",
+				Commands: []*cli.Command{
+					{
+						Name:   "a",
+						Usage:  "add, commit and push",
+						Action: git.RunGitAuto,
+						Flags:  []cli.Flag{git.NoVerifyFlag},
+					},
+					{
+						Name:   "m",
+						Usage:  "merge from master",
+						Action: git.RunGitPullAndMerge,
+					},
+				},
+			},
+			{
+				Name:  "net",
+				Usage: "net utils",
+				Commands: []*cli.Command{
+					{
+						Name:   "system",
+						Usage:  "display information about this machine",
+						Action: netsystem.Run,
+					},
+					{
+						Name:   "scan",
+						Usage:  "display information about local networks",
+						Action: netscan.Run,
+					},
+					{
+						Name:   "serve",
+						Usage:  "serve debug server on 0.0.0.0:8000",
+						Action: netserve.Run,
+					},
+					{
+						Name:   "traceroute",
+						Usage:  "pretty traceroute",
+						Action: nettraceroute.Run,
+					},
+					{
+						Name:   "l",
+						Usage:  "locates service by ip or domain from http://ip-api.com/json/",
+						Action: CommandLocateByIP,
+					},
+				},
+			},
+			{
+				Name:   "sha",
+				Usage:  "hashes string as sha512",
+				Action: CommandSha,
+				Flags:  []cli.Flag{verboseFlag},
+			},
+			{
+				Name:   "md5",
+				Usage:  "hashes string as md5 and returns it as UUID",
+				Action: CommandMD5UUID,
+			},
+			{
+				Name:   "watch",
+				Usage:  "like unix watch, but better",
+				Action: watch.Run,
+				Flags:  []cli.Flag{watch.IntervalFlag},
+			},
+			{
+				Name:   "ss",
+				Usage:  "starship config swap",
+				Action: CommandStarshipSwap,
+			},
+			{
+				Name:   "code",
+				Usage:  "analyse code",
+				Action: code.Run,
+			},
+			{
+				Name:   "depii",
+				Usage:  "depersonalize string (uuid, alfanum20)",
+				Action: CommandDePII,
+			},
+		},
+	}
+
+	err := cmd.Run(ctx, os.Args)
+	if err != nil {
+		return errors.Wrap(err, "run cmd")
+	}
+
+	return nil
+}

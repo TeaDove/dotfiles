@@ -1,0 +1,32 @@
+package cli
+
+import (
+	"context"
+	"crypto/md5" //nolint: gosec // as expected
+	"dotfiles/internal/cli/utils/systemutils"
+	"fmt"
+	"uuid"
+
+	"github.com/cockroachdb/errors"
+	"github.com/fatih/color"
+	"github.com/urfave/cli/v3"
+)
+
+func CommandMD5UUID(_ context.Context, cmd *cli.Command) error {
+	text, err := systemutils.ReadFromPipeOrSTDIN()
+	if err != nil {
+		return errors.Wrap(err, "read from stdin")
+	}
+
+	hash := md5.Sum([]byte(text)) //nolint: gosec // as expected
+	hashedText := uuid.UUID(hash).String()
+
+	if cmd.Bool(verboseFlag.Name) {
+		fmt.Printf("input:\n%s\n\n", color.BlueString(text)) //nolint:forbidigo // is ok
+		fmt.Printf("hash:\n%s\n", hashedText)                //nolint:forbidigo // is ok
+	} else {
+		fmt.Print(hashedText) //nolint:forbidigo // is ok
+	}
+
+	return nil
+}

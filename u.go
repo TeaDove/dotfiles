@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"dotfiles/pkg/cli"
+	"dotfiles/internal/cli"
 	"os"
 	"os/signal"
 	"syscall"
