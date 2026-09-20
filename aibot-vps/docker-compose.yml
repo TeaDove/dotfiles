@@ -13,8 +13,11 @@ services:
       - ../dotfiles-configs/.claude/agents:/home/claude/.claude/agents:ro
     secrets:
       - raspberry_key
+      - worker_pc_key
       - raspberry_sudo_pass
       - github_token
+      - openai_api_key
+      - telegram_bot_token
     cap_drop:
       - ALL
     security_opt:
@@ -29,7 +32,13 @@ services:
 secrets:
   raspberry_key:
     file: ./secrets/raspberry_ed25519
+  worker_pc_key:
+    file: ./secrets/worker_pc_ed25519
   raspberry_sudo_pass:
     file: ./secrets/raspberry_sudo_pass
   github_token:
     file: ./secrets/github_token
+  openai_api_key:
+    file: ./secrets/openai_api_key
+  telegram_bot_token:
+    file: ./secrets/telegram_bot_token

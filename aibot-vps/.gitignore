@@ -1,6 +1,7 @@
 data/
 workspace/*
 !workspace/CLAUDE.md
+!workspace/DOCS.md
 secrets/
 ssh/config
 ssh/known_hosts
