@@ -8,9 +8,7 @@ services:
       - ./workspace:/workspace
       - ./ssh/config:/home/claude/.ssh/config:ro
       - ./ssh/known_hosts:/home/claude/.ssh/known_hosts
-      - ../dotfiles-configs/.claude/CLAUDE.md:/home/claude/.claude/CLAUDE.md:ro
-      - ../dotfiles-configs/.claude/skills:/home/claude/.claude/skills:ro
-      - ../dotfiles-configs/.claude/agents:/home/claude/.claude/agents:ro
+      - ../dotfiles-configs/.claude:/home/claude/.claude-dotfiles:ro
     secrets:
       - raspberry_key
       - worker_pc_key

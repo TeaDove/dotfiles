@@ -15,6 +15,32 @@ warn() {
 [ -d /workspace ] || fail "/workspace is missing, mount ./workspace into it"
 [ -w /workspace ] || fail "/workspace is not writable by uid $(id -u), fix ownership of ./workspace"
 
+dotfiles="/home/claude/.claude-dotfiles"
+if [ -d "$dotfiles" ]; then
+	for link in "$HOME/.claude"/*; do
+		[ -L "$link" ] || continue
+		case "$(readlink "$link")" in
+		"$dotfiles"/*)
+			[ -e "$link" ] || rm "$link"
+			;;
+		esac
+	done
+
+	for src in "$dotfiles"/*.md "$dotfiles"/skills "$dotfiles"/agents; do
+		[ -e "$src" ] || continue
+		dst="$HOME/.claude/$(basename "$src")"
+		if [ -d "$dst" ] && [ ! -L "$dst" ]; then
+			rmdir "$dst" 2>/dev/null || {
+				warn "$dst exists and is not empty, skipping link"
+				continue
+			}
+		fi
+		ln -sfn "$src" "$dst"
+	done
+else
+	warn "$dotfiles is not mounted, claude configs will be missing"
+fi
+
 mkdir -p "$HOME/.ssh"
 chmod 700 "$HOME/.ssh"
 
