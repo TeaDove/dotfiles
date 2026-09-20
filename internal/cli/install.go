@@ -15,11 +15,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var dotfilesDirs = [3]string{
-	"./dotfiles-configs",
-	"~/dotfiles/dotfiles-configs",
-	"~/.dotfiles/dotfiles-configs",
-}
+var dotfilesDirs = [...]string{"./dotfiles-configs"}
 
 var mergeConfigs = mapset.NewSet(".claude/settings.json")
 
