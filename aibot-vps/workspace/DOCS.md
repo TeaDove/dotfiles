@@ -78,3 +78,37 @@ ssh worker-pc 'sudo systemctl reboot'
 
 Use `poweroff` after your work only if you powered the machine on yourself (see the rules
 in CLAUDE.md).
+
+## Yandex Disk
+
+The OAuth application `AI-Junk` has the single scope `cloud_api:disk.app_folder`, so the token
+only sees the application folder (`Приложения/AI-Junk` in the web UI). Address it with the
+`app:/` path prefix; `disk:/` paths are forbidden for this token.
+
+The token is stored in this container at `/run/secrets/yandex_disk_token`. It is an
+`access_token` obtained with `response_type=token`; there is no refresh token, and the client
+secret is not needed. When the token expires, the user issues a new one at
+`https://oauth.yandex.ru/authorize?response_type=token&client_id=<CLIENT_ID>`.
+
+Use the Python library [yadisk](https://github.com/ivknv/yadisk)
+([documentation](https://yadisk.readthedocs.io)) on the Raspberry through `uv`, no installation
+step is required:
+
+```bash
+ssh raspberry 'uv run --quiet --with yadisk python -' <<'PY'
+import sys
+import yadisk
+
+with yadisk.Client(token=sys.stdin.readline().strip()) as client:
+    print(client.check_token())
+    print([item.path for item in client.listdir("app:/")])
+PY
+```
+
+Pass the token over stdin or a protected file, never as a command argument. The REST API itself
+is described at https://yandex.ru/dev/disk-api/doc/ru/; upload and download go through one-time
+links returned by the API, which `yadisk` handles on its own.
+
+Other clients: `rclone` supports the application folder only starting with the release after
+v1.75 (`app_folder` backend option), the `ydcmd` CLI is archived, and there is no mature Go SDK,
+so Go services should call the REST API directly.
