@@ -110,11 +110,8 @@ with yadisk.Client(token=sys.stdin.read().strip()) as client:
     print(client.get_meta("app:/report.pdf").public_url)
 ```
 
-The `sync-defaults` extra brings the `requests` backend; plain `yadisk` has no HTTP session.
-The script must live in a file because stdin is taken by the token. Verified with this token:
-listing, upload, metadata and `publish` (public `https://yadi.sk/d/...` link, revoke it with
-`unpublish`) work; `get_disk_info()` returns 403 because the `cloud_api:disk.info` scope is
-absent.
+The script must live in a file because stdin is taken by the token. `get_disk_info()` returns
+403 because the `cloud_api:disk.info` scope is absent.
 
 Pass the token over stdin or a protected file, never as a command argument. The REST API itself
 is described at https://yandex.ru/dev/disk-api/doc/ru/; upload and download go through one-time
