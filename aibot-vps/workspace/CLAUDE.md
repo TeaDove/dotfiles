@@ -192,5 +192,8 @@ yourself. It is already installed and configured on the Raspberry:
 ssh raspberry 'goteleout Task done!'
 ```
 
+In Go code, `goteleout` can also be used as a library instead of shelling out — import it
+from `github.com/TeaDove/goteleout`.
+
 For example, when asked to notify the user when a task is done, running that command on
 completion is enough.
