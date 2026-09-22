@@ -18,7 +18,7 @@ import (
 
 var dotfilesDirs = [...]string{"./dotfiles-configs"}
 
-var mergeConfigs = mapset.NewSet(".claude/settings.json")
+var mergeConfigs = mapset.NewSet[string]()
 
 var codexMappings = [...][2]string{
 	{".claude/settings.json", ""},

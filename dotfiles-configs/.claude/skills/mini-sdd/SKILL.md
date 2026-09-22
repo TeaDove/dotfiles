@@ -16,9 +16,13 @@ The ONLY step that must run in a separate, fresh context is the independent revi
 fresh isolated agent (Claude Code: the `Task` tool with `subagent_type: sdd-reviewer`; Codex: a
 separate `codex exec` run given `~/.codex/agents/sdd-reviewer.md`).
 
-If no path is given, ask for one and stop. **If the file does not exist, STOP with an error** — the
-spec is anchored to its directory; a missing spec is a hard failure, never a reason to create one
-elsewhere or search around.
+The path is required on the **first** run of a conversation: resolve it to one canonical absolute path
+and record it in the report's `## project` header. On later `/mini-sdd` calls **in the same conversation the
+path is optional** — reuse the spec path from the most recent canonical block; a bare `/mini-sdd` must
+not fail just because the argument was omitted. Only if no path is given and none was established earlier
+in this conversation: ask for one and stop. **If the resolved path (given or remembered) points to no
+file, STOP with an error** — the spec is anchored to its directory; a missing spec is a hard failure,
+never a reason to create one elsewhere or search around.
 
 ## The spec file is the single source of truth for state
 
@@ -84,12 +88,14 @@ cascade from there.
 
 ## On every invocation: report first, then act
 
-1. Read the spec file. If `<spec>.backup` exists, `diff <spec>.backup <spec>` to detect every human edit
+1. Resolve the spec path — the argument, or if omitted the one recorded in this conversation's last
+   canonical block — then read the spec file. If `<spec>.backup` exists, `diff <spec>.backup <spec>` to detect every human edit
    since you last presented the file — an edited `IDEA`, edited artifact sections, or `TODO:` notes — and
    handle them as a change (below). An `IDEA` change cascades from IDEA down; an artifact edit cascades
    from that section down. (No backup yet — the first run — means nothing to diff: generate from IDEA.)
-2. **Print the current `STATUS` and the next steps before doing anything else**, so a bare invocation
-   can be used just to look. Then act according to state.
+2. **Report status before doing anything else** so a bare invocation can be used just to look: emit the
+   canonical block (see *Output*) — at least `project` (with the spec path), `status` and `next step`.
+   Then act according to state — every turn also closes with that same block.
 
 ## Dispatch by state
 
@@ -116,7 +122,9 @@ each terse, then set them `fresh` and ask for one bulk approval.
 
 ### Approval gate
 
-Before the gate, make sure `<spec>.backup` mirrors exactly what you are presenting. Use AskUserQuestion:
+Before the gate, make sure `<spec>.backup` mirrors exactly what you are presenting, and **emit the
+canonical block as text (with `awaiting approval on`) immediately before calling `AskUserQuestion`** — the
+block is the summary, the gate is the question. Use AskUserQuestion:
 **Approve** / **Request changes** (say what, iterate in chat, re-gate) / **Look at artifacts** (the human
 edited the file or left `TODO:` notes — `diff` against the backup, fold in their edits and TODOs, then
 re-gate) / **Stop** (leave as is and exit). Only the human sets `approved`; never approve on the human's
@@ -175,17 +183,24 @@ a fix (no progress), STOP and report the remaining findings.
 
 ## PR-fix mode (State DONE)
 
-Entered only when everything is `approved`, code `pass`, review `APPROVED`. Read the PR review comments
-for the current change (via the repository's connected tooling — reading only). For each actionable
-comment you classify its scope:
+Entered only when everything is `approved`, code `pass`, review `APPROVED`. Gather actionable fixes from
+**both** sources (reading only — never commit or push):
+
+- **PR review comments** for the current change, via the repository's connected tooling.
+- **`TODO:` markers the human left in the code**, limited to the **uncommitted** working-tree changes
+  (use the repository's own diff of uncommitted changes and scan the added lines for `TODO:`). Only the
+  ones newly added in the working tree — never act on committed baseline TODOs.
+
+Handle each fix the same way, by classifying its scope:
 
 - **Touches a normative artifact** (requirements/research/design — e.g. a banned dependency, a changed
   contract) → do NOT touch code. Instead write down in the affected section exactly what must change,
   mark it `stale`, set State `PR_FIX`, and wait until the artifacts converge (human updates IDEA /
-  approves the delta). Only after they are consistent again do you touch code.
-- **Pure code** (rename, local fix that does not diverge from DESIGN) → apply it, then re-review. If a
-  fix you are about to apply contradicts the current DESIGN, flag it and ask rather than silently
-  diverging.
+  approves the delta). Only after they are consistent again do you touch code, then remove a code
+  `TODO:` that drove the fix.
+- **Pure code** (rename, local fix that does not diverge from DESIGN) → apply it, **remove the handled
+  `TODO:` from the code**, then re-review. If a fix you are about to apply contradicts the current
+  DESIGN, flag it and ask rather than silently diverging.
 
 ## Invariants (do not violate)
 
@@ -201,6 +216,42 @@ comment you classify its scope:
 
 ## Output
 
-Always start with the `STATUS` line and the next steps. Show the phase you are in, verification commands
-and their results, and each review iteration's verdict. End with `mini-sdd complete`, `mini-sdd blocked`
-(+ what the spec must clarify), or `mini-sdd failed` (+ remaining findings).
+Chat is a pointer to the file, not a copy of it. The specifics live in the spec; never restate
+requirement/research/design content in chat — no acceptance-criteria dumps, no tech specifics (language
+versions, library names, contracts).
+
+**Every turn ends with the same canonical block** — the markdown structure below, sections in this fixed
+order. Always include `project` (with the canonical absolute spec path in its header), `status` and
+`next step`; include the rest only when it applies. The path in the `## project` header is what a later
+bare `/mini-sdd` uses to recover the spec. It is the last thing you write before yielding control. If the turn ends by calling a tool — in particular the
+approval gate `AskUserQuestion` — **emit the block as text FIRST, then make the call**; never let a tool
+call swallow the block. Any working narration goes before it, kept terse.
+
+## project <what this project is, one line, no more than 5 words> (<canonical absolute path to the spec file>)
+
+### status
+<the STATUS state>
+### next step
+<one line, or "—">
+
+### changes
+- <short delta, one item per change — "added endpoint X"; omit on first generation / no change>
+
+### blockers
+- <open [NEEDS CLARIFICATION] items needing your decision; omit if none>
+
+### awaiting approval on
+<sections at the gate, e.g. requirements, research, design; omit when not gating>
+
+### verification
+<exact commands + pass/fail; only right after DoD>
+
+### review
+<verdict + iteration; only right after a review>
+
+### result
+<mini-sdd complete | mini-sdd blocked | mini-sdd failed; only on the terminal turn>
+
+The approval gate (AskUserQuestion) still fires as its own interactive step; `awaiting approval on`
+names what it covers. `blockers` and the gate are the two things that must always surface, because they
+need the human.
