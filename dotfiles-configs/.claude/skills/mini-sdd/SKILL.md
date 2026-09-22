@@ -166,10 +166,17 @@ exact commands and results in `CODE`.
 
 ## Review (fresh, independent)
 
-Launch the reviewer as a fresh isolated agent (see Usage). Give it ONLY the spec file path and, if any
-paths held pre-existing user changes, that note. Do NOT pass your reasoning — it must judge the
-repository state itself. Expect `APPROVED` / `REJECTED` / `BLOCKED` with findings classified by severity
-(BLOCKER/MAJOR/MINOR) and type (IMPLEMENTATION_BUG/TEST_GAP/SPEC_GAP/OUT_OF_SCOPE).
+Launch the reviewer as a fresh isolated agent (see Usage). Pass it ONLY: the spec file path (the full
+spec — every requirement and design — lives there), the repo root / working directory, and, if any paths
+held pre-existing user changes, that note. Pass **nothing else**, and keep it short.
+
+In particular do NOT tell it which requirements passed a previous review, where to focus, what the delta
+since last time is, or what to confirm — that is your reasoning, and feeding it defeats the independent
+review: the reviewer must re-derive every requirement from the spec and judge the whole current state
+fresh. Do NOT restate VCS/tooling or code conventions either; those live in the repo's own
+AGENTS.md/CLAUDE.md, which the reviewer reads itself. Expect `APPROVED` / `REJECTED` / `BLOCKED` with
+findings classified by severity (BLOCKER/MAJOR/MINOR) and type
+(IMPLEMENTATION_BUG/TEST_GAP/SPEC_GAP/OUT_OF_SCOPE).
 
 - **APPROVED**, or REJECTED with only trivial MINORs → set `verdict: APPROVED`, State `DONE`. (Fix
   trivial MINORs; never loop on pure style.)
