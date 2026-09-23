@@ -26,11 +26,24 @@ rules live in separate files linked at the bottom and apply only to that languag
 
 ## Version control
 
-- Use any VCS (git, SVN, etc.) **read-only**. Reading history and state is always
+- Use any VCS (git, SVN, etc.) **read-only** by default. Reading history and state is always
   allowed: status, log, diff, blame, show, listing branches, inspecting commits, etc.
-- Mutating the repository is FORBIDDEN: do not commit, push, pull, fetch, rebase, merge,
-  create/switch/delete branches, stash, cherry-pick, reset, tag, or open PRs — and do not
+- Every mutating operation is FORBIDDEN by default: commit, push, pull, fetch, rebase, merge,
+  create/switch/delete branches, stash, cherry-pick, reset, tag, open/update/merge PRs. Do not
   offer or suggest doing any of these. I handle all of that myself.
+- A project's `CLAUDE.md` or `AGENTS.md` may allow some of these operations explicitly.
+  Silence means forbidden, and a permission covers only the operations it names. When
+  several files apply, the narrower one (closer to the code) wins.
+- When you rely on such a permission, say so before the first mutating operation and name
+  the file and section it comes from.
+- Report every mutating operation you perform, in this exact format (one block per
+  operation; `hash` is the commit/PR/tag id or `-` when there is none; omit the URL line
+  when there is nothing to link):
+
+  ```
+  *{action}*: [{hash}], {summary}
+  {url}
+  ```
 
 ## SVN
 
