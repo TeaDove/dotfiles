@@ -37,15 +37,17 @@ rules live in separate files linked at the bottom and apply only to that languag
 - When you rely on such a permission, say so before the first mutating operation and name
   the file and section it comes from.
 - Report every mutating operation you perform, one line per operation, in this exact
-  format:
+  format, with an empty line before and after the block of lines:
 
   ```
-  **{action}**: [{name}]({url})
+  ▶ **{action}**: [{name}]({url})
   ```
 
-  `name` is what identifies the result: the short hash for commits and pushes, the number
-  for PRs, the name for tags, branches and stashes. Link it to the commit/PR/tag page when
-  one exists; otherwise write `name` in plain text and without a link.
+  `action` is a past-tense verb (`committed`, `pushed`, `fetched`, `checked out`, `opened
+  PR`, `tagged`). `name` is what identifies the result: the short hash for commits and
+  pushes, the number for PRs, the name for tags, branches and stashes. Link it to the
+  commit/PR/tag page when one exists; otherwise write `name` in plain text and without a
+  link.
 
 ## SVN
 
