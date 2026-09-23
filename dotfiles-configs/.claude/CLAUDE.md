@@ -36,14 +36,16 @@ rules live in separate files linked at the bottom and apply only to that languag
   several files apply, the narrower one (closer to the code) wins.
 - When you rely on such a permission, say so before the first mutating operation and name
   the file and section it comes from.
-- Report every mutating operation you perform, in this exact format (one block per
-  operation; `hash` is the commit/PR/tag id or `-` when there is none; omit the URL line
-  when there is nothing to link):
+- Report every mutating operation you perform, one line per operation, in this exact
+  format:
 
   ```
-  *{action}*: [{hash}], {summary}
-  {url}
+  **{action}**: [{name}]({url})
   ```
+
+  `name` is what identifies the result: the short hash for commits and pushes, the number
+  for PRs, the name for tags, branches and stashes. Link it to the commit/PR/tag page when
+  one exists; otherwise write `name` in plain text and without a link.
 
 ## SVN
 
