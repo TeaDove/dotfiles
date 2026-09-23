@@ -10,6 +10,12 @@ ecryptfs-mount-private
 exec zsh
 ```
 
+### SSH host tint in kitty
+
+Inside kitty, `ssh` tints the window background with one of 32 colours picked from the
+remote host key in `known_hosts`, and restores the previous colours on exit. Unknown
+hosts are tinted by hostname. Disable with `SSH_TINT=0`.
+
 ## Install
 
 ```shell

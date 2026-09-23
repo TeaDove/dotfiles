@@ -49,6 +49,57 @@ function cbox () {
         bash -c "sudo /usr/local/bin/init-firewall.sh && exec claude --dangerously-skip-permissions $*"
 }
 
+function ssh-tint-key () {
+    local settings
+    settings=$(command ssh -G "$@" 2>/dev/null) || return 1
+    local target
+    target=$(print -r -- $settings | awk '
+        $1 == "hostkeyalias" { alias = $2 }
+        $1 == "hostname" { host = $2 }
+        $1 == "port" { port = $2 }
+        END {
+            if (alias != "") host = alias
+            if (host == "") exit 1
+            print (port == 22 ? host : "[" host "]:" port)
+        }')
+    [[ -n $target ]] || return 1
+    local -a hostfiles
+    hostfiles=( ${=${(M)${(f)settings}:#(user|global)knownhostsfile *}#(user|global)knownhostsfile } )
+    hostfiles=( ${hostfiles/#(\~|\%d)/$HOME} )
+    local hostkeys hostfile
+    hostkeys=$(for hostfile in $hostfiles; do
+        ssh-keygen -F $target -f $hostfile 2>/dev/null
+    done | awk '!/^#/ {print $3}' | sort | paste -sd, -)
+    print -r -- ${hostkeys:-$target}
+}
+
+function ssh-tint-color () {
+    local tints=(
+        291414 291c14 292414 272914 1f2914 172914 142919 142921
+        142929 142129 141929 171429 1f1429 271429 291424 29141c
+        411f1f 412c1f 41391f 3d411f 30411f 24411f 1f4128 1f4135
+        1f4141 1f3541 1f2841 241f41 301f41 3d1f41 411f39 411f2c
+    )
+    print -r -- $tints[$(( $(printf '%s' $1 | cksum | cut -d' ' -f1) % 32 + 1 ))]
+}
+
+function ssh () {
+    local tint_key
+    if [[ -n $KITTY_WINDOW_ID && -t 1 && $SSH_TINT != 0 ]]; then
+        tint_key=$(ssh-tint-key "$@")
+    fi
+    if [[ -z $tint_key ]]; then
+        command ssh "$@"
+        return
+    fi
+    printf '\e]30001\e\\\e]11;#%s\e\\' $(ssh-tint-color $tint_key)
+    {
+        command ssh "$@"
+    } always {
+        printf '\e]30101\e\\'
+    }
+}
+
 typeset -U path
 path=(
     /opt/homebrew/opt/*/libexec/gnubin(N)
