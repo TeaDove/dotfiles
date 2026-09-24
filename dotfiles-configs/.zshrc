@@ -209,3 +209,10 @@ bindkey '^[[4~' end-of-line
 if (( $+commands[starship] )); then
     eval "$(starship init zsh)"
 fi
+
+if [[ -n $KITTY_INSTALLATION_DIR ]]; then
+    export KITTY_SHELL_INTEGRATION=enabled
+    autoload -Uz -- $KITTY_INSTALLATION_DIR/shell-integration/zsh/kitty-integration
+    kitty-integration
+    unfunction kitty-integration
+fi
