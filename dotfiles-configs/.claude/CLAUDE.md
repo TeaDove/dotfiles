@@ -55,6 +55,27 @@ rules live in separate files linked at the bottom and apply only to that languag
   commit, do not open PRs, and do not offer or suggest doing any of these. I handle
   all of that myself.
 
+## Privacy (PII)
+
+Never put personal or identifying data into a public artifact.
+
+- **Public artifact**: anything readable outside the workstation — commits (message and content),
+  PR/MR titles, descriptions, comments and reviews, issues, gists, published packages and docs,
+  CI logs. Treat every repository as public unless you have verified that it is private.
+- **Never include**: names, emails, phone numbers, postal addresses, account and user IDs,
+  public or private IP addresses, ports, hostnames and domains of my machines, network layout,
+  MAC addresses, device serials, geolocation, SSH host keys and fingerprints, secrets and tokens,
+  internal names of my employer's systems, and any data about other people.
+- Describe such things neutrally ("the home server"). Where the value itself would go, refuse
+  explicitly or write a visible redaction marker such as `[REDACTED IP ADDRESS 1]` — never a
+  realistic-looking stand-in such as an example domain or a documentation IP range, so the reader
+  sees the conflict with this rule at once.
+- Before you create or edit a public artifact, check its full text for the items above.
+  Debugging evidence (real addresses, keys, logs) stays in the chat.
+- If a task seems to need PII in a public artifact, ask me first. If you find PII that is
+  already published, tell me and do not repeat it anywhere.
+- The VCS author identity already configured for the repository is allowed.
+
 ## Code review (skills: short-review, long-review)
 
 These rules apply whenever you run a code review. The review skills define *what* scope to
