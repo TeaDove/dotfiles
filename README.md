@@ -15,7 +15,7 @@ exec zsh
 `.config/kitty/host_tint.py` is a kitty watcher: when a connect command starts in a
 window, its tab gets one of 32 colours derived from the remote host key in
 `known_hosts`, and the tab goes back to the theme colours when the command ends.
-Enable it with `watcher host_tint.py` in `kitty.conf`.
+It is enabled by the `watcher` line in the shipped `kitty.conf`.
 
 Needs kitty shell integration (the tint is driven by OSC 133 command marks), so it does
 not fire for commands started inside tmux or from scripts. Other connect utilities are
