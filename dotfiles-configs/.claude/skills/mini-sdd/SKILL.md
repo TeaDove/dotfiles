@@ -1,6 +1,6 @@
 ---
 name: mini-sdd
-description: "Lightweight single-file Spec-Driven Development for small tasks. Drives ONE spec file through requirements → research → design → code → independent review, recording every phase and its status flag inside that same file so work resumes after any interruption. The human owns only the IDEA section; the agent owns every derived artifact. Editing IDEA (or asking for a change in chat) marks the affected phases stale and cascades a minimal delta, then re-requests approval. Once everything is approved, implemented and review-passed, it switches to PR-fix mode. Never commits or pushes. Trigger phrases: '/mini-sdd', 'mini-sdd <spec-file>', 'запусти mini-sdd', 'реализуй по спеке через mini-sdd'."
+description: "Lightweight single-file Spec-Driven Development for small tasks. Drives ONE spec file through requirements → research → design → code → independent review, recording every phase and its status flag inside that same file so work resumes after any interruption. The human owns only the IDEA section; the agent owns every derived artifact. Editing IDEA (or asking for a change in chat) marks the affected phases stale and cascades a minimal delta, then re-requests approval. Once everything is approved, implemented and review-passed, it switches to PR-fix mode. When work continued in the branch outside the flow, resync mode reads what the branch actually implements, writes a DRIFT report against the spec, and lets the human fold it back in before re-running the flow. Never commits or pushes. Trigger phrases: '/mini-sdd', 'mini-sdd <spec-file>', 'запусти mini-sdd', 'реализуй по спеке через mini-sdd', '/mini-sdd --resync', '/mini-sdd <spec-file> --resync', 'восстанови SDD по ветке'."
 ---
 
 # /mini-sdd — single-file Spec-Driven Development
@@ -8,8 +8,12 @@ description: "Lightweight single-file Spec-Driven Development for small tasks. D
 ## Usage
 
 ```
-/mini-sdd <path-to-sdd-spec.md>
+/mini-sdd [<path-to-sdd-spec.md>] [--resync]
 ```
+
+`--resync` is a flag, not a positional argument: it may come with or without the spec path, in any
+position. It forces the **Resync** flow (see below); without it the flow is chosen by state. The path is
+resolved exactly as without the flag.
 
 You are the orchestrator. Drive the whole flow yourself in this context with your normal tools.
 The ONLY step that must run in a separate, fresh context is the independent review — launch it as a
@@ -37,8 +41,11 @@ file alone. The file has this shape:
 <free-text intent, written and edited only by the human>
 
 ## STATUS
-State: <DRAFTING | AWAITING_APPROVAL | IMPLEMENTING | DoD | IN_REVIEW | DONE | PR_FIX>
+State: <DRAFTING | AWAITING_APPROVAL | IMPLEMENTING | DoD | IN_REVIEW | DONE | PR_FIX | RESYNC>
 Next: <one line: what you will do next, or what you are waiting for>
+
+## DRIFT          [status: fresh | decided]   <!-- only during a resync -->
+<how the branch diverges from the spec, one item per divergence, each with the human's decision>
 
 ## REQUIREMENTS   [status: fresh | stale | provisional | approved]
 <observable behaviour, acceptance criteria, edge cases, and any [NEEDS CLARIFICATION] open questions>
@@ -99,6 +106,7 @@ cascade from there.
 
 ## Dispatch by state
 
+- `--resync` flag, a chat request to resync, or State `RESYNC` → **Resync** flow (takes precedence).
 - REQUIREMENTS / RESEARCH / DESIGN missing or not all `approved` → **Forward / cascade** flow.
 - REQUIREMENTS + RESEARCH + DESIGN `approved` but `CODE DoD` not `pass` → **Implement**.
 - Code done but `REVIEW` not `APPROVED` → **Review**.
@@ -188,6 +196,48 @@ findings classified by severity (BLOCKER/MAJOR/MINOR) and type
 Bounded: at most **5** review iterations. If reached without approval, or the same findings return after
 a fix (no progress), STOP and report the remaining findings.
 
+## Resync (the branch drifted from the spec)
+
+For when work went on in the branch outside this flow. For example, after `DONE` the human kept going by
+hand or through ad-hoc agent sessions: exploratory changes, experiments, fixes. The code no longer
+matches the spec, and the spec has to catch up before the flow can drive the branch again. You never
+edit IDEA here either; you *propose* the IDEA delta and the human applies it.
+
+1. **Journal first.** Set State `RESYNC` and Next `drift report`, then save.
+2. **Read what the branch really implements.** Get the whole branch relative to its base, both committed
+   and uncommitted, through the repo's own VCS. Do not limit it to the working tree or to changes since
+   `DONE`, and do not trust the `CODE` section. Read the changed code itself.
+3. **Write `## DRIFT`** right after `STATUS`. Compare the code against every REQUIREMENTS item and DESIGN
+   decision. Write one item per divergence, numbered `D1`, `D2`, …, each with:
+   - **kind**: `added` means the code does something the spec does not describe. `removed` means a spec
+     item that the code no longer satisfies. `changed` means both describe it, but differently.
+   - **evidence**: `file:line` references.
+   - **spec delta**: which `R`/design items would be added, reworded, or deleted to match the code.
+   - **IDEA proposal**: the exact line(s) to add to or remove from IDEA if the human keeps the change.
+     Leave it empty for design-only drift that changes no observable behaviour.
+   - **decision**: `keep` (the spec adopts the code), `revert` (the code goes back to the spec), or
+     `?`. You always write `?`; only the human sets it.
+
+   Mark debug scaffolding, experiment knobs, and one-off scripts as such in their item, so the human
+   can pick `revert` for them. Leave REQUIREMENTS / RESEARCH / DESIGN / CODE and the code untouched.
+   Set DRIFT `fresh`.
+4. **Gate.** Refresh `<spec>.backup` and emit the canonical block. `changes` gets the drift counts per
+   kind, and `awaiting approval on` is `drift`. Then use AskUserQuestion with these options:
+   - **Apply decisions**: the human has set every `decision` in the file and edited IDEA where they want.
+   - **Request changes**: the drift report itself is wrong or incomplete; iterate on it, then re-gate.
+   - **Stop**.
+5. **Apply.** If any `decision` is still `?`, list those items as blockers and stop. Do not guess. Then
+   diff against `<spec>.backup` as usual and fold in the human's edits. After that:
+   - A `keep` item that changes observable behaviour must be covered by the new IDEA. If it is not, it
+     is a blocker: ask the human to update IDEA or switch the item to `revert`.
+   - Journal the affected phases `stale`. Cascade a minimal delta so that `keep` items become part of
+     REQUIREMENTS / RESEARCH / DESIGN. `revert` items leave the spec as is.
+   - Set CODE `DoD: pending`, REVIEW `verdict: pending`, and DRIFT `decided`. Then run the normal
+     approval gate.
+6. **Converge.** After approval, continue with **Implement**. Bring every `revert` item back to the spec,
+   and do not rewrite `keep` code that already satisfies it. Then run DoD and the fresh review as usual.
+   On `DONE`, delete the `DRIFT` section and refresh `<spec>.backup`.
+
 ## PR-fix mode (State DONE)
 
 Entered only when everything is `approved`, code `pass`, review `APPROVED`. Gather actionable fixes from
@@ -215,6 +265,7 @@ Handle each fix the same way, by classifying its scope:
 - The human owns IDEA and approvals; you own the final derived content and the change classification.
   The human may edit artifacts or leave `TODO:` notes; reconcile them via the `<spec>.backup` diff.
 - Never invent a product decision — surface it as `[NEEDS CLARIFICATION]` and stop.
+- Resync never edits IDEA and never decides a DRIFT item; it proposes, the human decides.
 - Cascade minimal deltas; never regenerate an approved chain wholesale.
 - Verification is mandatory; review is a fresh independent agent.
 - **VCS is read-only.** Never commit, push, create branches, or run destructive VCS commands, and never

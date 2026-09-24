@@ -15,7 +15,6 @@ $ "
 
 alias ll='ls -la --color=auto 2&>/dev/null || ls -laG'
 alias l='ls -l --color=auto 2&>/dev/null || ls -lG'
-alias i="ipython"
 alias b="bpython"
 alias speed='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -B'
 alias d='dust'
