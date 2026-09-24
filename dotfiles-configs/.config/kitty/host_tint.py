@@ -16,6 +16,7 @@ TARGET_COMMANDS: dict[str, int] = {}
 COMMAND_PREFIXES: frozenset[str] = frozenset(
     {'command', 'doas', 'env', 'exec', 'nohup', 'sudo', 'time'}
 )
+KITTEN_COMMANDS: frozenset[str] = frozenset({'kitten', 'kitty'})
 SATURATION: float = 0.45
 LIGHTNESS: tuple[float, float] = (0.28, 0.42)
 ACTIVE_FOREGROUND: str = '#f2f2f2'
@@ -87,7 +88,14 @@ def command_and_args(argv: list[str]) -> tuple[str, list[str]]:
         argv = argv[1:]
     if not argv:
         return '', []
-    return os.path.basename(argv[0]), argv[1:]
+    name, args = os.path.basename(argv[0]), argv[1:]
+    if name in KITTEN_COMMANDS:
+        while args and args[0] in ('+', '+kitten'):
+            args = args[1:]
+        if not args:
+            return '', []
+        return args[0], args[1:]
+    return name, args
 
 
 def split_cmdline(cmdline: str) -> list[str]:
@@ -121,6 +129,15 @@ def connection_key(cmdline: str) -> str | None:
     return None
 
 
+def connect_process_running(window: 'Window') -> bool:
+    for process in window.child.foreground_processes:
+        argv = process.get('cmdline') or []
+        name, _ = command_and_args(list(argv))
+        if name in SSH_COMMANDS or name in TARGET_COMMANDS:
+            return True
+    return False
+
+
 def paint_tab(boss: 'Boss', window: 'Window', color: str | None) -> None:
     background = color or 'NONE'
     active = ACTIVE_FOREGROUND if color else 'NONE'
@@ -147,7 +164,7 @@ def on_cmd_startstop(boss: 'Boss', window: 'Window', data: dict[str, Any]) -> No
             paint_tab(boss, window, tint(key))
             tinted_windows.add(window.id)
             return
-        if window.id in tinted_windows:
+        if window.id in tinted_windows and not connect_process_running(window):
             paint_tab(boss, window, None)
             tinted_windows.discard(window.id)
     except Exception as err:
