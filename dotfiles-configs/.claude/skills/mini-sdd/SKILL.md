@@ -216,7 +216,7 @@ edit IDEA here either; you *propose* the IDEA delta and the human applies it.
    - **IDEA proposal**: the exact line(s) to add to or remove from IDEA if the human keeps the change.
      Leave it empty for design-only drift that changes no observable behaviour.
    - **decision**: `keep` (the spec adopts the code), `revert` (the code goes back to the spec), or
-     `?`. You always write `?`; only the human sets it.
+     `[NEEDS CLARIFICATION]`. You always write `[NEEDS CLARIFICATION]`; only the human replaces it.
 
    Mark debug scaffolding, experiment knobs, and one-off scripts as such in their item, so the human
    can pick `revert` for them. Leave REQUIREMENTS / RESEARCH / DESIGN and the code untouched.
@@ -226,8 +226,8 @@ edit IDEA here either; you *propose* the IDEA delta and the human applies it.
    - **Apply decisions**: the human has set every `decision` in the file and edited IDEA where they want.
    - **Request changes**: the drift report itself is wrong or incomplete; iterate on it, then re-gate.
    - **Stop**.
-5. **Apply.** If any `decision` is still `?`, list those items as blockers and stop. Do not guess. Then
-   diff against `<spec>.backup` as usual and fold in the human's edits. After that:
+5. **Apply.** If any `decision` is still `[NEEDS CLARIFICATION]`, list those items as blockers and stop.
+   Do not guess. Then diff against `<spec>.backup` as usual and fold in the human's edits. After that:
    - A `keep` item that changes observable behaviour must be covered by the new IDEA. If it is not, it
      is a blocker: ask the human to update IDEA or switch the item to `revert`.
    - Journal the affected phases `stale`. Cascade a minimal delta so that `keep` items become part of
