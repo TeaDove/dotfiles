@@ -95,15 +95,23 @@ Use the Python library [yadisk](https://github.com/ivknv/yadisk)
 step is required:
 
 ```bash
-ssh raspberry 'uv run --quiet --with yadisk python -' <<'PY'
+ssh raspberry 'uv run --quiet --with "yadisk[sync-defaults]" python /path/to/script.py' \
+  < /run/secrets/yandex_disk_token
+```
+
+```python
 import sys
+
 import yadisk
 
-with yadisk.Client(token=sys.stdin.readline().strip()) as client:
-    print(client.check_token())
-    print([item.path for item in client.listdir("app:/")])
-PY
+with yadisk.Client(token=sys.stdin.read().strip()) as client:
+    client.upload("/local/report.pdf", "app:/report.pdf", overwrite=True)
+    client.publish("app:/report.pdf")
+    print(client.get_meta("app:/report.pdf").public_url)
 ```
+
+The script must live in a file because stdin is taken by the token. `get_disk_info()` returns
+403 because the `cloud_api:disk.info` scope is absent.
 
 Pass the token over stdin or a protected file, never as a command argument. The REST API itself
 is described at https://yandex.ru/dev/disk-api/doc/ru/; upload and download go through one-time
