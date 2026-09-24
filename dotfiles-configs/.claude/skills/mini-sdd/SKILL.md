@@ -55,16 +55,16 @@ Next: <one line: what you will do next, or what you are waiting for>
 
 ## DESIGN         [status: fresh | stale | provisional | approved]
 <the HOW: components, contracts, key decisions. `provisional` while REQUIREMENTS has an open blocker.>
-
-## CODE           [DoD: pending | pass | fail]
-<what was implemented; the exact verification commands you ran and their results>
-
-## REVIEW         [verdict: pending | APPROVED | REJECTED | BLOCKED]
-<latest independent-review findings; iteration counter>
 ```
+
+The spec holds no CODE or REVIEW section: the code lives in the repository and verification and review
+results are reported in chat. Their progress is tracked only by `State` (`IMPLEMENTING` → `DoD` →
+`IN_REVIEW` → `DONE`); while `IN_REVIEW`, `Next` carries the review iteration (e.g. `review 2/5`).
 
 - **`STATUS` is a computed rollup**, placed right after IDEA for a quick glance. Recompute it from the
   per-phase flags on every change; it must never contradict them (no `DONE` while DESIGN is `stale`).
+  Any normative section leaving `approved` resets State to the spec phase; a passed approval gate sets
+  it to `IMPLEMENTING`.
 - **Ownership.** The human owns the `IDEA` section and all approvals; never rewrite IDEA. You own the
   *final* content of every derived section, but the human may also edit those sections directly in the
   file or drop `TODO:` notes in them — you reconcile such edits (see *Backup + human edits* below).
@@ -108,9 +108,9 @@ cascade from there.
 
 - `--resync` flag, a chat request to resync, or State `RESYNC` → **Resync** flow (takes precedence).
 - REQUIREMENTS / RESEARCH / DESIGN missing or not all `approved` → **Forward / cascade** flow.
-- REQUIREMENTS + RESEARCH + DESIGN `approved` but `CODE DoD` not `pass` → **Implement**.
-- Code done but `REVIEW` not `APPROVED` → **Review**.
-- Everything `approved`, code `pass`, review `APPROVED` (State `DONE`) → **PR-fix** mode.
+- REQUIREMENTS + RESEARCH + DESIGN `approved`, State `IMPLEMENTING` or `DoD` → **Implement** / **DoD**.
+- State `IN_REVIEW` → **Review**.
+- Everything `approved`, State `DONE` → **PR-fix** mode.
 
 ## Forward / cascade flow
 
@@ -166,9 +166,9 @@ stop for the human — do not invent it.
 Determine the project's real verification commands from its own config (Makefile/Taskfile/justfile,
 package.json, pyproject.toml, go.mod, `.github/workflows/*`, README, CLAUDE.md/AGENTS.md) — prefer what
 CI or the documented dev workflow uses. Run them (tests, linters, static analysis, build). Record the
-exact commands and results in `CODE`.
+exact commands and results in chat (`verification` in the canonical block).
 
-- Implementation failure → fix, re-verify (bounded ~3 attempts). Set `DoD: pass` only when they pass.
+- Implementation failure → fix, re-verify (bounded ~3 attempts). Move State to `IN_REVIEW` only when they pass.
 - Environment/tooling failure you must not work around → STOP with a clear failure message; never report
   success for a verification step you could not actually run.
 
@@ -186,7 +186,7 @@ AGENTS.md/CLAUDE.md, which the reviewer reads itself. Expect `APPROVED` / `REJEC
 findings classified by severity (BLOCKER/MAJOR/MINOR) and type
 (IMPLEMENTATION_BUG/TEST_GAP/SPEC_GAP/OUT_OF_SCOPE).
 
-- **APPROVED**, or REJECTED with only trivial MINORs → set `verdict: APPROVED`, State `DONE`. (Fix
+- **APPROVED**, or REJECTED with only trivial MINORs → State `DONE`. (Fix
   trivial MINORs; never loop on pure style.)
 - Any **SPEC_GAP** / reviewer **BLOCKED** → record it as a `[NEEDS CLARIFICATION]` in the owning phase,
   mark it `stale`, and STOP for the human. Do not invent the answer.
@@ -206,7 +206,7 @@ edit IDEA here either; you *propose* the IDEA delta and the human applies it.
 1. **Journal first.** Set State `RESYNC` and Next `drift report`, then save.
 2. **Read what the branch really implements.** Get the whole branch relative to its base, both committed
    and uncommitted, through the repo's own VCS. Do not limit it to the working tree or to changes since
-   `DONE`, and do not trust the `CODE` section. Read the changed code itself.
+   `DONE`. Read the changed code itself.
 3. **Write `## DRIFT`** right after `STATUS`. Compare the code against every REQUIREMENTS item and DESIGN
    decision. Write one item per divergence, numbered `D1`, `D2`, …, each with:
    - **kind**: `added` means the code does something the spec does not describe. `removed` means a spec
@@ -219,7 +219,7 @@ edit IDEA here either; you *propose* the IDEA delta and the human applies it.
      `?`. You always write `?`; only the human sets it.
 
    Mark debug scaffolding, experiment knobs, and one-off scripts as such in their item, so the human
-   can pick `revert` for them. Leave REQUIREMENTS / RESEARCH / DESIGN / CODE and the code untouched.
+   can pick `revert` for them. Leave REQUIREMENTS / RESEARCH / DESIGN and the code untouched.
    Set DRIFT `fresh`.
 4. **Gate.** Refresh `<spec>.backup` and emit the canonical block. `changes` gets the drift counts per
    kind, and `awaiting approval on` is `drift`. Then use AskUserQuestion with these options:
@@ -232,7 +232,7 @@ edit IDEA here either; you *propose* the IDEA delta and the human applies it.
      is a blocker: ask the human to update IDEA or switch the item to `revert`.
    - Journal the affected phases `stale`. Cascade a minimal delta so that `keep` items become part of
      REQUIREMENTS / RESEARCH / DESIGN. `revert` items leave the spec as is.
-   - Set CODE `DoD: pending`, REVIEW `verdict: pending`, and DRIFT `decided`. Then run the normal
+   - Set DRIFT `decided`. Then run the normal
      approval gate.
 6. **Converge.** After approval, continue with **Implement**. Bring every `revert` item back to the spec,
    and do not rewrite `keep` code that already satisfies it. Then run DoD and the fresh review as usual.
@@ -240,7 +240,7 @@ edit IDEA here either; you *propose* the IDEA delta and the human applies it.
 
 ## PR-fix mode (State DONE)
 
-Entered only when everything is `approved`, code `pass`, review `APPROVED`. Gather actionable fixes from
+Entered only when everything is `approved` and State is `DONE` (DoD passed, review `APPROVED`). Gather actionable fixes from
 **both** sources (reading only — never commit or push):
 
 - **PR review comments** for the current change, via the repository's connected tooling.
