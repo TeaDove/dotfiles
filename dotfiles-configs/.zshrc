@@ -15,11 +15,10 @@ $ "
 
 alias ll='ls -la --color=auto 2&>/dev/null || ls -laG'
 alias l='ls -l --color=auto 2&>/dev/null || ls -lG'
-alias i="ipython"
 alias b="bpython"
 alias speed='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -B'
 alias d='dust'
-alias s='source .venv/bin/activate'
+alias s='kitty +kitten ssh'
 alias tm='tmux new-session -A -s main'
 alias mac-unquarantine='xattr -d com.apple.quarantine'
 
@@ -55,6 +54,8 @@ path=(
     /opt/homebrew/bin
     /opt/homebrew/sbin
     $HOME/.local/bin
+    /Applications/kitty.app/Contents/MacOS(N)
+    $HOME/Applications/kitty.app/Contents/MacOS(N)
     /usr/local/go/bin
     $HOME/.cargo/bin
     $path
