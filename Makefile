@@ -12,7 +12,7 @@ test:
 
 install:
 	$(GO) install u.go
-	u install
+	$(GO) run . install
 
 cbox-build:
 	docker build -t claude-box devcontainer
