@@ -17,6 +17,13 @@ COMMAND_PREFIXES: frozenset[str] = frozenset(
     {'command', 'doas', 'env', 'exec', 'nohup', 'sudo', 'time'}
 )
 KITTEN_COMMANDS: frozenset[str] = frozenset({'kitten', 'kitty'})
+HOST_KEY_PREFERENCE: tuple[str, ...] = (
+    'ssh-ed25519',
+    'ecdsa-sha2-nistp256',
+    'ecdsa-sha2-nistp384',
+    'ecdsa-sha2-nistp521',
+    'ssh-rsa',
+)
 SATURATION: float = 0.45
 LIGHTNESS: tuple[float, float] = (0.28, 0.42)
 ACTIVE_FOREGROUND: str = '#f2f2f2'
@@ -62,8 +69,8 @@ def ssh_target(settings: dict[str, list[str]]) -> str | None:
     return alias[0] if port == '22' else f'[{alias[0]}]:{port}'
 
 
-def known_host_keys(target: str, settings: dict[str, list[str]]) -> str | None:
-    keys: list[str] = []
+def known_host_key(target: str, settings: dict[str, list[str]]) -> str | None:
+    keys: dict[str, str] = {}
     hostfiles = settings.get('userknownhostsfile', [])
     hostfiles += settings.get('globalknownhostsfile', [])
     for path in hostfiles:
@@ -73,9 +80,12 @@ def known_host_keys(target: str, settings: dict[str, list[str]]) -> str | None:
         found = output_of(['ssh-keygen', '-F', target, '-f', expanded])
         for line in found.splitlines():
             fields = line.split()
-            if not line.startswith('#') and len(fields) > 2:
-                keys.append(fields[2])
-    return ','.join(sorted(keys)) if keys else None
+            if not line.startswith(('#', '@')) and len(fields) > 2:
+                keys.setdefault(fields[1], fields[2])
+    for key_type in HOST_KEY_PREFERENCE:
+        if key_type in keys:
+            return keys[key_type]
+    return min(keys.values()) if keys else None
 
 
 def positional(args: list[str], index: int) -> str | None:
@@ -117,10 +127,10 @@ def connection_key(cmdline: str) -> str | None:
         settings = ssh_settings(args)
         target = ssh_target(settings)
         if target is not None:
-            keys = known_host_keys(target, settings)
-            if keys is not None:
-                host_key_cache[cmdline] = keys
-                return keys
+            host_key = known_host_key(target, settings)
+            if host_key is not None:
+                host_key_cache[cmdline] = host_key
+                return host_key
             return target
     if name in TARGET_COMMANDS:
         return positional(args, TARGET_COMMANDS[name])
