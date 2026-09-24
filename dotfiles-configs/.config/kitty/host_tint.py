@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from kitty.boss import Boss
     from kitty.window import Window
 
-SSH_COMMANDS: frozenset[str] = frozenset({'ssh', 'autossh', 'mosh'})
+SSH_COMMANDS: frozenset[str] = frozenset({'autossh', 'mosh', 'pssh', 's', 'ssh'})
 TARGET_COMMANDS: dict[str, int] = {}
 COMMAND_PREFIXES: frozenset[str] = frozenset(
     {'command', 'doas', 'env', 'exec', 'nohup', 'sudo', 'time'}

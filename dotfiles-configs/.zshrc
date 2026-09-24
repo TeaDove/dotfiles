@@ -19,7 +19,7 @@ alias i="ipython"
 alias b="bpython"
 alias speed='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -B'
 alias d='dust'
-alias s='source .venv/bin/activate'
+alias s='kitty +kitten ssh'
 alias tm='tmux new-session -A -s main'
 alias mac-unquarantine='xattr -d com.apple.quarantine'
 
