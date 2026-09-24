@@ -54,6 +54,8 @@ path=(
     /opt/homebrew/bin
     /opt/homebrew/sbin
     $HOME/.local/bin
+    /Applications/kitty.app/Contents/MacOS(N)
+    $HOME/Applications/kitty.app/Contents/MacOS(N)
     /usr/local/go/bin
     $HOME/.cargo/bin
     $path
