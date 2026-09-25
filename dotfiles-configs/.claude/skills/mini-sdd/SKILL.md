@@ -61,6 +61,13 @@ The spec holds no CODE or REVIEW section: the code lives in the repository and v
 results are reported in chat. Their progress is tracked only by `State` (`IMPLEMENTING` → `DoD` →
 `IN_REVIEW` → `DONE`); while `IN_REVIEW`, `Next` carries the review iteration (e.g. `review 2/5`).
 
+**Language.** Write every artifact in the spec file in Russian, except headings and statuses: section
+and title headings, `[status: …]` flags, `State` values, field labels (`State:`, `Next:`, DRIFT item
+fields such as `kind`/`decision`) and their fixed values (`added`, `keep`, `[NEEDS CLARIFICATION]`, …)
+stay in English exactly as shown in this skill. All free text — requirements, research notes, design,
+`Next`, DRIFT descriptions — is in Russian. The same applies to chat: the canonical block's headings stay
+in English, its content and all narration are in Russian.
+
 - **`STATUS` is a computed rollup**, placed right after IDEA for a quick glance. Recompute it from the
   per-phase flags on every change; it must never contradict them (no `DONE` while DESIGN is `stale`).
   Any normative section leaving `approved` resets State to the spec phase; a passed approval gate sets
@@ -234,9 +241,11 @@ edit IDEA here either; you *propose* the IDEA delta and the human applies it.
      REQUIREMENTS / RESEARCH / DESIGN. `revert` items leave the spec as is.
    - Set DRIFT `decided`. Then run the normal
      approval gate.
+   - Once that gate is approved, delete the `DRIFT` section from the spec and refresh `<spec>.backup`.
+     Before deleting, list every `revert` item in `Next` in a few words each, so Implement still knows
+     which code to bring back.
 6. **Converge.** After approval, continue with **Implement**. Bring every `revert` item back to the spec,
    and do not rewrite `keep` code that already satisfies it. Then run DoD and the fresh review as usual.
-   On `DONE`, delete the `DRIFT` section and refresh `<spec>.backup`.
 
 ## PR-fix mode (State DONE)
 
