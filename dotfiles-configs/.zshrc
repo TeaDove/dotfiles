@@ -216,3 +216,5 @@ if [[ -n $KITTY_INSTALLATION_DIR ]]; then
     kitty-integration
     unfunction kitty-integration
 fi
+
+source /Users/teadove/yandex-cloud/completion.zsh.inc
