@@ -1,7 +1,7 @@
 ## Cheat sheet
 ### Kitty term fix
 ```shell
-infocmp -x xterm-kitty | pssh 2a02:6b8:c02:901:0:fce0:0:2af  'tic -x -o ~/.terminfo /dev/stdin'
+infocmp -x xterm-kitty | ssh 192.168.1.1  'tic -x -o ~/.terminfo /dev/stdin'
 ```
 
 ### Linux decrypt
@@ -10,17 +10,11 @@ ecryptfs-mount-private
 exec zsh
 ```
 
-### Host tint in kitty
+### No pager journalctl
 
-`.config/kitty/host_tint.py` is a kitty watcher: when a connect command starts in a
-window, its tab gets one of 32 colours derived from the remote host key in
-`known_hosts`, and the tab goes back to the theme colours when the command ends.
-It is enabled by the `watcher` line in the shipped `kitty.conf`.
-
-Needs kitty shell integration (the tint is driven by OSC 133 command marks), so it does
-not fire for commands started inside tmux or from scripts. Other connect utilities are
-added to `TARGET_COMMANDS` in the watcher: command name -> index of the argument that
-names the host.
+```shell
+sudo journalctl -x -u --no-pager -o short-iso
+```
 
 ## Install
 
