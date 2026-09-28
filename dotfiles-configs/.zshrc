@@ -218,3 +218,8 @@ if [[ -n $KITTY_INSTALLATION_DIR ]]; then
 fi
 
 source /Users/teadove/yandex-cloud/completion.zsh.inc
+
+if [[ -f ~/.zshrc-secret ]]; then
+    source ~/.zshrc-secret
+    echo ".zshrc-secret sourced"
+fi

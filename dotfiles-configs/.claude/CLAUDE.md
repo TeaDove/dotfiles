@@ -161,6 +161,12 @@ If a review turns up nothing, output no blocks and just write `No issues found`.
 - Functions ~80 lines max; return early on errors
 - Never mute parse errors from database rows or external input. Always propagate them or log.
 
+### Markdown
+
+- Lines in `.md` files are at most 120 characters; wrap prose and code blocks to fit. The only
+  exceptions are lines that cannot be wrapped without breaking them: YAML frontmatter values (e.g. a
+  skill's `description`), table rows, and single long URLs.
+
 ### Comments
 
 Do not write comments. The only allowed forms are `NOFIX:` and `LEGACY:` (below). Everything else is
