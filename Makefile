@@ -16,3 +16,10 @@ install:
 
 cbox-build:
 	docker build -t claude-box devcontainer
+
+push:
+	u g a
+	make install
+	u ss
+	u ss
+	u ss
