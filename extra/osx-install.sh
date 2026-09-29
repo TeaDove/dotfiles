@@ -1,6 +1,8 @@
 #!/bin/bash
 
-brew install tmux git jql yq lsd dust lazygit fish zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fzf gopass 2fa curlie wget cloc curlie tree neovim bat lolcat kitty terraform graphviz
+brew install tmux git jql yq lsd dust lazygit \
+  zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search \
+  fzf gopass 2fa curlie wget cloc curlie tree neovim bat lolcat kitty terraform graphviz
 
 brew install --cask karabiner-elements
 

@@ -6,7 +6,7 @@ sudo apt upgrade -y
 
 sudo apt install -y python3 python3-pip python3-dev python3-setuptools python3-venv \
   build-essential make git net-tools curl wget vim neovim \
-  fish zsh zsh-autosuggestions zsh-syntax-highlighting fzf kitty-terminfo tmux neofetch btop golang-go
+  zsh zsh-autosuggestions zsh-syntax-highlighting fzf kitty-terminfo tmux neofetch btop golang-go
 
 sudo snap install lsd
 
