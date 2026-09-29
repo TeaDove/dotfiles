@@ -38,7 +38,7 @@ func Run(ctx context.Context) error { //nolint: funlen // Is presentation builde
 				Name:   "l",
 				Usage:  "reads stdin, colorizes it to stdout and saves raw lines to /tmp/ulog/{date}.txt",
 				Action: logs.Run,
-				Flags:  []cli.Flag{logs.NoSaveFlag, verboseFlag},
+				Flags:  []cli.Flag{logs.SaveFlag, verboseFlag},
 			},
 			{
 				Name:   "u",

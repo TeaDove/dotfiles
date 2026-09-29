@@ -17,10 +17,10 @@ import (
 const logDir = "/tmp/ulog"
 
 //nolint:gochecknoglobals // is ok
-var NoSaveFlag = &cli.BoolFlag{Name: "no-save", Usage: "do not save log to /tmp/ulog"}
+var SaveFlag = &cli.BoolFlag{Name: "save", Usage: "save log to /tmp/ulog"}
 
 func Run(ctx context.Context, cmd *cli.Command) error {
-	noSave := cmd.Bool(NoSaveFlag.Name)
+	save := cmd.Bool(SaveFlag.Name)
 
 	formatter, err := NewLogFormatter(cmd.Bool("v"))
 	if err != nil {
@@ -32,7 +32,7 @@ func Run(ctx context.Context, cmd *cli.Command) error {
 		logPath   string
 	)
 
-	if !noSave {
+	if save {
 		mkdirErr := os.MkdirAll(logDir, 0o755)
 		if mkdirErr != nil {
 			return errors.Wrap(mkdirErr, "make log dir")
@@ -61,7 +61,7 @@ func Run(ctx context.Context, cmd *cli.Command) error {
 		err = ctx.Err()
 	}
 
-	if !noSave {
+	if save {
 		color.HiCyan("\nstdout saved to %s\n", logPath)
 	}
 
