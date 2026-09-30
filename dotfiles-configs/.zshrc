@@ -217,7 +217,9 @@ if [[ -n $KITTY_INSTALLATION_DIR ]]; then
     unfunction kitty-integration
 fi
 
-source /Users/teadove/yandex-cloud/completion.zsh.inc
+if [[ -f ~/yandex-cloud/completion.zsh.inc ]]; then
+    source ~/yandex-cloud/completion.zsh.inc
+fi
 
 if [[ -f ~/.zshrc-secret ]]; then
     source ~/.zshrc-secret
