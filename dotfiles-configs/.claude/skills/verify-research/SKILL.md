@@ -11,7 +11,11 @@ description: "Independently verify the conclusions of the last topic discussed i
 /verify-research                                        # the last topic of the current chat
 /verify-research <topic hint>                           # a specific topic of the current chat
 /verify-research <session-id | path.jsonl> [topic hint] # another chat
+/verify-research --loop[=N] ...                         # revise and re-verify, at most N rounds (default 3)
 ```
+
+`--loop` may be combined with any form above and is not part of the topic hint. Its value defaults to
+`3`; `--loop=0` disables the loop. A value that is not a non-negative integer: ask the user and stop.
 
 By default only the **last topic** of the chat is verified, not the whole chat. A topic hint is free
 text naming the discussion to verify instead (e.g. `про падение воркера`).
@@ -30,11 +34,21 @@ text naming the discussion to verify instead (e.g. `про падение вор
    and the user's topic hint verbatim if there is one. Pass nothing else: no summary of the findings,
    no hints on what to check, no opinion on whether the conclusions are right. The verifier must judge
    the chat on its own; your reasoning would defeat the independent check.
-3. **Relay the report** as the verifier returned it. Do not soften, reorder, or drop findings, and do
-   not act on them: no fixes, no runbook steps. The user decides what to do next.
+3. **Relay the report** as the verifier returned it. Do not soften, reorder, or drop findings. Without
+   `--loop`, do not act on them: no fixes, no runbook steps. The user decides what to do next.
+4. **Loop** (only when `--loop` is on and the report has findings; otherwise stop after step 3).
+   - Write a new summary of the researched topic in the chat, taking the verifier's findings into
+     account: corrected root cause, fixed or dropped claims, updated fix/runbook, and what was left
+     unresolved and why. Text only: no file edits, no mutating commands.
+   - Launch a new verifier exactly as in step 2, for the same transcript and topic hint. Add one line to
+     the prompt: the transcript ends with revised summary number K. Nothing else about the findings.
+   - Relay the new report as in step 3.
+   - Repeat while the report has findings and fewer than N revised summaries were written. Stop early
+     when a report has no findings. After the last round, state whether findings remain.
 
 ## Hard constraints
 
 - Read-only end to end: neither you nor the verifier edits files, commits, or runs mutating commands.
+  The only thing you write in the loop is the revised summary, as chat text.
 - The verifier runs in a fresh context; never let it inherit this chat's reasoning other than via the
   transcript it reads itself.
