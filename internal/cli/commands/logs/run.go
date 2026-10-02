@@ -22,7 +22,7 @@ var SaveFlag = &cli.BoolFlag{Name: "save", Usage: "save log to /tmp/ulog"}
 func Run(ctx context.Context, cmd *cli.Command) error {
 	save := cmd.Bool(SaveFlag.Name)
 
-	formatter, err := NewLogFormatter(cmd.Bool("v"))
+	formatter, err := NewLogFormatter()
 	if err != nil {
 		return errors.Wrap(err, "new log formatter")
 	}

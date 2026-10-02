@@ -10,7 +10,7 @@ import (
 func TestFormatDefault(t *testing.T) {
 	t.Parallel()
 
-	formatter, err := NewLogFormatter(false)
+	formatter, err := NewLogFormatter()
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -70,43 +70,10 @@ func TestFormatDefault(t *testing.T) {
 	}
 }
 
-func TestFormatVerbose(t *testing.T) {
-	t.Parallel()
-
-	formatter, err := NewLogFormatter(true)
-	require.NoError(t, err)
-
-	tests := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name: "leading tags stay on the header line",
-			input: "2026.08.18 20:56:30.680860 [runner/replay.go:313] I: [tag=123abc] " +
-				"[t=2026-08-01] Unexpected error: req=x\n",
-			expected: "2026.08.18 20:56:30.68 [runner/replay.go:313] I: [tag=123abc] " +
-				"[t=2026-08-01]\nUnexpected error: req=x\n",
-		},
-		{
-			name:     "no tags keeps message on the new line",
-			input:    "2026.08.18 20:56:35.379705 [runner/state.go:123] E: no tags, boom\n",
-			expected: "2026.08.18 20:56:35.37 [runner/state.go:123] E:\nno tags, boom\n",
-		},
-	}
-
-	for _, testCase := range tests {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-			assert.Equal(t, testCase.expected, formatter.format(testCase.input))
-		})
-	}
-}
-
 func TestArgRegexp(t *testing.T) {
 	t.Parallel()
 
-	found := argRegexp.FindAllString("Job completed, elapsed=20m, total=200, deleted=1", -1)
+	found := argRegexp.FindAllString("Job completed, elapsed=20m, total: 200, deleted=1", -1)
 
-	assert.Equal(t, []string{"elapsed=", "total=", "deleted="}, found)
+	assert.Equal(t, []string{"elapsed=", "total: ", "deleted="}, found)
 }

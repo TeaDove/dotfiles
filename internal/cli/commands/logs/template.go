@@ -14,16 +14,13 @@ const (
 	timeLayout      = "2006.01.02 15:04:05.000000"
 	defaultTemplate = `{{ colorHiBlack (toTimestamp .Time "15:04:05") }} {{ colorHiWhite .Caller }} ` +
 		`{{ levelColor (printf "%s:" .Level) }} {{ if .Tags }}{{ colorHiBlack .Tags }}{{ end }}{{ colorBody .Body }}`
-	verboseTemplate = `{{ colorHiBlack (toTimestamp .Time "2006.01.02 15:04:05.00") }} {{ colorHiWhite .Caller }} ` +
-		`{{ levelColor (printf "%s:" .Level) }}{{ if .Tags }} {{ colorHiBlack (trimSpace .Tags) }}{{ end }}` + "\n" +
-		`{{ colorBody .Body }}`
 )
 
 var (
 	lineRegexp = regexp.MustCompile(
 		`^(\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}\.\d+) (\[[^\]]*\]) ([A-Z]): ((?:\[[^\]]*=[^\]]*\] *)*)(.*)$`,
 	)
-	argRegexp   = regexp.MustCompile(`[A-Za-z][A-Za-z0-9_\-]*=`)
+	argRegexp   = regexp.MustCompile(`[A-Za-z][A-Za-z0-9_\-]*(?:=|: )`)
 	tealColor   = color.RGB(0x42, 0x9B, 0x9C)
 	levelColors = map[string]color.Attribute{
 		"D": color.FgHiBlack,
@@ -48,13 +45,8 @@ type LogFormatter struct {
 	template *template.Template
 }
 
-func NewLogFormatter(verbose bool) (*LogFormatter, error) {
-	templateText := defaultTemplate
-	if verbose {
-		templateText = verboseTemplate
-	}
-
-	parsed, err := template.New("log").Funcs(templateFuncs()).Parse(templateText)
+func NewLogFormatter() (*LogFormatter, error) {
+	parsed, err := template.New("log").Funcs(templateFuncs()).Parse(defaultTemplate)
 	if err != nil {
 		return nil, errors.Wrap(err, "parse template")
 	}
