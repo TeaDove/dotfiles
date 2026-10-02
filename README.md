@@ -11,9 +11,13 @@ exec zsh
 ```
 
 ### No pager journalctl
-
 ```shell
 sudo journalctl -x -u --no-pager -o short-iso
+```
+
+### Lintin
+```shell
+gotestsum --format-hide-empty-pkg -- ./... --race && golangci-lint run -D exhaustruct_v5,exhaustruct
 ```
 
 ## Install
