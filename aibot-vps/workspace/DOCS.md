@@ -51,15 +51,15 @@ instead of `api.telegram.org`.
 
 ## Worker PC lifecycle
 
-Wake `worker-pc` through the Raspberry (`wakeonlan` is expected there; install it via apt
+Wake `worker-pc` through the worker-server (`wakeonlan` is expected there; install it via apt
 if missing):
 
 ```bash
-ssh raspberry 'wakeonlan <WORKER_MAC>'
+ssh worker-server 'wakeonlan <WORKER_MAC>'
 ```
 
 The worker's MAC address is deliberately not written here — it is stored in your memory,
-recall it from there. Exact hardware specs of the Raspberry and `worker-pc` are in memory
+recall it from there. Exact hardware specs of `worker-pc` are in memory
 as well.
 
 Then poll until SSH is up (boot takes a minute or two):
@@ -91,11 +91,11 @@ secret is not needed. When the token expires, the user issues a new one at
 `https://oauth.yandex.ru/authorize?response_type=token&client_id=<CLIENT_ID>`.
 
 Use the Python library [yadisk](https://github.com/ivknv/yadisk)
-([documentation](https://yadisk.readthedocs.io)) on the Raspberry through `uv`, no installation
+([documentation](https://yadisk.readthedocs.io)) on the worker-server through `uv`, no installation
 step is required:
 
 ```bash
-ssh raspberry 'uv run --quiet --with "yadisk[sync-defaults]" python /path/to/script.py' \
+ssh worker-server 'uv run --quiet --with "yadisk[sync-defaults]" python /path/to/script.py' \
   < /run/secrets/yandex_disk_token
 ```
 

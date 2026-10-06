@@ -17,7 +17,7 @@ Personal dotfiles + a small Go CLI that installs them.
 - `devcontainer/` — Docker sandbox (`make cbox-build`).
 - `aibot-vps/` — Docker setup for a VPS running Claude Code in Remote Control mode
   (`claude rc`): the container is only a point of presence, real work happens over SSH on
-  remote hosts (Raspberry Pi). Claude configs are bind-mounted from
+  remote hosts (worker-server). Claude configs are bind-mounted from
   `dotfiles-configs/.claude`, credentials (SSH key, sudo password, GitHub/OpenAI/Telegram
   tokens) are passed via Docker secrets from the gitignored `secrets/`; agent-facing
   rules live in `aibot-vps/workspace/CLAUDE.md`, bootstrap commands in

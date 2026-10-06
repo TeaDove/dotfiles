@@ -1,12 +1,12 @@
-Host raspberry
-    HostName raspberry.example.com
+Host worker-server
+    HostName home.example.com
     Port 22
     User teadove
-    IdentityFile /home/claude/.ssh/keys/raspberry_ed25519
+    IdentityFile /home/claude/.ssh/keys/worker_server_ed25519
     IdentitiesOnly yes
 
 Host worker-pc
-    HostName raspberry.example.com
+    HostName home.example.com
     Port 2223
     User teadove-aibot
     IdentityFile /home/claude/.ssh/keys/worker_pc_ed25519
