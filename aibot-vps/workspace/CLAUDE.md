@@ -6,40 +6,42 @@ workstation and do not try to escape to the VPS host.
 
 Real work happens on remote machines over SSH.
 
-## Raspberry Pi
+## worker-server
 
-The Raspberry Pi is the primary always-on execution host:
+The worker-server is the primary always-on execution host:
 
 ```bash
-ssh raspberry
-ssh raspberry '<command>'
+ssh worker-server
+ssh worker-server '<command>'
 ```
 
-On the Raspberry you connect as user `teadove` and have full administrative access and
+On the worker-server you connect as user `teadove` and have full administrative access and
 full trust: `sudo`, Docker, systemd, cron, installing packages — all allowed without
 asking. Because you have that much power there, be careful: it is the always-on home of
 persistent services and data, not an expendable sandbox.
 
-`sudo` on the Raspberry asks for a password. It is stored in this container at
-`/run/secrets/raspberry_sudo_pass`. Never print or echo the password; feed it to
+Its resources are enough for simple pet projects and a light backend; check exact capacity over SSH.
+
+`sudo` on the worker-server asks for a password. It is stored in this container at
+`/run/secrets/worker_server_sudo_pass`. Never print or echo the password; feed it to
 `sudo -S` over stdin:
 
 ```bash
-ssh raspberry 'sudo -S -p "" whoami' < /run/secrets/raspberry_sudo_pass
+ssh worker-server 'sudo -S -p "" whoami' < /run/secrets/worker_server_sudo_pass
 ```
 
 For a sequence of root commands, prefer a single `sudo -S` invocation running a script,
 or refresh the sudo timestamp first (`sudo -S -v`) and then run plain `sudo` commands
 within the same SSH session.
 
-Use the Raspberry for normal development, persistent services, scheduled jobs, storage,
+Use the worker-server for normal development, persistent services, scheduled jobs, storage,
 downloads, automation, and anything that must remain available while other machines are
 off.
 
 ## Worker PC
 
 `worker-pc` is a more powerful compute host. You have fewer rights there than on the
-Raspberry, and it is available less often — it may be offline at any time and must be
+worker-server, and it is available less often — it may be offline at any time and must be
 treated like a preemptible cloud worker, not like an always-on server. Use it only when a
 task actually needs its compute.
 
@@ -48,7 +50,7 @@ Before using it:
 1. Check whether `ssh worker-pc` is already reachable.
 2. If it is already reachable, assume a human may have powered it on and may currently be
    using it. Do not shut it down when your task finishes.
-3. If it is not reachable, wake it through the Raspberry via Wake-on-LAN (see "Worker PC
+3. If it is not reachable, wake it through the worker-server via Wake-on-LAN (see "Worker PC
    lifecycle" in DOCS.md), wait for SSH to become available, and remember that you
    powered it on.
 4. If and only if you powered it on for this task, shut it down after all work and data
@@ -73,11 +75,11 @@ available to the SSH account.
 
 - Execute tasks (builds, scripts, services, downloads, experiments) on the appropriate
   remote host, not on the VPS container.
-- If a task needs a tool, install it on the Raspberry, or use what is already available to
+- If a task needs a tool, install it on the worker-server, or use what is already available to
   the unprivileged account on `worker-pc`.
 - Keep task files and repositories on remote hosts. Use `/workspace` on the VPS only for
   notes and scratch data that must survive container restarts.
-- Long-running services and schedules belong on the Raspberry as systemd units, Docker
+- Long-running services and schedules belong on the worker-server as systemd units, Docker
   containers, or cron jobs. They must not depend on this container being alive.
 - SSH hosts are defined in `~/.ssh/config`; more remote hosts may be added there later.
 
@@ -86,7 +88,7 @@ available to the SSH account.
 Default to acting instead of asking for confirmation when the action is routine and
 reversible.
 
-On the Raspberry, do not ask before installing packages, creating/editing files, starting
+On the worker-server, do not ask before installing packages, creating/editing files, starting
 or stopping services, creating Docker containers, downloading public files, running
 experiments, or creating systemd/cron automation needed to complete the task.
 
@@ -109,7 +111,7 @@ For work expected to take more than a few minutes:
 - use meaningful exit codes;
 - make repeated execution safe where practical.
 
-For unattended services/jobs on the Raspberry:
+For unattended services/jobs on the worker-server:
 
 - configure reasonable restart/retry behavior;
 - preserve stdout/stderr or journald logs;
@@ -148,19 +150,19 @@ A GitHub token for a dedicated bot account is stored in this container at
 `/run/secrets/github_token`. Never print or echo it, and never embed it in remote URLs
 because that can leak it into `.git/config`, process arguments, or shell history.
 
-Set it up on the Raspberry once via the `gh` CLI (install it there first if missing):
+Set it up on the worker-server once via the `gh` CLI (install it there first if missing):
 
 ```bash
-ssh raspberry 'gh auth login --with-token && gh auth setup-git' < /run/secrets/github_token
+ssh worker-server 'gh auth login --with-token && gh auth setup-git' < /run/secrets/github_token
 ```
 
-After that, plain `git` and `gh` on the Raspberry are authenticated persistently. Before
+After that, plain `git` and `gh` on the worker-server are authenticated persistently. Before
 creating commits, ensure the dedicated bot account's `user.name` and `user.email` are
 configured.
 
 The private `TeaDove/junk` repository may be used for your work, e.g. as the home for
 new code and small projects that have no repository of their own. It is already cloned
-on the Raspberry at `~/junk`, and the bot account has push access to it.
+on the worker-server at `~/junk`, and the bot account has push access to it.
 
 # Secrets
 
@@ -186,10 +188,10 @@ An OpenAI API key is stored at `/run/secrets/openai_api_key`, and a Telegram bot
 `/run/secrets/telegram_bot_token`. Apply the secret-handling rules above when using them.
 
 To message the user in Telegram, prefer the `goteleout` utility over calling the Bot API
-yourself. It is already installed and configured on the Raspberry:
+yourself. It is already installed and configured on the worker-server:
 
 ```bash
-ssh raspberry 'goteleout Task done!'
+ssh worker-server 'goteleout Task done!'
 ```
 
 In Go code, `goteleout` can also be used as a library instead of shelling out — import it
