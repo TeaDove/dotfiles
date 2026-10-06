@@ -223,3 +223,46 @@ func TestMergeJSONFile(t *testing.T) {
 		assert.NotContains(t, got, "model")
 	})
 }
+
+func TestInstallStarshipConfig(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		configs map[string]string
+		exp     string
+	}{
+		{
+			name:    "secret config wins",
+			configs: map[string]string{"starship-v.toml": "v", "starship-secret.toml": "secret"},
+			exp:     "secret",
+		},
+		{
+			name:    "falls back to v config",
+			configs: map[string]string{"starship-v.toml": "v"},
+			exp:     "v",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(tt *testing.T) {
+			tt.Parallel()
+
+			dotfilesDir := tt.TempDir()
+			homeDir := tt.TempDir()
+
+			require.NoError(tt, os.MkdirAll(filepath.Join(dotfilesDir, ".config"), 0o755))
+			require.NoError(tt, os.MkdirAll(filepath.Join(homeDir, ".config"), 0o755))
+
+			for name, content := range tc.configs {
+				require.NoError(tt, os.WriteFile(filepath.Join(dotfilesDir, ".config", name), []byte(content), 0o600))
+			}
+
+			require.NoError(tt, installStarshipConfig(dotfilesDir, homeDir))
+
+			got, err := os.ReadFile(filepath.Join(homeDir, ".config", "starship.toml"))
+			require.NoError(tt, err)
+			assert.Equal(tt, tc.exp, string(got))
+		})
+	}
+}

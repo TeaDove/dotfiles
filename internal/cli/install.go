@@ -98,7 +98,32 @@ func CommandInstall(_ context.Context, _ *cli.Command) error { //nolint: gocogni
 		return errors.Wrap(err, "install files")
 	}
 
+	err = installStarshipConfig(dofilesPath, homeDir)
+	if err != nil {
+		return errors.Wrap(err, "install starship config")
+	}
+
 	color.Green("Dotfiles installed from %s to %s", dofilesPath, homeDir)
+
+	return nil
+}
+
+func installStarshipConfig(dotfilesPath, homeDir string) error {
+	src := filepath.Join(dotfilesPath, ".config", "starship-secret.toml")
+
+	_, err := os.Stat(src)
+	if err != nil {
+		if !errors.Is(err, fs.ErrNotExist) {
+			return errors.Wrap(err, "stat secret config")
+		}
+
+		src = filepath.Join(dotfilesPath, ".config", "starship-v.toml")
+	}
+
+	err = overwriteFile(src, filepath.Join(homeDir, ".config", "starship.toml"), 0o644)
+	if err != nil {
+		return errors.Wrapf(err, "copy %s", src)
+	}
 
 	return nil
 }

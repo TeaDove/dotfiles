@@ -95,6 +95,7 @@ done
 fpath=($completions_cache $fpath)
 unset completions_cache completion_command completion_file
 
+FPATH=/Users/$USER/.zsh/:$FPATH
 autoload -Uz compinit && compinit
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'l:|=* r:|=*'
