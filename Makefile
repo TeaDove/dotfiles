@@ -28,20 +28,22 @@ fresh-install-darwin:
 
 fresh-install-ubuntu:
 	sudo add-apt-repository -y ppa:longsleep/golang-backports
+	curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --batch --yes --dearmor \
+		-o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+	echo "deb [arch=$$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg]" \
+		"https://apt.releases.hashicorp.com $$(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
 	sudo apt update
 	sudo env DEBIAN_FRONTEND=noninteractive apt upgrade -y
 	sudo env DEBIAN_FRONTEND=noninteractive apt install -y \
 		python3 python3-pip python3-dev python3-setuptools python3-venv \
 		build-essential make git net-tools curl wget vim neovim \
 		zsh zsh-autosuggestions zsh-syntax-highlighting fzf kitty-terminfo tmux neofetch btop golang-go \
-		gopass cloc tree bat lolcat graphviz pre-commit
-	sudo snap install lsd
-	sudo snap install terraform --classic
+		gopass cloc tree bat lolcat graphviz pre-commit terraform
 	[ -d /usr/local/share/zsh-history-substring-search ] || sudo git clone --depth 1 \
 		https://github.com/zsh-users/zsh-history-substring-search /usr/local/share/zsh-history-substring-search
 	curl -sS https://starship.rs/install.sh | sh -s -- -y
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
-	$$HOME/.cargo/bin/cargo install du-dust jql
+	$$HOME/.cargo/bin/cargo install du-dust jql lsd
 	go install rsc.io/2fa@latest
 	go install github.com/mikefarah/yq/v4@latest
 	go install github.com/jesseduffield/lazygit@latest
