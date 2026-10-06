@@ -28,17 +28,13 @@ fresh-install-darwin:
 
 fresh-install-ubuntu:
 	sudo add-apt-repository -y ppa:longsleep/golang-backports
-	curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --batch --yes --dearmor \
-		-o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-	echo "deb [arch=$$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg]" \
-		"https://apt.releases.hashicorp.com $$(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
 	sudo apt update
 	sudo env DEBIAN_FRONTEND=noninteractive apt upgrade -y
 	sudo env DEBIAN_FRONTEND=noninteractive apt install -y \
 		python3 python3-pip python3-dev python3-setuptools python3-venv \
 		build-essential make git net-tools curl wget vim neovim \
 		zsh zsh-autosuggestions zsh-syntax-highlighting fzf kitty-terminfo tmux neofetch btop golang-go \
-		gopass cloc tree bat lolcat graphviz pre-commit terraform
+		gopass cloc tree bat lolcat graphviz pre-commit
 	[ -d /usr/local/share/zsh-history-substring-search ] || sudo git clone --depth 1 \
 		https://github.com/zsh-users/zsh-history-substring-search /usr/local/share/zsh-history-substring-search
 	curl -sS https://starship.rs/install.sh | sh -s -- -y
@@ -49,6 +45,10 @@ fresh-install-ubuntu:
 	go install github.com/jesseduffield/lazygit@latest
 	go install github.com/rs/curlie@latest
 	go install github.com/teadove/goteleout@latest
+	src=$$(mktemp -d) && git clone --depth 1 \
+		--branch $$(go list -m -f '{{.Version}}' github.com/hashicorp/terraform@latest) \
+		https://github.com/hashicorp/terraform $$src && \
+		cd $$src && go install -ldflags "-X github.com/hashicorp/terraform/version.dev=no" .
 	git config --global credential.helper store
 	chsh -s $$(which zsh)
 	$(MAKE) install
