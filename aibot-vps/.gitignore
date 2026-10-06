@@ -1,5 +1,6 @@
 data/
 workspace/*
+!workspace/.claude
 !workspace/CLAUDE.md
 !workspace/DOCS.md
 secrets/
