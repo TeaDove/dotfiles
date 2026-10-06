@@ -15,7 +15,8 @@ fresh-install-darwin:
 		"$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 	brew install tmux git yq lsd lazygit go btop \
 		zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search \
-		fzf gopass curlie wget cloc tree neovim bat lolcat kitty terraform graphviz
+		fzf gopass curlie wget cloc tree neovim bat lolcat kitty graphviz
+	# brew install terraform
 	brew install --cask karabiner-elements
 	curl -sS https://starship.rs/install.sh | sh -s -- -y
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
@@ -45,10 +46,6 @@ fresh-install-ubuntu:
 	go install github.com/jesseduffield/lazygit@latest
 	go install github.com/rs/curlie@latest
 	go install github.com/teadove/goteleout@latest
-	src=$$(mktemp -d) && git clone --depth 1 \
-		--branch $$(go list -m -f '{{.Version}}' github.com/hashicorp/terraform@latest) \
-		https://github.com/hashicorp/terraform $$src && \
-		cd $$src && go install -ldflags "-X github.com/hashicorp/terraform/version.dev=no" .
 	git config --global credential.helper store
 	chsh -s $$(which zsh)
 	$(MAKE) install
