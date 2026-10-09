@@ -9,8 +9,10 @@ and, for new projects, [NEWPROJECTS.md](NEWPROJECTS.md).
   below unless I ask.
 - In a new project, use Go 1.27 and:
   - `fiber` for HTTP — take the setup from https://github.com/TeaDove/teasutils/tree/master/fiberutils
-  - `gorm` for database access — take the setup from https://github.com/TeaDove/teasutils/tree/master/serviceutils/dbutils
-  - `zerolog` for logging — take the setup from https://github.com/TeaDove/teasutils/tree/master/serviceutils/loggerutils
+  - `gorm` for database access — take the setup from
+    https://github.com/TeaDove/teasutils/tree/master/serviceutils/dbutils
+  - `zerolog` for logging — take the setup from
+    https://github.com/TeaDove/teasutils/tree/master/serviceutils/loggerutils
   - Error wrapping: `github.com/cockroachdb/errors` (`errors.Wrap`, `errors.Wrapf`).
   - CLI: `github.com/urfave/cli`.
   - Dependency injection: by hand, no DI framework.
@@ -35,9 +37,12 @@ Do not skip these steps, and don't rely on CI to catch what you missed.
 ## Code style
 
 - Packages, files: lowercase + layer suffix (`userrepo`, `eventservice`), not (`user-service`, `event-service`)
-- Prefer long variable names, e.g. `queue := NewQueue()`, not `q := NewQueue()`, with exceptions like `ctx`, `i` (in loops), etc.
-- Errors should always be wrapped
-- Name error variables `err`, unless that would cause shadowing or hide a wrapped/outer error you still need — only then use a qualified name (e.g. `jsonErr`)
+- Prefer long variable names, e.g. `queue := NewQueue()`, not `q := NewQueue()`, with exceptions
+  like `ctx`, `i` (in loops), etc.
+- Errors should always be wrapped, with minimal, low-cardinality context,
+  e.g. `errors.Wrap(err, "open file")`, not `errors.Wrapf(err, "failed to open %s", path)`
+- Name error variables `err`, unless that would cause shadowing or hide a wrapped/outer error you
+  still need — only then use a qualified name (e.g. `jsonErr`)
 - Always use the explicit two-line form. Never combine assignment and `nil` check in one `if` statement
 - Global variables for mutable shared state are forbidden, but allowed in other cases, e.g. exported errors
 

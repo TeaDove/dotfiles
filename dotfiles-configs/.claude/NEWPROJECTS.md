@@ -19,3 +19,26 @@ inwards.
 - `api` — presentation layer: REST API, gRPC, etc.
 - `util` — shared utilities.
 - `dto` — shared DTOs; this should mostly not be needed.
+
+Each package is named in the singular with its layer suffix (`userrepo`), and packages are grouped
+in a plural directory per layer (`repos`).
+
+e.g.
+```tree
+├── internal
+│   ├── suppliers
+│   │   ├── cloudsupplier
+│   │   │   ├── supplier.go
+│   │   │   └── instance.go
+│   │   └── openaisupplier
+│   │       ├── supplier.go
+│   │       └── prompts.go
+│   ├── repos
+│   │   └── userrepo
+│   │       ├── repo.go
+│   │       └── methods.go
+│   └── utils
+│       └── randutil
+│           ├── text.go
+│           └── hasher.go
+```
