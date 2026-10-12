@@ -27,6 +27,9 @@ After every code change, before reporting the task as complete, you **must**:
 2. `go test ./...` (or the relevant packages) — confirm tests pass.
 3. `golangci-lint run ./...` / `pre-commit run -a` - confirm lints work.
 
+If the project has no golangci-lint config of its own (`.golangci.yml`, `.golangci.yaml`, `.golangci.toml`
+or `.golangci.json`), use the one from dotfiles: `golangci-lint run --config ~/dotfiles/.golangci.yml ./...`.
+
 Do not skip these steps, and don't rely on CI to catch what you missed.
 
 ## Code style

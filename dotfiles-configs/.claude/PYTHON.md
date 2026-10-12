@@ -30,6 +30,9 @@ After every code change, before reporting the task as complete, you **must** run
 2. Run the tests (e.g. `pytest`) — confirm they pass.
 3. Run the formatters/linters (`ruff`, `black`, `pre-commit run -a`, depending on the project) — confirm they pass.
 
+If the project has no ruff config of its own (`ruff.toml`, `.ruff.toml` or `[tool.ruff]` in `pyproject.toml`),
+use the one from dotfiles: `ruff check --config ~/dotfiles/ruff.toml` and `ruff format --config ~/dotfiles/ruff.toml`.
+
 Do not skip these steps, and don't rely on CI to catch what you missed.
 
 ## Code style
