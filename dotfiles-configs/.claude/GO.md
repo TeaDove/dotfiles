@@ -39,6 +39,7 @@ Do not skip these steps, and don't rely on CI to catch what you missed.
 - Errors should always be wrapped
 - Name error variables `err`, unless that would cause shadowing or hide a wrapped/outer error you still need — only then use a qualified name (e.g. `jsonErr`)
 - Always use the explicit two-line form. Never combine assignment and `nil` check in one `if` statement
+- Global variables for mutable shared state are forbidden, but allowed in other cases, e.g. exported errors
 
 ## `new` with arbitrary expressions (Go 1.26)
 

@@ -20,8 +20,7 @@ rules live in separate files linked at the bottom and apply only to that languag
   bypass a rule (e.g. add a `//nolint` directive, disable a check, skip a gate) ONLY
   when I explicitly allow it for that case, or when that exact rule is already listed
   among documented exceptions (in this file or other README/DOCS/CLAUDE.md/AGENTS.md).
-- Default to the strictest interpretation of every rule. For example, global
-  variables are forbidden unless I explicitly say otherwise. When a rule blocks you,
+- Default to the strictest interpretation of every rule. When a rule blocks you,
   ask me instead of silencing or working around it on your own.
 
 ## Version control
