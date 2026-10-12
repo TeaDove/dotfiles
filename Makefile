@@ -24,8 +24,8 @@ fresh-install-darwin:
 	pip3 install pre-commit --break-system-packages
 	go install rsc.io/2fa@latest
 	go install github.com/teadove/goteleout@latest
-	chsh -s /bin/zsh
 	$(MAKE) install
+	chsh -s /bin/zsh
 
 fresh-install-ubuntu:
 	sudo add-apt-repository -y ppa:longsleep/golang-backports
@@ -47,5 +47,5 @@ fresh-install-ubuntu:
 	go install github.com/rs/curlie@latest
 	go install github.com/teadove/goteleout@latest
 	git config --global credential.helper store
-	chsh -s $$(which zsh)
 	$(MAKE) install
+	chsh -s $$(which zsh)
