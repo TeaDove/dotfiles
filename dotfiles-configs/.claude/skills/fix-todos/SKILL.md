@@ -1,6 +1,6 @@
 ---
 name: fix-todos
-description: "Find the TODO markers this branch added (used to flag agent-written code for follow-up), then for each one: validate it is clear, unambiguous, and safe to act on. Ambiguous ones are reported as impossible to resolve; clear ones are fixed in place and the TODO removed. After fixing, run the project's Definition of Done (for Go: build, tests, linters) and report the list of TODOs with a short note on what was done — no code. VCS-agnostic — never assumes git; gathers the branch's changes via whatever version control the repo uses. Trigger phrases: 'поправь TODO', 'разбери TODO в ветке', 'исправь мои TODO', 'fix todos', 'resolve todos', '/fix-todos'."
+description: "Find the TODO markers this branch added (used to flag agent-written code for follow-up), then for each one: validate it is clear, unambiguous, and safe to act on. Clear ones are fixed in place and the TODO removed; for ambiguous ones the agent works out its own proposed solution without applying it. After fixing, run the project's Definition of Done (for Go: build, tests, linters) and report the list of TODOs with a short note on what was done — no code. Then the proposals for the unresolved TODOs are listed and offered to the user as a choice (approve to apply, or other); approved ones are applied and the DoD rerun. VCS-agnostic — never assumes git; gathers the branch's changes via whatever version control the repo uses. Trigger phrases: 'поправь TODO', 'разбери TODO в ветке', 'исправь мои TODO', 'fix todos', 'resolve todos', '/fix-todos'."
 ---
 
 # /fix-todos
@@ -28,9 +28,10 @@ untouched.
 
 You (the user) review agent-written code by dropping `TODO:` comments where something needs fixing
 (e.g. `// TODO: this should return early on nil`). This skill collects those TODOs, decides for each
-whether the instruction is clear and safe enough to act on, applies the clear ones, and refuses the
-ambiguous ones instead of guessing. A wrong "fix" from a misread TODO is worse than an honest "I can't
-tell what you meant here" — so the bar for acting is high.
+whether the instruction is clear and safe enough to act on, applies the clear ones, and does not apply
+the ambiguous ones on a guess. A wrong "fix" from a misread TODO is worse than an honest "I can't
+tell what you meant here" — so the bar for acting is high. Instead of just giving up on an ambiguous TODO,
+work out the most reasonable solution yourself and offer it to the user for approval.
 
 ## Hard constraints
 
@@ -46,7 +47,8 @@ tell what you meant here" — so the bar for acting is high.
 - **Don't guess intent.** A TODO must be acted on only when its meaning is singular and the fix is
   obvious from the code around it. If it is vague ("fix this", "make it better"), has more than one
   reasonable interpretation, depends on context you don't have, or asks for a product/behavior decision
-  you can't derive — do **not** implement it. Report it as unresolved (see Output format).
+  you can't derive — do **not** implement it on your own. Treat it as unresolved, think through a proposed
+  solution, and apply it only after the user approves it (see step 7).
 - **Safety first.** Do not apply a TODO whose fix would plausibly break behavior, change a public API,
   or ripple beyond the local change without you being confident it's correct and complete. When acting
   would require broad risky edits, treat it as unresolved and say why.
@@ -80,6 +82,11 @@ For every collected TODO decide: **✅ clear & safe** or **❌ unresolved**.
 - ❌ Unresolved → ambiguous, underspecified, needs a decision you can't derive, or the fix would be
   risky or far-reaching. Record a one-line reason ("cannot resolve — ambiguous: …").
 
+For every unresolved TODO, think the problem through yourself and prepare a proposal: the interpretation
+you consider most reasonable, the concrete change you would make, and why. Base it on the surrounding code,
+the conventions, and how similar cases are handled in the repo. If the fix is risky, say what it touches.
+Do not apply the proposal yet.
+
 Before applying anything, print this triage to the user: the two lists (clear & safe vs unresolved,
 each item as `file:line` + one line) so they can see up front which TODOs will be fixed and which won't.
 
@@ -97,6 +104,24 @@ the TODO to the unresolved list with the failure as the reason. Never leave the 
 ### 6. Emit the report
 Output the report described below — no code snippets.
 
+### 7. Offer the proposals for the unresolved TODOs
+Only if there are unresolved TODOs. After the report, ask the user about each of them with the
+interactive choice tool (`AskUserQuestion`; up to 4 questions per call, so batch if there are more):
+
+- The question names the TODO (`file:line` and its text) and states the proposal in one or two sentences.
+- Options: **Approve** — apply the proposal as described, and **Skip** — leave the TODO untouched. The tool adds
+  **Other** automatically, where the user types their own instruction.
+
+Then:
+
+- **Approve** → apply the proposal with the smallest correct change and delete the TODO.
+- **Other** → treat the user's text as the clarified instruction: apply it if it is now clear and safe,
+  otherwise ask again.
+- **Skip** → leave the TODO as it is.
+
+If anything was applied, rerun the Definition of Done (step 5, same revert rule) and print a short update:
+which TODOs were applied, the new DoD result, and how many remain unresolved.
+
 ## Output format
 
 Two sections. In each list item, reference the TODO by a clickable `file:line`.
@@ -107,6 +132,7 @@ Two sections. In each list item, reference the TODO by a clickable `file:line`.
 
 ## ❌ Unresolved
 - `path/to/file.go:88`: {{ the TODO text }} → cannot resolve: {{ why — ambiguity / missing decision / risk }}
+  Proposal: {{ the interpretation and the change you would make, one or two lines — no code }}
 
 ## DoD
 {{ build / tests / linters: pass or fail, one line each; or "skipped — no code changed" }}
