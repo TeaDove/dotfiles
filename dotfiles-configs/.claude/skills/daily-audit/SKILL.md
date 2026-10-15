@@ -173,7 +173,7 @@ several readable chunks** (not one tall strip — confirmed unreadable in Telegr
 2026-10-16) and attach the links to the report (user's explicit ask, 2026-10-16):
 
 1. `scp /run/secrets/grafana_viewer_token worker-server:/tmp/grafana_viewer_token`.
-2. On worker-server: `~/.local/bin/uv run --with playwright python
+2. On worker-server: `uv run --with playwright python
    /srv/aibot/daily-audit/screenshot.py /tmp/grafana_dashboard < /tmp/grafana_viewer_token`, then
    `rm -f /tmp/grafana_viewer_token` immediately — never leave the token sitting in `/tmp`.
    `screenshot.py` (kept in sync with `dotfiles-configs/.claude/skills/daily-audit/screenshot.py` in
@@ -187,7 +187,7 @@ several readable chunks** (not one tall strip — confirmed unreadable in Telegr
 3. Upload each chunk with its own ssh+upload call — **do not loop a single `ssh ... < token` over
    multiple files**, the remote `sys.stdin.read()` only gets data on the first loop iteration and
    every later one fails with "token is empty" (hit this 2026-10-16). One `ssh` invocation per file:
-   `ssh worker-server '~/.local/bin/uv run --no-project --with "yadisk[sync-defaults]" python
+   `ssh worker-server 'uv run --no-project --with "yadisk[sync-defaults]" python
    /srv/aibot/mam-26-1/lab2/upload_file.py /tmp/grafana_dashboard-N.png
    "app:/daily-audit-dashboard-N.png"' < /run/secrets/yandex_disk_token` — the redirect must be on
    the outer `ssh` invocation (the container's own stdin), not inside the quoted remote command, or
