@@ -1,6 +1,6 @@
 ---
 name: daily-audit
-description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc, plus a best-effort Claude usage note. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets. Reports to Telegram via goteleout, then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
+description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets. Reports to Telegram via goteleout, then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
 ---
 
 # /daily-audit
@@ -139,14 +139,6 @@ Format: a short Telegram message via `goteleout` from worker-server (same patter
 notification in this project) — a few lines per section above, problems first, then a one-line
 all-clear summary for whatever had no findings. Keep it scannable, not a wall of raw command output.
 
-### Claude usage (best effort)
-
-If a `<total_tokens left>` style system signal is present in the run, report it as a rough session
-budget signal. There is no API for personal Claude plan usage/limits, and the Admin API's usage/cost
-endpoints need an Admin API key this project doesn't have — say so plainly rather than silently
-omitting the section every time; don't speculate about remaining quota beyond what's actually
-observable.
-
 ### Audio
 
 Last step, every run, unattended:
@@ -167,4 +159,3 @@ State these once per report when relevant, don't pad the report with them daily 
 - No read access to the system journal (only this skill's own service-user-scoped journal entries are
   visible) — deeper incident diagnosis after a finding here still needs a human to grant
   `systemd-journal` group membership or do it themselves.
-- Claude usage/cost reporting is best-effort only (see Output → Claude usage).
