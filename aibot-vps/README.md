@@ -13,6 +13,7 @@ ssh-copy-id -i secrets/worker_server_ed25519.pub -p <port> teadove@<home-endpoin
  printf '%s' '<openai-api-key>' > secrets/openai_api_key
  printf '%s' '<telegram-bot-token>' > secrets/telegram_bot_token
  printf '%s' '<yandex-disk-token>' > secrets/yandex_disk_token
+ printf '%s' '<grafana-viewer-token>' > secrets/grafana_viewer_token
 chmod 600 secrets/*
 
 cp ssh/config.example ssh/config
