@@ -27,3 +27,8 @@ Personal dotfiles + a small Go CLI that installs them.
 
 - `make install` — `go install u.go` then `u install`.
 - `make test` — run the Go test suite.
+
+## After changes
+
+- After any change to the configs in `dotfiles-configs/` or to the Go code, run `make install` so the installed
+  `u` binary and the configs in `$HOME` match the repo.

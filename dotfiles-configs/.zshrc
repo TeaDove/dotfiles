@@ -222,7 +222,6 @@ if [[ -f ~/yandex-cloud/completion.zsh.inc ]]; then
     source ~/yandex-cloud/completion.zsh.inc
 fi
 
-if [[ -f ~/.zshrc-secret ]]; then
-    source ~/.zshrc-secret
-    echo ".zshrc-secret sourced"
+if [[ -f ~/.zshrc-s ]]; then
+    source ~/.zshrc-s
 fi

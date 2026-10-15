@@ -2,6 +2,8 @@
 .claude/worktrees
 u-*
 build
-dotfiles-configs/.config/starship-secret.toml
-dotfiles-configs/.claude/skills/secret-*
-dotfiles-configs/.zshrc-secret
+
+**/s-*
+**/.s-*
+**/*-s
+**/*-s.*
