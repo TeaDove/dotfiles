@@ -194,7 +194,9 @@ several readable chunks** (not one tall strip — confirmed unreadable in Telegr
    the remote shell looks for the secret on worker-server's own filesystem and fails. `overwrite=True`
    in the helper keeps each chunk's link stable across days. If a chunk's printed URL is empty, the
    publish call raced the upload — re-run just the `get_meta`/`publish` pair for that one file once
-   before giving up on it (hit this 2026-10-16, a second attempt returned the link immediately).
+   before giving up on it (hit this 2026-10-16, a second attempt returned the link immediately). If a
+   chunk still has no link after that retry, report it as a WARN line in the output (see Output) —
+   don't silently drop it.
 4. Clean up the local `/tmp/grafana_dashboard-*.png` files on worker-server once uploaded.
 
 ## Output
@@ -217,31 +219,45 @@ curl -s -m 30 -X POST "https://teadove.space:7999/proxy/telegram-bot/$TOKEN/send
 Write the report to `/tmp/daily-audit-report.txt` on worker-server first (same file round-trip as
 before — a heredoc piped straight through a nested nested SSH nested `"$(cat)"` has been unreliable
 here before too). If this curl call itself ever times out or returns non-200, retry once with
-`timeout 30`; only after that counts as a real delivery failure worth a Known-gaps note. (If
-`goteleout` gets fixed upstream later, this can switch back — but don't revert speculatively, verify
-it's actually reliable again first.)
+`timeout 30`. If both attempts fail, the report can't reach Telegram at all that run — still run the
+Audio step below (it's independent of delivery) so the user at least hears something happened, and
+try again on the next scheduled fire. (If `goteleout` gets fixed upstream later, this can switch back
+— but don't revert speculatively, verify it's actually reliable again first.)
 
-Send one Telegram message this way, in this fixed shape (same ✅/⚠️ emoji vocabulary homeobs already
-uses elsewhere in this project) — add a `Dashboard:` block with today's N screenshot links:
+Send one Telegram message this way, in this fixed shape — one emoji at the very top, line-level
+emoji dropped everywhere else, the body split into two OK/WARN blocks:
 
 ```
-{{ ✅ | ⚠️ | 🔴 }} Daily audit — {{ YYYY-MM-DD }}
+{{ ✅ | ⚠️ }} Daily audit — {{ YYYY-MM-DD }}
 
-Reachability: {{ one line }}
-Services: {{ ✅ all expected, running | one line per failed/new/removed service }}
-worker-pc: {{ woke, pinged, shut down OK | already on, cycle skipped }}
-Security baseline: {{ ✅ no changes | one line per flagged delta }}
-Prometheus: {{ N/M targets up; firing alerts if any; trend flags if any }}
-Tokens: {{ ✅ all live | one line per dead token }}
-Dashboard: {{ 📸 N parts: one "i/N <link>" line per chunk | ⚠️ screenshot failed, see Known gaps }}
-{{ one line per relevant entry from Known gaps, omit the section entirely if none apply today }}
+✅ OK
+{{ one line per check that came back clean }}
+
+⚠️ WARN
+{{ one line per check with a finding }}
 ```
 
-Pick the top-line emoji from the worst thing found: 🔴 only if worker-server itself is unreachable
-(Reachability failing makes every other section "unknown", say so instead of guessing), ⚠️ if there is
-at least one other finding anywhere, ✅ only when every section reads all-clear — so the user can judge
-severity from the first line alone. Keep each line short: this is a status scan, not a dump of raw
-command output.
+Each of the seven checks (Reachability, Services, worker-pc, Security baseline, Prometheus, Tokens,
+Dashboard) contributes exactly one line, placed into whichever block matches its own result that run
+— never both. Both blocks are optional: omit the `✅ OK` block entirely if nothing came back clean,
+omit `⚠️ WARN` entirely if nothing did. The top-line emoji follows directly from that: `⚠️` if the WARN
+block exists at all, `✅` only when it's empty and omitted. If worker-server itself is unreachable,
+every other check is "unknown" rather than skipped — put all seven lines in WARN that run rather than
+guessing any of them clean. Keep each line short: this is a status scan, not a dump of raw command
+output. Some examples of what a line looks like in each block:
+
+```
+✅ OK
+Reachability: worker-server alive
+Services: all expected, running
+Tokens: all live
+Dashboard: 3 parts: 1/3 <link>, 2/3 <link>, 3/3 <link>
+
+⚠️ WARN
+worker-pc: not reachable, ssh timeout, WoL ignored
+Security baseline: authorized_keys count went 2 -> 3 on worker-server
+Prometheus: 17/18 targets up (blackbox_exporter down); LAN devices 30% below the 7-day average
+```
 
 ### Audio
 
@@ -257,7 +273,8 @@ fresh explicit ask in that request.
 
 ## Known gaps
 
-State these once per report when relevant, don't pad the report with them daily if nothing changed:
+Internal reference only — these are not surfaced in the Telegram report (see Output), they just save
+the next session from re-discovering the same structural limits:
 
 - No firewall visibility on the container or worker-pc with current permissions (worker-server's
   `ufw status` is checked — see Permissions / security baseline).
