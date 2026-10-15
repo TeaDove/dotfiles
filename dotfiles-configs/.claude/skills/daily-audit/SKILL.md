@@ -1,6 +1,6 @@
 ---
 name: daily-audit
-description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets. Reports to Telegram via goteleout, then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
+description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets; a Grafana dashboard screenshot, split into readable chunks, uploaded to Yandex Disk. Reports to Telegram via a direct Bot API call through the proxy (goteleout proved unreliable here) with the screenshot links, then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
 ---
 
 # /daily-audit
@@ -166,37 +166,98 @@ already wired into a configured CLI (ask that CLI's own auth-status command rath
 API by hand), and the Telegram bot token specifically — this report's own successful delivery via
 goteleout **is** the liveness check; if delivery fails, that's the finding (see Output).
 
+## Dashboard screenshot
+
+Every run, after all the checks above, screenshot the `Home observability` dashboard **split into
+several readable chunks** (not one tall strip — confirmed unreadable in Telegram's preview, fixed
+2026-10-16) and attach the links to the report (user's explicit ask, 2026-10-16):
+
+1. `scp /run/secrets/grafana_viewer_token worker-server:/tmp/grafana_viewer_token`.
+2. On worker-server: `~/.local/bin/uv run --with playwright python
+   /srv/aibot/daily-audit/screenshot.py /tmp/grafana_dashboard < /tmp/grafana_viewer_token`, then
+   `rm -f /tmp/grafana_viewer_token` immediately — never leave the token sitting in `/tmp`.
+   `screenshot.py` (kept in sync with `dotfiles-configs/.claude/skills/daily-audit/screenshot.py` in
+   this repo — if they've drifted, the deployed copy wins for today's run, but fix the repo copy too)
+   prints one path per line, e.g. `/tmp/grafana_dashboard-1.png` .. `-N.png`. It scrolls the full page
+   first — Grafana lazy-renders panels outside the current viewport, a screenshot taken without this
+   step comes back with most panels empty — then reads each row's actual Y position from the DOM
+   (`[data-testid*="dashboard-row"]`) and groups rows into chunks of roughly 2000px, cutting only at
+   row boundaries so no panel is ever split across two images. Don't hardcode specific row names or
+   pixel offsets; the grouping is computed fresh each run so it keeps working as panels are added.
+3. Upload each chunk with its own ssh+upload call — **do not loop a single `ssh ... < token` over
+   multiple files**, the remote `sys.stdin.read()` only gets data on the first loop iteration and
+   every later one fails with "token is empty" (hit this 2026-10-16). One `ssh` invocation per file:
+   `ssh worker-server '~/.local/bin/uv run --no-project --with "yadisk[sync-defaults]" python
+   /srv/aibot/mam-26-1/lab2/upload_file.py /tmp/grafana_dashboard-N.png
+   "app:/daily-audit-dashboard-N.png"' < /run/secrets/yandex_disk_token` — the redirect must be on
+   the outer `ssh` invocation (the container's own stdin), not inside the quoted remote command, or
+   the remote shell looks for the secret on worker-server's own filesystem and fails. `overwrite=True`
+   in the helper keeps each chunk's link stable across days. If a chunk's printed URL is empty, the
+   publish call raced the upload — re-run just the `get_meta`/`publish` pair for that one file once
+   before giving up on it (hit this 2026-10-16, a second attempt returned the link immediately). If a
+   chunk still has no link after that retry, report it as a WARN line in the output (see Output) —
+   don't silently drop it.
+4. Clean up the local `/tmp/grafana_dashboard-*.png` files on worker-server once uploaded.
+
 ## Output
 
-`goteleout` is at `~/go/bin/goteleout` on worker-server, `uv` at `~/.local/bin/uv` — a bare `ssh
-worker-server 'goteleout ...'` fails with "command not found", the non-login SSH shell doesn't have
-either on `$PATH`; always use the full path. Write the report to a temp file first
-(`ssh worker-server 'cat > /tmp/daily-audit-report.txt' <<'EOF' ... EOF`), then
-`ssh worker-server '~/go/bin/goteleout "$(cat /tmp/daily-audit-report.txt)"; rm -f
-/tmp/daily-audit-report.txt'` — piping a multi-line heredoc straight into a remote `"$(cat)"` inside
-one SSH command silently returned exit 1 with no stderr on 2026-10-15; the file round-trip is the
-version that's actually been proven to work, don't revert to the shorter form.
+**Send via direct Bot API call through the proxy, not the `goteleout` CLI.** `goteleout` hung past a
+90s timeout three times in a row on 2026-10-16 (both a one-link and a three-link message) while a raw
+`curl` to the exact same endpoint with the exact same payload answered in under a second every single
+time — not a proxy problem (confirmed: no IPv6 route is even involved, `teadove.space` has no AAAA
+record), something specific to the `goteleout` binary through this path. Reuse its already-working
+config instead of hand-rolling a new credential:
 
-Send one Telegram message this way, in this fixed shape (same ✅/⚠️ emoji vocabulary homeobs already
-uses elsewhere in this project):
-
-```
-{{ ✅ | ⚠️ | 🔴 }} Daily audit — {{ YYYY-MM-DD }}
-
-Reachability: {{ one line }}
-Services: {{ ✅ all expected, running | one line per failed/new/removed service }}
-worker-pc: {{ woke, pinged, shut down OK | already on, cycle skipped }}
-Security baseline: {{ ✅ no changes | one line per flagged delta }}
-Prometheus: {{ N/M targets up; firing alerts if any; trend flags if any }}
-Tokens: {{ ✅ all live | one line per dead token }}
-{{ one line per relevant entry from Known gaps, omit the section entirely if none apply today }}
+```bash
+ssh worker-server 'TOKEN=$(python3 -c "import json; print(json.load(open(\"/home/teadove-aibot/
+.config/goteleout.json\"))[\"token\"])"); USERID=$(python3 -c "import json;
+print(json.load(open(\"/home/teadove-aibot/.config/goteleout.json\"))[\"user\"])");
+curl -s -m 30 -X POST "https://teadove.space:7999/proxy/telegram-bot/$TOKEN/sendMessage"
+-d "chat_id=$USERID" --data-urlencode "text=$(cat /tmp/daily-audit-report.txt)"'
 ```
 
-Pick the top-line emoji from the worst thing found: 🔴 only if worker-server itself is unreachable
-(Reachability failing makes every other section "unknown", say so instead of guessing), ⚠️ if there is
-at least one other finding anywhere, ✅ only when every section reads all-clear — so the user can judge
-severity from the first line alone. Keep each line short: this is a status scan, not a dump of raw
-command output.
+Write the report to `/tmp/daily-audit-report.txt` on worker-server first (same file round-trip as
+before — a heredoc piped straight through a nested nested SSH nested `"$(cat)"` has been unreliable
+here before too). If this curl call itself ever times out or returns non-200, retry once with
+`timeout 30`. If both attempts fail, the report can't reach Telegram at all that run — still run the
+Audio step below (it's independent of delivery) so the user at least hears something happened, and
+try again on the next scheduled fire. (If `goteleout` gets fixed upstream later, this can switch back
+— but don't revert speculatively, verify it's actually reliable again first.)
+
+Send one Telegram message this way, in this fixed shape — one emoji at the very top, line-level
+emoji dropped everywhere else, the body split into two OK/WARN blocks:
+
+```
+{{ ✅ | ⚠️ }} Daily audit — {{ YYYY-MM-DD }}
+
+✅ OK
+{{ one line per check that came back clean }}
+
+⚠️ WARN
+{{ one line per check with a finding }}
+```
+
+Each of the seven checks (Reachability, Services, worker-pc, Security baseline, Prometheus, Tokens,
+Dashboard) contributes exactly one line, placed into whichever block matches its own result that run
+— never both. Both blocks are optional: omit the `✅ OK` block entirely if nothing came back clean,
+omit `⚠️ WARN` entirely if nothing did. The top-line emoji follows directly from that: `⚠️` if the WARN
+block exists at all, `✅` only when it's empty and omitted. If worker-server itself is unreachable,
+every other check is "unknown" rather than skipped — put all seven lines in WARN that run rather than
+guessing any of them clean. Keep each line short: this is a status scan, not a dump of raw command
+output. Some examples of what a line looks like in each block:
+
+```
+✅ OK
+Reachability: worker-server alive
+Services: all expected, running
+Tokens: all live
+Dashboard: 3 parts: 1/3 <link>, 2/3 <link>, 3/3 <link>
+
+⚠️ WARN
+worker-pc: not reachable, ssh timeout, WoL ignored
+Security baseline: authorized_keys count went 2 -> 3 on worker-server
+Prometheus: 17/18 targets up (blackbox_exporter down); LAN devices 30% below the 7-day average
+```
 
 ### Audio
 
@@ -212,7 +273,8 @@ fresh explicit ask in that request.
 
 ## Known gaps
 
-State these once per report when relevant, don't pad the report with them daily if nothing changed:
+Internal reference only — these are not surfaced in the Telegram report (see Output), they just save
+the next session from re-discovering the same structural limits:
 
 - No firewall visibility on the container or worker-pc with current permissions (worker-server's
   `ufw status` is checked — see Permissions / security baseline).
