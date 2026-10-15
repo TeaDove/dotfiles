@@ -1,6 +1,6 @@
 ---
 name: daily-audit
-description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets. Reports to Telegram via goteleout, then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
+description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets; a full-page Grafana dashboard screenshot uploaded to Yandex Disk. Reports to Telegram via goteleout with the screenshot link, then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
 ---
 
 # /daily-audit
@@ -166,6 +166,29 @@ already wired into a configured CLI (ask that CLI's own auth-status command rath
 API by hand), and the Telegram bot token specifically — this report's own successful delivery via
 goteleout **is** the liveness check; if delivery fails, that's the finding (see Output).
 
+## Dashboard screenshot
+
+Every run, after all the checks above, take a full-page screenshot of the `Home observability`
+dashboard and attach its link to the report (user's explicit ask, 2026-10-16):
+
+1. `scp /run/secrets/grafana_viewer_token worker-server:/tmp/grafana_viewer_token`.
+2. On worker-server: `~/.local/bin/uv run --with playwright python
+   /srv/aibot/daily-audit/screenshot.py /tmp/grafana_dashboard.png < /tmp/grafana_viewer_token`, then
+   `rm -f /tmp/grafana_viewer_token` immediately — never leave the token sitting in `/tmp`.
+   `screenshot.py` (kept in sync with `dotfiles-configs/.claude/skills/daily-audit/screenshot.py` in
+   this repo — if they've drifted, the deployed copy wins for today's run, but fix the repo copy too)
+   sets the viewport to the page's own full scroll height and scrolls through it in steps before
+   shooting — Grafana lazy-renders panels outside the current viewport, so a naive `full_page`
+   screenshot at a fixed small viewport comes back with most panels empty.
+3. Upload and publish, reusing the existing helper so the link stays stable across days
+   (`overwrite=True` keeps the same public URL — see `yandex-disk-access` memory):
+   `ssh worker-server '~/.local/bin/uv run --no-project --with "yadisk[sync-defaults]" python
+   /srv/aibot/mam-26-1/lab2/upload_file.py /tmp/grafana_dashboard.png
+   "app:/daily-audit-dashboard.png"' < /run/secrets/yandex_disk_token` — the redirect must be on the
+   outer `ssh` invocation (the container's own stdin), not inside the quoted remote command, or the
+   remote shell looks for the secret on worker-server's own filesystem and fails.
+4. Clean up `/tmp/grafana_dashboard.png` on worker-server once uploaded.
+
 ## Output
 
 `goteleout` is at `~/go/bin/goteleout` on worker-server, `uv` at `~/.local/bin/uv` — a bare `ssh
@@ -177,8 +200,15 @@ either on `$PATH`; always use the full path. Write the report to a temp file fir
 one SSH command silently returned exit 1 with no stderr on 2026-10-15; the file round-trip is the
 version that's actually been proven to work, don't revert to the shorter form.
 
+This proxy path occasionally stalls for minutes before succeeding (known, see the
+`telegram-user-and-goteleout` memory) — confirmed again on 2026-10-16: two calls hung past a 90s
+timeout back to back, the third went through in under a second. Wrap the call in `timeout 90`; if it
+times out, kill the hung `goteleout` process **by its exact PID** (`pgrep -af goteleout`, never `pkill
+-f` on a pattern — it also matches the wrapping `ssh`/`bash -c` command line) and retry once more
+before treating it as a real delivery failure worth a Known-gaps note.
+
 Send one Telegram message this way, in this fixed shape (same ✅/⚠️ emoji vocabulary homeobs already
-uses elsewhere in this project):
+uses elsewhere in this project) — add a `Dashboard:` line with today's screenshot link:
 
 ```
 {{ ✅ | ⚠️ | 🔴 }} Daily audit — {{ YYYY-MM-DD }}
@@ -189,6 +219,7 @@ worker-pc: {{ woke, pinged, shut down OK | already on, cycle skipped }}
 Security baseline: {{ ✅ no changes | one line per flagged delta }}
 Prometheus: {{ N/M targets up; firing alerts if any; trend flags if any }}
 Tokens: {{ ✅ all live | one line per dead token }}
+Dashboard: {{ 📸 <today's Yandex Disk link> | ⚠️ screenshot failed, see Known gaps }}
 {{ one line per relevant entry from Known gaps, omit the section entirely if none apply today }}
 ```
 
