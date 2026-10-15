@@ -1,6 +1,6 @@
 ---
 name: daily-audit
-description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets; a full-page Grafana dashboard screenshot uploaded to Yandex Disk. Reports to Telegram via goteleout with the screenshot link, then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
+description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets; a Grafana dashboard screenshot, split into readable chunks, uploaded to Yandex Disk. Reports to Telegram via a direct Bot API call through the proxy (goteleout proved unreliable here) with the screenshot links, then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
 ---
 
 # /daily-audit
@@ -168,47 +168,61 @@ goteleout **is** the liveness check; if delivery fails, that's the finding (see 
 
 ## Dashboard screenshot
 
-Every run, after all the checks above, take a full-page screenshot of the `Home observability`
-dashboard and attach its link to the report (user's explicit ask, 2026-10-16):
+Every run, after all the checks above, screenshot the `Home observability` dashboard **split into
+several readable chunks** (not one tall strip — confirmed unreadable in Telegram's preview, fixed
+2026-10-16) and attach the links to the report (user's explicit ask, 2026-10-16):
 
 1. `scp /run/secrets/grafana_viewer_token worker-server:/tmp/grafana_viewer_token`.
 2. On worker-server: `~/.local/bin/uv run --with playwright python
-   /srv/aibot/daily-audit/screenshot.py /tmp/grafana_dashboard.png < /tmp/grafana_viewer_token`, then
+   /srv/aibot/daily-audit/screenshot.py /tmp/grafana_dashboard < /tmp/grafana_viewer_token`, then
    `rm -f /tmp/grafana_viewer_token` immediately — never leave the token sitting in `/tmp`.
    `screenshot.py` (kept in sync with `dotfiles-configs/.claude/skills/daily-audit/screenshot.py` in
    this repo — if they've drifted, the deployed copy wins for today's run, but fix the repo copy too)
-   sets the viewport to the page's own full scroll height and scrolls through it in steps before
-   shooting — Grafana lazy-renders panels outside the current viewport, so a naive `full_page`
-   screenshot at a fixed small viewport comes back with most panels empty.
-3. Upload and publish, reusing the existing helper so the link stays stable across days
-   (`overwrite=True` keeps the same public URL — see `yandex-disk-access` memory):
+   prints one path per line, e.g. `/tmp/grafana_dashboard-1.png` .. `-N.png`. It scrolls the full page
+   first — Grafana lazy-renders panels outside the current viewport, a screenshot taken without this
+   step comes back with most panels empty — then reads each row's actual Y position from the DOM
+   (`[data-testid*="dashboard-row"]`) and groups rows into chunks of roughly 2000px, cutting only at
+   row boundaries so no panel is ever split across two images. Don't hardcode specific row names or
+   pixel offsets; the grouping is computed fresh each run so it keeps working as panels are added.
+3. Upload each chunk with its own ssh+upload call — **do not loop a single `ssh ... < token` over
+   multiple files**, the remote `sys.stdin.read()` only gets data on the first loop iteration and
+   every later one fails with "token is empty" (hit this 2026-10-16). One `ssh` invocation per file:
    `ssh worker-server '~/.local/bin/uv run --no-project --with "yadisk[sync-defaults]" python
-   /srv/aibot/mam-26-1/lab2/upload_file.py /tmp/grafana_dashboard.png
-   "app:/daily-audit-dashboard.png"' < /run/secrets/yandex_disk_token` — the redirect must be on the
-   outer `ssh` invocation (the container's own stdin), not inside the quoted remote command, or the
-   remote shell looks for the secret on worker-server's own filesystem and fails.
-4. Clean up `/tmp/grafana_dashboard.png` on worker-server once uploaded.
+   /srv/aibot/mam-26-1/lab2/upload_file.py /tmp/grafana_dashboard-N.png
+   "app:/daily-audit-dashboard-N.png"' < /run/secrets/yandex_disk_token` — the redirect must be on
+   the outer `ssh` invocation (the container's own stdin), not inside the quoted remote command, or
+   the remote shell looks for the secret on worker-server's own filesystem and fails. `overwrite=True`
+   in the helper keeps each chunk's link stable across days. If a chunk's printed URL is empty, the
+   publish call raced the upload — re-run just the `get_meta`/`publish` pair for that one file once
+   before giving up on it (hit this 2026-10-16, a second attempt returned the link immediately).
+4. Clean up the local `/tmp/grafana_dashboard-*.png` files on worker-server once uploaded.
 
 ## Output
 
-`goteleout` is at `~/go/bin/goteleout` on worker-server, `uv` at `~/.local/bin/uv` — a bare `ssh
-worker-server 'goteleout ...'` fails with "command not found", the non-login SSH shell doesn't have
-either on `$PATH`; always use the full path. Write the report to a temp file first
-(`ssh worker-server 'cat > /tmp/daily-audit-report.txt' <<'EOF' ... EOF`), then
-`ssh worker-server '~/go/bin/goteleout "$(cat /tmp/daily-audit-report.txt)"; rm -f
-/tmp/daily-audit-report.txt'` — piping a multi-line heredoc straight into a remote `"$(cat)"` inside
-one SSH command silently returned exit 1 with no stderr on 2026-10-15; the file round-trip is the
-version that's actually been proven to work, don't revert to the shorter form.
+**Send via direct Bot API call through the proxy, not the `goteleout` CLI.** `goteleout` hung past a
+90s timeout three times in a row on 2026-10-16 (both a one-link and a three-link message) while a raw
+`curl` to the exact same endpoint with the exact same payload answered in under a second every single
+time — not a proxy problem (confirmed: no IPv6 route is even involved, `teadove.space` has no AAAA
+record), something specific to the `goteleout` binary through this path. Reuse its already-working
+config instead of hand-rolling a new credential:
 
-This proxy path occasionally stalls for minutes before succeeding (known, see the
-`telegram-user-and-goteleout` memory) — confirmed again on 2026-10-16: two calls hung past a 90s
-timeout back to back, the third went through in under a second. Wrap the call in `timeout 90`; if it
-times out, kill the hung `goteleout` process **by its exact PID** (`pgrep -af goteleout`, never `pkill
--f` on a pattern — it also matches the wrapping `ssh`/`bash -c` command line) and retry once more
-before treating it as a real delivery failure worth a Known-gaps note.
+```bash
+ssh worker-server 'TOKEN=$(python3 -c "import json; print(json.load(open(\"/home/teadove-aibot/
+.config/goteleout.json\"))[\"token\"])"); USERID=$(python3 -c "import json;
+print(json.load(open(\"/home/teadove-aibot/.config/goteleout.json\"))[\"user\"])");
+curl -s -m 30 -X POST "https://teadove.space:7999/proxy/telegram-bot/$TOKEN/sendMessage"
+-d "chat_id=$USERID" --data-urlencode "text=$(cat /tmp/daily-audit-report.txt)"'
+```
+
+Write the report to `/tmp/daily-audit-report.txt` on worker-server first (same file round-trip as
+before — a heredoc piped straight through a nested nested SSH nested `"$(cat)"` has been unreliable
+here before too). If this curl call itself ever times out or returns non-200, retry once with
+`timeout 30`; only after that counts as a real delivery failure worth a Known-gaps note. (If
+`goteleout` gets fixed upstream later, this can switch back — but don't revert speculatively, verify
+it's actually reliable again first.)
 
 Send one Telegram message this way, in this fixed shape (same ✅/⚠️ emoji vocabulary homeobs already
-uses elsewhere in this project) — add a `Dashboard:` line with today's screenshot link:
+uses elsewhere in this project) — add a `Dashboard:` block with today's N screenshot links:
 
 ```
 {{ ✅ | ⚠️ | 🔴 }} Daily audit — {{ YYYY-MM-DD }}
@@ -219,7 +233,7 @@ worker-pc: {{ woke, pinged, shut down OK | already on, cycle skipped }}
 Security baseline: {{ ✅ no changes | one line per flagged delta }}
 Prometheus: {{ N/M targets up; firing alerts if any; trend flags if any }}
 Tokens: {{ ✅ all live | one line per dead token }}
-Dashboard: {{ 📸 <today's Yandex Disk link> | ⚠️ screenshot failed, see Known gaps }}
+Dashboard: {{ 📸 N parts: one "i/N <link>" line per chunk | ⚠️ screenshot failed, see Known gaps }}
 {{ one line per relevant entry from Known gaps, omit the section entirely if none apply today }}
 ```
 
