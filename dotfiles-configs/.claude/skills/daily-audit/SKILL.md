@@ -47,22 +47,22 @@ checks on the others. Record failures as findings, not as reasons to stop.
 `ssh -o ConnectTimeout=8 -o BatchMode=yes worker-server 'echo alive'`. This is the always-on host;
 treat unreachable as the top-line finding of the report.
 
-### B. Known services (currently: homeobs)
+### B. Known services
 
-On worker-server:
+Don't hardcode a service list here — it will drift the moment something is added or removed. Discover
+it fresh every run, on worker-server:
 
 ```bash
-for s in homeobs prometheus prometheus-alertmanager prometheus-blackbox-exporter \
-         prometheus-node-exporter grafana-server; do
-  systemctl is-active "$s"
-done
-systemctl --failed --no-legend --no-pager
-curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:9105/metrics
-curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/api/health
+systemctl --failed --no-legend --no-pager                                  # any failed unit, unconditional
+systemctl list-units --type=service --state=running --no-legend --no-pager # the current active set
 ```
 
-Add new hosts' service lists here as they're set up — this check is meant to grow with the
-infrastructure, not stay homeobs-only forever.
+Diff the running-service set against the baseline file (see State) the same way as the permissions
+baseline below — flag additions/removals as findings instead of silently absorbing them, then let the
+baseline advance. For whichever services turn out to be running, check their own documented health
+endpoint if they have one — as of 2026-10-15 that's homeobs (`curl 127.0.0.1:9105/metrics`, see its
+README) and Grafana (`curl 127.0.0.1:3000/api/health`); read `/srv/aibot/*/README.md` or the project's
+own docs for any service added later rather than guessing at a URL.
 
 ### C. worker-pc wake / ping / shutdown
 
@@ -114,7 +114,7 @@ change on worker-server. `ufw`/iptables are **not** checkable on the container o
 current permissions — don't claim they were checked there; note that gap once in the report rather
 than every day (see Known gaps).
 
-### E. Prometheus health
+### E. Prometheus health and trend anomalies
 
 On worker-server, against `127.0.0.1:9090`:
 
@@ -123,27 +123,71 @@ curl -s 127.0.0.1:9090/api/v1/targets | jq -r '.data.activeTargets[] | select(.h
 curl -s 127.0.0.1:9090/api/v1/alerts | jq -r '.data.alerts[] | select(.state=="firing") | .labels.alertname'
 ```
 
-Real-time anomalies already page the user instantly via Alertmanager → homeobs → goteleout — this
-check is a complementary daily sanity pass (every target up, nothing silently firing), not a
-replacement for it. Don't re-derive "is this value normal" from first principles each day; report
-target/alert counts and any `health != "up"` or `state == "firing"` entries, nothing more speculative.
+Real-time threshold alerts already page the user instantly via Alertmanager → homeobs → goteleout — the
+two queries above are a complementary daily sanity pass (every target up, nothing silently firing), not
+a replacement for it.
+
+Beyond that, catch drift that has no alert rule yet by comparing today against a trailing week — one
+concrete query per metric, each with its own threshold. Don't freelance "does this look normal"; only
+report what one of these actually crosses, via `/api/v1/query`:
+
+```promql
+# LAN devices online vs. the 7-day average — flag a swing past 30% either way
+abs(homeobs_lan_devices_online - avg_over_time(homeobs_lan_devices_online[7d]))
+  / avg_over_time(homeobs_lan_devices_online[7d]) > 0.3
+
+# today's best download speed vs. the 7-day average — flag a drop past 30%
+(avg_over_time(homeobs_speedtest_download_bits_per_second[7d])
+    - max_over_time(homeobs_speedtest_download_bits_per_second[1d]))
+  / avg_over_time(homeobs_speedtest_download_bits_per_second[7d]) > 0.3
+
+# root filesystem usage growth over the last 7 days, in percentage points — flag past 5pp/week
+(1 - node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})
+  - (1 - (node_filesystem_avail_bytes{mountpoint="/"} offset 7d)
+    / (node_filesystem_size_bytes{mountpoint="/"} offset 7d)) > 0.05
+```
+
+If a series has under 7 days of history (e.g. right after a new metric is deployed), skip it rather
+than reporting noise from a short window — note that once in Known gaps, not every day. Add a new
+query here, same shape, whenever a metric worth trend-watching is added — this list is meant to grow
+with the infrastructure like the rest of the skill, not stay fixed at three forever.
 
 ### F. Token liveness
 
-Run from the container, which holds `/run/secrets/*` (never print the values):
+`ls /run/secrets/` from the container to see what actually exists today — don't hardcode the set of
+token names here, it drifts the moment a secret is added or renamed. For each one found, work out the
+cheapest read-only liveness probe the same way a human would: `/workspace/DOCS.md` documents the
+OpenAI/Telegram proxies, and the project's own memory files cover the rest (search for the secret's
+name — e.g. the Yandex Disk and GitHub entries each name their exact check). Never print a secret's
+value, only whether it still gets accepted.
 
-| Token | Check |
-|---|---|
-| `github_token` | `ssh worker-server '~/bin/gh auth status'` (already configured there) |
-| `openai_api_key` | `curl -s -o /dev/null -w '%{http_code}' https://teadove.space:7999/proxy/openai/v1/models -H "Authorization: Bearer $(cat /run/secrets/openai_api_key)"` — expect `200` |
-| `yandex_disk_token` | `uv run --with "yadisk[sync-defaults]" python <script>` on worker-server calling `client.check_token()` (see `yandex-disk-access` memory for the exact invocation) |
-| `telegram_bot_token` | No separate probe — this report's own successful delivery via goteleout **is** the liveness check. If delivery fails, that's the finding (see Output). |
+Two cases don't need a dedicated probe because something else already proves them each run: a token
+already wired into a configured CLI (ask that CLI's own auth-status command rather than hitting the
+API by hand), and the Telegram bot token specifically — this report's own successful delivery via
+goteleout **is** the liveness check; if delivery fails, that's the finding (see Output).
 
 ## Output
 
-Format: a short Telegram message via `goteleout` from worker-server (same pattern as every other
-notification in this project) — a few lines per section above, problems first, then a one-line
-all-clear summary for whatever had no findings. Keep it scannable, not a wall of raw command output.
+Send one Telegram message via `goteleout` from worker-server, in this fixed shape (same ✅/⚠️ emoji
+vocabulary homeobs already uses elsewhere in this project):
+
+```
+{{ ✅ | ⚠️ | 🔴 }} Daily audit — {{ YYYY-MM-DD }}
+
+Reachability: {{ one line }}
+Services: {{ ✅ all expected, running | one line per failed/new/removed service }}
+worker-pc: {{ woke, pinged, shut down OK | already on, cycle skipped }}
+Security baseline: {{ ✅ no changes | one line per flagged delta }}
+Prometheus: {{ N/M targets up; firing alerts if any; trend flags if any }}
+Tokens: {{ ✅ all live | one line per dead token }}
+{{ one line per relevant entry from Known gaps, omit the section entirely if none apply today }}
+```
+
+Pick the top-line emoji from the worst thing found: 🔴 only if worker-server itself is unreachable
+(Reachability failing makes every other section "unknown", say so instead of guessing), ⚠️ if there is
+at least one other finding anywhere, ✅ only when every section reads all-clear — so the user can judge
+severity from the first line alone. Keep each line short: this is a status scan, not a dump of raw
+command output.
 
 ### Audio
 
