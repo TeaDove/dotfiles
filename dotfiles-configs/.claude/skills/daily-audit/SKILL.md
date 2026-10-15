@@ -1,6 +1,6 @@
 ---
 name: daily-audit
-description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets; a Grafana dashboard screenshot, split into readable chunks, uploaded to Yandex Disk. Reports to Telegram via a direct Bot API call through the proxy (goteleout proved unreliable here) with the screenshot links, then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
+description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets; a Grafana dashboard screenshot, split into readable chunks, uploaded to Yandex Disk. Reports to Telegram via goteleout with the screenshot links, then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
 ---
 
 # /daily-audit
@@ -201,28 +201,21 @@ several readable chunks** (not one tall strip — confirmed unreadable in Telegr
 
 ## Output
 
-**Send via direct Bot API call through the proxy, not the `goteleout` CLI.** `goteleout` hung past a
-90s timeout three times in a row on 2026-10-16 (both a one-link and a three-link message) while a raw
-`curl` to the exact same endpoint with the exact same payload answered in under a second every single
-time — not a proxy problem (confirmed: no IPv6 route is even involved, `teadove.space` has no AAAA
-record), something specific to the `goteleout` binary through this path. Reuse its already-working
-config instead of hand-rolling a new credential:
+Send via `goteleout` — now safe to use again (2026-10-16: PATH fixed so it resolves bare, and
+`goteleout` itself patched upstream with a 90s internal deadline + longer per-attempt timeouts,
+TeaDove/goteleout#4, so a stuck send fails cleanly instead of hanging forever). Write the report to
+`/tmp/daily-audit-report.txt` on worker-server first — piping a multi-line heredoc straight into a
+remote `"$(cat)"` inside one SSH command has been unreliable here before, the file round-trip is the
+version that's actually proven to work — then:
 
 ```bash
-ssh worker-server 'TOKEN=$(python3 -c "import json; print(json.load(open(\"/home/teadove-aibot/
-.config/goteleout.json\"))[\"token\"])"); USERID=$(python3 -c "import json;
-print(json.load(open(\"/home/teadove-aibot/.config/goteleout.json\"))[\"user\"])");
-curl -s -m 30 -X POST "https://teadove.space:7999/proxy/telegram-bot/$TOKEN/sendMessage"
--d "chat_id=$USERID" --data-urlencode "text=$(cat /tmp/daily-audit-report.txt)"'
+ssh worker-server 'goteleout "$(cat /tmp/daily-audit-report.txt)"; rm -f /tmp/daily-audit-report.txt'
 ```
 
-Write the report to `/tmp/daily-audit-report.txt` on worker-server first (same file round-trip as
-before — a heredoc piped straight through a nested nested SSH nested `"$(cat)"` has been unreliable
-here before too). If this curl call itself ever times out or returns non-200, retry once with
-`timeout 30`. If both attempts fail, the report can't reach Telegram at all that run — still run the
-Audio step below (it's independent of delivery) so the user at least hears something happened, and
-try again on the next scheduled fire. (If `goteleout` gets fixed upstream later, this can switch back
-— but don't revert speculatively, verify it's actually reliable again first.)
+Wrap the call in `timeout 100` as a safety margin anyway (slightly past goteleout's own 90s internal
+deadline) and retry once if it still fails. If both attempts fail, the report can't reach Telegram at
+all that run — still run the Audio step below (it's independent of delivery) so the user at least
+hears something happened, and try again on the next scheduled fire.
 
 Send one Telegram message this way, in this fixed shape — one emoji at the very top, line-level
 emoji dropped everywhere else, the body split into two OK/WARN blocks:

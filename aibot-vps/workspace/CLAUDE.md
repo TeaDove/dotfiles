@@ -17,8 +17,8 @@ ssh worker-server '<command>'
 
 On the worker-server you connect as the dedicated, unprivileged user `teadove-aibot` — not a
 full-trust account. It has no general `sudo`: only a short, point-granted NOPASSWD whitelist in
-`/etc/sudoers.d/` (currently things like `systemctl restart homeobs`, `systemctl reboot`, `ufw
-status`, and a couple of Mint helper scripts — run `sudo -n -l` to see the exact current list). It
+`/etc/sudoers.d/` (currently things like `systemctl reboot`, `ufw status`, and a couple of Mint
+helper scripts — run `sudo -n -l` to see the exact current list). It
 is not in the `sudo` or `docker` group; containers run as this account's own rootless Docker, which
 needs no root at all. Because the account is this restricted, treat it accordingly: it is the
 always-on home of persistent services and data, not an expendable sandbox.
