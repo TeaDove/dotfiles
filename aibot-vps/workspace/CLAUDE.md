@@ -15,24 +15,20 @@ ssh worker-server
 ssh worker-server '<command>'
 ```
 
-On the worker-server you connect as user `teadove` and have full administrative access and
-full trust: `sudo`, Docker, systemd, cron, installing packages — all allowed without
-asking. Because you have that much power there, be careful: it is the always-on home of
-persistent services and data, not an expendable sandbox.
+On the worker-server you connect as the dedicated, unprivileged user `teadove-aibot` — not a
+full-trust account. It has no general `sudo`: only a short, point-granted NOPASSWD whitelist in
+`/etc/sudoers.d/` (currently things like `systemctl restart homeobs`, `systemctl reboot`, `ufw
+status`, and a couple of Mint helper scripts — run `sudo -n -l` to see the exact current list). It
+is not in the `sudo` or `docker` group; containers run as this account's own rootless Docker, which
+needs no root at all. Because the account is this restricted, treat it accordingly: it is the
+always-on home of persistent services and data, not an expendable sandbox.
 
 Its resources are enough for simple pet projects and a light backend; check exact capacity over SSH.
 
-`sudo` on the worker-server asks for a password. It is stored in this container at
-`/run/secrets/worker_server_sudo_pass`. Never print or echo the password; feed it to
-`sudo -S` over stdin:
-
-```bash
-ssh worker-server 'sudo -S -p "" whoami' < /run/secrets/worker_server_sudo_pass
-```
-
-For a sequence of root commands, prefer a single `sudo -S` invocation running a script,
-or refresh the sudo timestamp first (`sudo -S -v`) and then run plain `sudo` commands
-within the same SSH session.
+If a task needs a privileged action outside the current NOPASSWD whitelist, ask the human to run it
+themselves (they have their own full-access login), or ask them to add a new narrow NOPASSWD entry
+for exactly that command. There is no password-based `sudo` path to fall back to, and you cannot
+grant yourself new sudo scope.
 
 Use the worker-server for normal development, persistent services, scheduled jobs, storage,
 downloads, automation, and anything that must remain available while other machines are
