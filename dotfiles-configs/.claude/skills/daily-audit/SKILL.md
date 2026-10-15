@@ -168,8 +168,17 @@ goteleout **is** the liveness check; if delivery fails, that's the finding (see 
 
 ## Output
 
-Send one Telegram message via `goteleout` from worker-server, in this fixed shape (same ✅/⚠️ emoji
-vocabulary homeobs already uses elsewhere in this project):
+`goteleout` is at `~/go/bin/goteleout` on worker-server, `uv` at `~/.local/bin/uv` — a bare `ssh
+worker-server 'goteleout ...'` fails with "command not found", the non-login SSH shell doesn't have
+either on `$PATH`; always use the full path. Write the report to a temp file first
+(`ssh worker-server 'cat > /tmp/daily-audit-report.txt' <<'EOF' ... EOF`), then
+`ssh worker-server '~/go/bin/goteleout "$(cat /tmp/daily-audit-report.txt)"; rm -f
+/tmp/daily-audit-report.txt'` — piping a multi-line heredoc straight into a remote `"$(cat)"` inside
+one SSH command silently returned exit 1 with no stderr on 2026-10-15; the file round-trip is the
+version that's actually been proven to work, don't revert to the shorter form.
+
+Send one Telegram message this way, in this fixed shape (same ✅/⚠️ emoji vocabulary homeobs already
+uses elsewhere in this project):
 
 ```
 {{ ✅ | ⚠️ | 🔴 }} Daily audit — {{ YYYY-MM-DD }}
