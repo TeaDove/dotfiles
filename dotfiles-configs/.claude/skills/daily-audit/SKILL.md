@@ -52,7 +52,8 @@ treat unreachable as the top-line finding of the report.
 On worker-server:
 
 ```bash
-for s in homeobs prometheus prometheus-alertmanager prometheus-blackbox-exporter prometheus-node-exporter grafana-server; do
+for s in homeobs prometheus prometheus-alertmanager prometheus-blackbox-exporter \
+         prometheus-node-exporter grafana-server; do
   systemctl is-active "$s"
 done
 systemctl --failed --no-legend --no-pager
@@ -86,8 +87,9 @@ just for this). Gather, then diff against the baseline file:
 ```bash
 id
 sudo -n -l 2>&1            # expect "a password is required" on the container; a fixed NOPASSWD list on the others
-ss -tlnH 2>/dev/null | awk '{print $4}' | sort -u   # listening ports; container has no ss — note that, don't treat as a failure
+ss -tlnH 2>/dev/null | awk '{print $4}' | sort -u   # listening ports; container has no ss, note that
 wc -l ~/.ssh/authorized_keys 2>&1
+sudo -n ufw status verbose 2>&1   # worker-server only (NOPASSWD since 2026-10-15); skip elsewhere, not a failure
 ```
 
 Known-good baseline as of 2026-10-15 (seed the first baseline.json from this if none exists):
@@ -95,18 +97,22 @@ Known-good baseline as of 2026-10-15 (seed the first baseline.json from this if 
 - **container**: uid 1000(claude), no sudo, no `ss`/`netstat` available.
 - **worker-server**: uid 1001(teadove-aibot), groups `teadove-aibot,audio,users`, sudo limited to
   `mintdrivers-remove-live-media`, `mintdrivers-load-broadcom-modules`, `mint-refresh-cache`,
-  `dpkg_lock_check.sh`, `systemctl restart homeobs`, `systemctl reboot` — nothing else. Listening:
-  `22` (0.0.0.0, expected — SSH), `631` (loopback, cups), `9090/9093/9100/9105/9115` (loopback,
-  Prometheus stack), `53` (loopback, local resolver), `3000` (**all interfaces** — Grafana, expected,
-  it's the one LAN-visible service). 2 authorized_keys entries.
+  `dpkg_lock_check.sh`, `systemctl restart homeobs`, `systemctl reboot`, `ufw status[ verbose|
+  numbered]` — nothing else. Listening: `22` (0.0.0.0, expected — SSH), `631` (loopback, cups),
+  `9090/9093/9100/9105/9115` (loopback, Prometheus stack), `53` (loopback, local resolver), `3000`
+  (**all interfaces** — Grafana, expected, it's the one LAN-visible service). 2 authorized_keys
+  entries. `ufw`: active, default deny (incoming) / allow (outgoing), only `22` and `3000` allowed in
+  (IPv4 and IPv6) — matches the listening-port baseline above exactly; any other allowed port or a
+  non-active status is a finding.
 - **worker-pc**: uid 1001(teadove-aibot), groups `teadove-aibot,users`, sudo limited to the same first
   four plus `systemctl poweroff`, `systemctl reboot`. Listening: `22` (0.0.0.0), `631` (loopback),
   `53` (loopback) — nothing else; it has no always-on services. 1 authorized_keys entry.
 
 Flag as a finding, not a silent baseline update, anything in: sudo -l output, authorized_keys count,
-group membership, or a newly-listening port on a non-loopback address. ufw/iptables rules are **not**
-checkable with current permissions on any host — don't claim they were checked; note the gap once in
-the report rather than every day (see Known gaps).
+group membership, a newly-listening port on a non-loopback address, or a `ufw` allowed-port/status
+change on worker-server. `ufw`/iptables are **not** checkable on the container or worker-pc with
+current permissions — don't claim they were checked there; note that gap once in the report rather
+than every day (see Known gaps).
 
 ### E. Prometheus health
 
@@ -155,7 +161,8 @@ fresh explicit ask in that request.
 
 State these once per report when relevant, don't pad the report with them daily if nothing changed:
 
-- No firewall (ufw/iptables) visibility on any host with current permissions.
+- No firewall visibility on the container or worker-pc with current permissions (worker-server's
+  `ufw status` is checked — see Permissions / security baseline).
 - No read access to the system journal (only this skill's own service-user-scoped journal entries are
   visible) — deeper incident diagnosis after a finding here still needs a human to grant
   `systemd-journal` group membership or do it themselves.
