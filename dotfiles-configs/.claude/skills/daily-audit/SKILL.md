@@ -1,6 +1,6 @@
 ---
 name: daily-audit
-description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets; a Grafana dashboard screenshot, split into readable chunks, uploaded to Yandex Disk. Reports to Telegram via goteleout with the screenshot links, then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
+description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets; a Grafana dashboard screenshot, split into readable chunks, uploaded to Yandex Disk. Every anomaly (reboot, outage, failed wake, failed step) is recorded, diagnosed and given a proposed fix. Reports to Telegram via goteleout with the screenshot links (falling back to curl from the VPS container if worker-server is unreachable), then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
 ---
 
 # /daily-audit
@@ -45,7 +45,13 @@ checks on the others. Record failures as findings, not as reasons to stop.
 ### A. Reachability
 
 `ssh -o ConnectTimeout=8 -o BatchMode=yes worker-server 'echo alive'`. This is the always-on host;
-treat unreachable as the top-line finding of the report.
+treat unreachable as the top-line finding of the report. Retry twice ~30s apart before calling it down, and
+also probe worker-pc's port: if both time out, the whole home WAN path is down, not one host.
+
+Being reachable now is not enough. worker-server is a headless server (lid closed, next to the router) and
+must never reboot on its own, so also run `journalctl --list-boots --no-pager` and `uptime -s`: any boot
+that started after the previous baseline's `generated_at` is an anomaly (see Anomalies), even if every
+other check is green.
 
 ### B. Known services
 
@@ -166,6 +172,30 @@ already wired into a configured CLI (ask that CLI's own auth-status command rath
 API by hand), and the Telegram bot token specifically — this report's own successful delivery via
 goteleout **is** the liveness check; if delivery fails, that's the finding (see Output).
 
+## Anomalies
+
+An anomaly is anything that deviates from normal operation, even if it already recovered by the time
+you look: worker-server rebooted or was down, the home network was unreachable, worker-pc did not wake
+on WoL or did not power off, a service restarted, a check timed out, a step of this skill failed.
+"It came back later" never closes one. For every anomaly:
+
+1. **Record** it in the report (see Output), with timestamps.
+2. **Diagnose** it before writing the report, as far as current permissions allow. Starting points:
+   - unexpected reboot or downtime on worker-server: the tail of the previous boot
+     (`journalctl -b -1 --no-pager | tail -100`, plus `-k` for the kernel log), whether it ended with a
+     clean `shutdown.target` or just stops (freeze/power loss), `last -x reboot shutdown`,
+     `/var/log/apt/history.log` and `/var/log/dpkg.log` around that time, battery/AC state via `upower -d`,
+     thermals via `sensors` if installed;
+   - home network unreachable: whether both forwarded ports time out (WAN/router) or only one (that
+     host), and the gap in homeobs speedtest/LAN-scan logs and metrics for the same window;
+   - worker-pc not waking: whether the magic packet left worker-server, whether worker-pc shows up in the
+     LAN scan at all, and how long it was given.
+3. **Propose a fix**: a concrete next step, with the exact command when one exists. If the fix needs
+   privileges this account lacks, say so and give the command the user must run themselves.
+
+If the diagnosis is incomplete (for example, no access to the system journal), say exactly what was not
+visible instead of guessing a cause.
+
 ## Dashboard screenshot
 
 Every run, after all the checks above, screenshot the `Home observability` dashboard **split into
@@ -213,9 +243,25 @@ ssh worker-server 'goteleout "$(cat /tmp/daily-audit-report.txt)"; rm -f /tmp/da
 ```
 
 Wrap the call in `timeout 100` as a safety margin anyway (slightly past goteleout's own 90s internal
-deadline) and retry once if it still fails. If both attempts fail, the report can't reach Telegram at
-all that run — still run the Audio step below (it's independent of delivery) so the user at least
-hears something happened, and try again on the next scheduled fire.
+deadline) and retry once if it still fails. A successful send prints nothing, so don't pipe the call
+through `grep -v`: an empty output makes `grep` exit 1 and looks like a failure. If both attempts fail,
+use the fallback below.
+
+### Fallback: send from the VPS container
+
+If worker-server is unreachable, or goteleout failed twice, send the same text straight from the
+container with curl to `api.telegram.org` (it does not go through worker-server, the home network, or
+the proxy). Keep the token out of argv by feeding the URL through `curl -K -`. The chat id is the user's
+Telegram id from the `telegram-user-and-goteleout` memory; don't write it into this file.
+
+```bash
+{ printf 'url = "https://api.telegram.org/bot%s/sendMessage"\n' "$(cat /run/secrets/telegram_bot_token)"; } \
+  | curl -s -m 30 -K - -d chat_id="$CHAT_ID" --data-urlencode text@/tmp/daily-audit-report.txt \
+  | jq -r '.ok'
+rm -f /tmp/daily-audit-report.txt
+```
+
+`true` means delivered. If it also fails, the run still ends, and the next scheduled fire tries again.
 
 Send one Telegram message this way, in this fixed shape — one emoji at the very top, line-level
 emoji dropped everywhere else, the body split into two OK/WARN blocks:
@@ -228,7 +274,13 @@ emoji dropped everywhere else, the body split into two OK/WARN blocks:
 
 ⚠️ WARN
 {{ one line per check with a finding }}
+
+🔎 Anomalies
+{{ per anomaly: what happened and when / diagnosis / proposed fix }}
 ```
+
+The `🔎 Anomalies` block is omitted when there were none; when present, the top emoji is `⚠️`. Each entry
+is up to three short lines (what, diagnosis, fix), not a log dump.
 
 Each of the seven checks (Reachability, Services, worker-pc, Security baseline, Prometheus, Tokens,
 Dashboard) contributes exactly one line, placed into whichever block matches its own result that run
@@ -250,6 +302,11 @@ Dashboard: 3 parts: 1/3 <link>, 2/3 <link>, 3/3 <link>
 worker-pc: not reachable, ssh timeout, WoL ignored
 Security baseline: authorized_keys count went 2 -> 3 on worker-server
 Prometheus: 17/18 targets up (blackbox_exporter down); LAN devices 30% below the 7-day average
+
+🔎 Anomalies
+worker-server rebooted: previous boot ended 23:56 with no clean shutdown, down 12.5h
+Diagnosis: journal stops mid-stream right after an apt upgrade (systemd, kernel) -> freeze, not reboot
+Fix: read the kernel log of boot -1 (needs systemd-journal access); hold kernel upgrades until then
 ```
 
 ### Audio
@@ -260,6 +317,7 @@ Last step, every run, unattended:
 ssh worker-server '~/bin/say "Daily audit report sent to Telegram"'
 ```
 
+Skip it if worker-server is unreachable (the fallback delivery already happened from the container).
 This is a standing, explicitly user-approved exception to the "speaker only on request" rule (see that
 memory) — scoped to exactly this one call in this one skill. Do not add `say` anywhere else without a
 fresh explicit ask in that request.
