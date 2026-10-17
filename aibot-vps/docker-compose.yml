@@ -9,7 +9,7 @@ services:
       - ./ssh/config:/home/claude/.ssh/config:ro
       - ./ssh/known_hosts:/home/claude/.ssh/known_hosts
       - ../dotfiles-configs/.claude:/home/claude/.claude-dotfiles:ro
-      - claude.settings.json:/home/claude/.claude-dotfiles/settings.json:ro
+      - ./claude.settings.json:/home/claude/.claude-dotfiles/settings.json:ro
       - ./secrets:/run/secrets:ro
     cap_drop:
       - ALL
