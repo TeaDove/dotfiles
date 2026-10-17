@@ -38,14 +38,15 @@ if [ -d "$dotfiles" ]; then
 		ln -sfn "$src" "$dst"
 	done
 else
-	warn "$dotfiles is not mounted, claude configs will be missing"
+	fail "$dotfiles is not mounted, claude configs will be missing"
 fi
+ls -sfn ~/.claude-settings.json ~/.claude/settings.json
 
 mkdir -p "$HOME/.ssh"
 chmod 700 "$HOME/.ssh"
 
-[ -f "$HOME/.ssh/config" ] || warn "$HOME/.ssh/config is missing, named ssh hosts will not resolve"
-[ -s "$HOME/.ssh/known_hosts" ] || warn "$HOME/.ssh/known_hosts is missing or empty, populate it with ssh-keyscan"
+[ -f "$HOME/.ssh/config" ] || fail "$HOME/.ssh/config is missing, named ssh hosts will not resolve"
+[ -s "$HOME/.ssh/known_hosts" ] || fail "$HOME/.ssh/known_hosts is missing or empty, populate it with ssh-keyscan"
 
 if [ -d /run/secrets ]; then
 	mkdir -p "$HOME/.ssh/keys"
