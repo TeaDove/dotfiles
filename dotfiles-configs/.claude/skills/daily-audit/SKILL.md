@@ -239,8 +239,13 @@ remote `"$(cat)"` inside one SSH command has been unreliable here before, the fi
 version that's actually proven to work — then:
 
 ```bash
-ssh worker-server 'goteleout "$(cat /tmp/daily-audit-report.txt)"; rm -f /tmp/daily-audit-report.txt'
+ssh worker-server 'goteleout --parse-mode HTML "$(cat /tmp/daily-audit-report.txt)" < /dev/null'
+ssh worker-server 'rm -f /tmp/daily-audit-report.txt'
 ```
+
+Keep the `< /dev/null`: goteleout reads stdin to EOF whenever it is not a terminal, before its own
+deadline starts, so over a non-interactive `ssh` without it the call waits forever. That was the cause of
+the 2026-10-16 "hangs" (confirmed 2026-10-17: same send, 100s timeout without it, 0.5s with it).
 
 Wrap the call in `timeout 100` as a safety margin anyway (slightly past goteleout's own 90s internal
 deadline) and retry once if it still fails. A successful send prints nothing, so don't pipe the call
@@ -256,57 +261,80 @@ Telegram id from the `telegram-user-and-goteleout` memory; don't write it into t
 
 ```bash
 { printf 'url = "https://api.telegram.org/bot%s/sendMessage"\n' "$(cat /run/secrets/telegram_bot_token)"; } \
-  | curl -s -m 30 -K - -d chat_id="$CHAT_ID" --data-urlencode text@/tmp/daily-audit-report.txt \
+  | curl -s -m 30 -K - -d chat_id="$CHAT_ID" -d parse_mode=HTML --data-urlencode text@/tmp/daily-audit-report.txt \
   | jq -r '.ok'
 rm -f /tmp/daily-audit-report.txt
 ```
 
 `true` means delivered. If it also fails, the run still ends, and the next scheduled fire tries again.
 
-Send one Telegram message this way, in this fixed shape — one emoji at the very top, line-level
-emoji dropped everywhere else, the body split into two OK/WARN blocks:
+Send one Telegram message this way, in this fixed shape: one emoji at the very top, line-level emoji
+dropped everywhere else, the body split into OK/WARN blocks, and every check written as a bold title line
+followed by its detail line. Send it with Telegram's HTML parse mode (`goteleout --parse-mode HTML`, or
+`-d parse_mode=HTML` in the curl fallback) and write titles as `<b>Title</b>`. Escape `&`, `<` and `>` in
+detail text as `&amp;`, `&lt;` and `&gt;`, otherwise Telegram rejects the whole message. Don't switch to
+Markdown: an unescaped `_` in names like `yandex_disk` breaks it.
 
 ```
 {{ ✅ | ⚠️ }} Daily audit — {{ YYYY-MM-DD }}
 
 ✅ OK
-{{ one line per check that came back clean }}
+<b>{{ check name }}</b>
+{{ detail }}
+
+<b>{{ check name }}</b>
+{{ detail }}
 
 ⚠️ WARN
-{{ one line per check with a finding }}
+<b>{{ check name }}</b>
+{{ detail }}
 
 🔎 Anomalies
-{{ per anomaly: what happened and when / diagnosis / proposed fix }}
+<b>{{ what happened }}</b>
+{{ when, and for how long }}
+Diagnosis: {{ diagnosis }}
+Fix: {{ proposed fix }}
 ```
 
-The `🔎 Anomalies` block is omitted when there were none; when present, the top emoji is `⚠️`. Each entry
-is up to three short lines (what, diagnosis, fix), not a log dump.
+The `🔎 Anomalies` block is omitted when there were none; when present, the top emoji is `⚠️`. Each anomaly
+is a bold title plus up to three short lines (when, diagnosis, fix), not a log dump.
 
 Each of the seven checks (Reachability, Services, worker-pc, Security baseline, Prometheus, Tokens,
-Dashboard) contributes exactly one line, placed into whichever block matches its own result that run
-— never both. Both blocks are optional: omit the `✅ OK` block entirely if nothing came back clean,
-omit `⚠️ WARN` entirely if nothing did. The top-line emoji follows directly from that: `⚠️` if the WARN
-block exists at all, `✅` only when it's empty and omitted. If worker-server itself is unreachable,
-every other check is "unknown" rather than skipped — put all seven lines in WARN that run rather than
-guessing any of them clean. Keep each line short: this is a status scan, not a dump of raw command
-output. Some examples of what a line looks like in each block:
+Dashboard) contributes exactly one entry: its name as the bold title, then one short detail line that
+starts with a capital letter. The entry goes into whichever block matches its own result that run, never
+both. Separate entries with one blank line. Both blocks are optional: omit the `✅ OK` block entirely if
+nothing came back clean, omit `⚠️ WARN` entirely if nothing did. The top-line emoji follows directly from
+that: `⚠️` if the WARN block exists at all, `✅` only when it's empty and omitted. If worker-server itself
+is unreachable, every other check is "unknown" rather than skipped: put all seven entries in WARN that
+run rather than guessing any of them clean. Keep each detail line short: this is a status scan, not a
+dump of raw command output. Examples of entries in each block:
 
 ```
 ✅ OK
-Reachability: worker-server alive
-Services: all expected, running
-Tokens: all live
-Dashboard: 3 parts: 1/3 <link>, 2/3 <link>, 3/3 <link>
+<b>Reachability</b>
+Worker-server alive, same boot as baseline (up since 16 Oct 12:32 MSK), no reboot
+
+<b>Services</b>
+37 running, 0 failed, set unchanged; homeobs metrics and Grafana health OK
+
+<b>Dashboard</b>
+3 parts: 1/3 {{ link }}, 2/3 {{ link }}, 3/3 {{ link }}
 
 ⚠️ WARN
-worker-pc: not reachable, ssh timeout, WoL ignored
-Security baseline: authorized_keys count went 2 -> 3 on worker-server
-Prometheus: 17/18 targets up (blackbox_exporter down); LAN devices 30% below the 7-day average
+<b>worker-pc</b>
+Not reachable, ssh timeout, WoL ignored
+
+<b>Tokens</b>
+Openai, github, telegram live; yandex_disk not checked, the classifier denied the probe
+
+<b>Prometheus</b>
+17/18 targets up (blackbox_exporter down); LAN devices 30% below the 7-day average
 
 🔎 Anomalies
-worker-server rebooted: previous boot ended 23:56 with no clean shutdown, down 12.5h
-Diagnosis: journal stops mid-stream right after an apt upgrade (systemd, kernel) -> freeze, not reboot
-Fix: read the kernel log of boot -1 (needs systemd-journal access); hold kernel upgrades until then
+<b>worker-server rebooted</b>
+Previous boot ended 23:56 with no clean shutdown, down 12.5h
+Diagnosis: journal stops mid-stream right after an apt upgrade (systemd, kernel), so a freeze
+Fix: read the kernel log of boot -1; hold kernel upgrades until then
 ```
 
 ### Audio
