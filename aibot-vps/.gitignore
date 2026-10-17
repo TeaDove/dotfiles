@@ -3,7 +3,6 @@ workspace/*
 !workspace/.claude
 !workspace/CLAUDE.md
 !workspace/DOCS.md
-!workspace/init.sh
 secrets/
 ssh/config
 ssh/known_hosts
