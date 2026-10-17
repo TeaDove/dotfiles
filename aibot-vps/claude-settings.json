@@ -1,7 +1,22 @@
 {
+  "theme": "dark",
   "permissions": {
     "allow": [
       "Bash(scp /run/secrets/* worker-*:*)"
+    ]
+  },
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "Organization: one person's home lab. Claude Code runs unattended as an infrastructure and automation assistant for its owner.",
+      "Host containment: Claude Code runs in a minimal Docker container on a VPS. Its only work hosts are the owner's home machines, reached over SSH by the aliases worker-server (always on) and worker-pc (often powered off), each as a dedicated unprivileged account.",
+      "Key internal services: the hosts worker-server and worker-pc (SSH aliases from ~/.ssh/config) are inside the trust boundary, together with the services running on them, such as Prometheus and Grafana on worker-server.",
+      "Secrets management: the owner's tokens are mounted read-only at /run/secrets in the container and copied into ~/.ssh/keys by the entrypoint. The owner issued them for this agent to use on its own hosts.",
+      "Sensitive data locations & audiences: files under /run/secrets and ~/.ssh/keys hold credentials. Their cleared audience is the agent's own accounts on worker-server and worker-pc. Everything else is outside that audience: chat output, logs, commits, and any third-party service other than the API a given token belongs to."
+    ],
+    "allow": [
+      "$defaults",
+      "Copying API tokens from /run/secrets in the container to worker-server or worker-pc is allowed, either with scp or by piping them over ssh stdin into a mode-600 file or straight into the command that uses them. The owner authorized keeping these tokens on those hosts. This does not cover private SSH keys (*_ed25519) or printing a secret's value."
     ]
   }
 }

@@ -40,7 +40,7 @@ if [ -d "$dotfiles" ]; then
 else
 	fail "$dotfiles is not mounted, claude configs will be missing"
 fi
-ls -sfn ~/.claude-settings.json ~/.claude/settings.json
+ln -sfn ~/.claude-settings.json ~/.claude/settings.json
 
 mkdir -p "$HOME/.ssh"
 chmod 700 "$HOME/.ssh"
