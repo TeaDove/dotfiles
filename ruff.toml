@@ -1,1 +1,4 @@
 line-length = 140
+
+[lint]
+ignore = ["TRY002", "B008"]
