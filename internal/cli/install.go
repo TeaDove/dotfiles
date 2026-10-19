@@ -109,7 +109,7 @@ func CommandInstall(_ context.Context, _ *cli.Command) error { //nolint: gocogni
 }
 
 func installStarshipConfig(dotfilesPath, homeDir string) error {
-	src := filepath.Join(dotfilesPath, ".config", "starship-secret.toml")
+	src := filepath.Join(dotfilesPath, ".config", "starship-s.toml")
 
 	_, err := os.Stat(src)
 	if err != nil {
