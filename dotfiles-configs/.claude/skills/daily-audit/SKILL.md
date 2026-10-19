@@ -1,6 +1,6 @@
 ---
 name: daily-audit
-description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets; a Grafana dashboard screenshot, split into readable chunks, uploaded to Yandex Disk. Every anomaly (reboot, outage, failed wake, failed step) is recorded, diagnosed and given a proposed fix. Reports to Telegram via goteleout with the screenshot links (falling back to curl from the VPS container if worker-server is unreachable), then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
+description: "Daily hardware/security/availability check across the VPS container, worker-server and worker-pc. Checks: worker-server reachability; homeobs and its dependent services; a worker-pc wake/ping/shutdown cycle; a permissions/security baseline diff on all three hosts; a Prometheus health pass; liveness of every token in /run/secrets; a Grafana dashboard screenshot, split into readable chunks, sent to Telegram as files. Every anomaly (reboot, outage, failed wake, failed step) is recorded, diagnosed and given a proposed fix. Reports to Telegram via goteleout (falling back to curl from the VPS container if worker-server is unreachable), then announces the fact of sending with `say` on worker-server. Trigger phrases: 'ежедневный аудит', 'daily audit', '/daily-audit'. Runs unattended on a daily schedule; also runnable on demand."
 ---
 
 # /daily-audit
@@ -200,7 +200,7 @@ visible instead of guessing a cause.
 
 Every run, after all the checks above, screenshot the `Home observability` dashboard **split into
 several readable chunks** (not one tall strip — confirmed unreadable in Telegram's preview, fixed
-2026-10-16) and attach the links to the report (user's explicit ask, 2026-10-16):
+2026-10-16) and send the chunks to Telegram right before the report (user's explicit ask, 2026-10-16):
 
 1. `scp /run/secrets/grafana_viewer_token worker-server:/tmp/grafana_viewer_token`.
 2. On worker-server: `uv run --with playwright python
@@ -214,20 +214,10 @@ several readable chunks** (not one tall strip — confirmed unreadable in Telegr
    (`[data-testid*="dashboard-row"]`) and groups rows into chunks of roughly 2000px, cutting only at
    row boundaries so no panel is ever split across two images. Don't hardcode specific row names or
    pixel offsets; the grouping is computed fresh each run so it keeps working as panels are added.
-3. Upload each chunk with its own ssh+upload call — **do not loop a single `ssh ... < token` over
-   multiple files**, the remote `sys.stdin.read()` only gets data on the first loop iteration and
-   every later one fails with "token is empty" (hit this 2026-10-16). One `ssh` invocation per file:
-   `ssh worker-server 'uv run --no-project --with "yadisk[sync-defaults]" python
-   /srv/aibot/mam-26-1/lab2/upload_file.py /tmp/grafana_dashboard-N.png
-   "app:/daily-audit-dashboard-N.png"' < /run/secrets/yandex_disk_token` — the redirect must be on
-   the outer `ssh` invocation (the container's own stdin), not inside the quoted remote command, or
-   the remote shell looks for the secret on worker-server's own filesystem and fails. `overwrite=True`
-   in the helper keeps each chunk's link stable across days. If a chunk's printed URL is empty, the
-   publish call raced the upload — re-run just the `get_meta`/`publish` pair for that one file once
-   before giving up on it (hit this 2026-10-16, a second attempt returned the link immediately). If a
-   chunk still has no link after that retry, report it as a WARN line in the output (see Output) —
-   don't silently drop it.
-4. Clean up the local `/tmp/grafana_dashboard-*.png` files on worker-server once uploaded.
+3. Before sending the report (see Output), send all chunks in one call from the container:
+   `/workspace/bin/tg-big-send.sh /tmp/grafana_dashboard-1.png ... /tmp/grafana_dashboard-N.png`.
+   Do not upload them to Yandex Disk. If the call fails twice, report the Dashboard entry as WARN.
+4. Clean up the local `/tmp/grafana_dashboard-*.png` files on worker-server once sent.
 
 ## Output
 
@@ -318,7 +308,7 @@ Worker-server alive, same boot as baseline (up since 16 Oct 12:32 MSK), no reboo
 37 running, 0 failed, set unchanged; homeobs metrics and Grafana health OK
 
 <b>Dashboard</b>
-3 parts: 1/3 {{ link }}, 2/3 {{ link }}, 3/3 {{ link }}
+3 parts sent as files above
 
 ⚠️ WARN
 <b>worker-pc</b>
