@@ -28,9 +28,13 @@ Limits (raise them only if the user asks):
 ## Run directory and resume
 
 Keep every artifact in `~/.claude/factcheck/<YYYY-MM-DD>-<slug>/`, where the slug is a few words of the
-claim. Save each agent's raw output there as soon as it arrives, plus `state.md`: the approved DoD, which
-steps are done, and a cost log with one line per agent (role, model, round, tokens and duration as
-reported with the agent's result).
+claim. Save each agent's raw output there as soon as it arrives, plus `state.md` with:
+
+- the approved DoD and which steps are done;
+- an `## Agents` list with one line per launched agent: role, model, round and its agent ID. Write the line
+  when you launch the agent and never edit it afterwards. SendMessage needs the ID for a revision and step
+  5 needs it to count tokens, so put progress notes (status, verdict, problems found) on separate lines,
+  never in place of the ID line.
 
 A rate limit or an interruption must not lose finished work. On start, if a run directory for the same
 claim exists and its `state.md` is not marked done, resume from the first unfinished step instead of
@@ -101,6 +105,11 @@ On `REVISE`, send the problems to the same researcher with SendMessage, so it re
 context, then verify again. Stop after the configured number of rounds. Statements that still fail are
 dropped from that researcher's result and listed in the report as rejected.
 
+Some problems are not about a statement: an estimate, range, caveat or summary that says more than the
+passing statements support. They cannot be dropped, so keep them as notes for the report. When you write
+the report, word those parts only as far as passing statements support them. A statement that passed in
+another agent's result counts.
+
 ## 4. Compare and adjudicate
 
 Build an agreement table: one row per sub-claim, one column per researcher, each cell holding that
@@ -111,9 +120,11 @@ Do not re-run the whole research for a dispute, and do not average it away: the 
 the correct one. For each disputed sub-claim, launch one adjudicator with only that sub-claim, the
 competing positions and their verified sources. It must decide from the evidence which position holds, or
 under which definitions each one holds, or declare the dispute unresolved and say what evidence would
-settle it. Verify the adjudicator's result as in step 3. Repeat for the disputes that remain, up to the
-configured number of adjudication rounds. Anything still disputed goes into the report as an open
-dispute, with both positions.
+settle it. Verify the adjudicator's result exactly as in step 3, with the same round limit: send the
+problems to the same adjudicator with SendMessage, then verify again. Adjudicators add unsupported details
+and mislabel sources as readily as researchers do, so do not skip this because they reuse statements that
+already passed. Repeat for the disputes that remain, up to the configured number of adjudication rounds.
+Anything still disputed goes into the report as an open dispute, with both positions.
 
 ## 5. Report
 
@@ -126,7 +137,8 @@ Time: <start> – <end> (<duration>)
 Agents: <n> researchers, <n> verifiers, <n> adjudicators (<n> opus, <n> sonnet)
 Iterations: verify-and-revise rounds per researcher <list>; adjudication rounds <n>
 Disputes: <raised> raised, <resolved> resolved, <open> open
-Tokens: <sum of the tokens reported for every agent>
+Tokens: agents <input> in (<cache read> cache read, <cache write> cache write), at least <output> out;
+coordinator <input> in, at least <output> out
 
 ## Verdict
 <one line per sub-claim: verdict, best estimate with range, confidence>
@@ -144,7 +156,15 @@ Tokens: <sum of the tokens reported for every agent>
 <statements dropped because their quote did not check out>
 ```
 
-If some agents' results did not report a token count, give the total as a lower bound and say how many
-agents it leaves out. Never estimate.
+Count tokens from the transcripts. Do not use the number in an agent's completion notification: it
+tracks the agent's context size, not what it spent, and a resumed agent reports it again. Each agent's
+transcript is `subagents/agent-<agentId>.jsonl` in the session's transcript directory
+(`~/.claude/projects/<project>/<session-id>/`; find it by searching for one of the IDs in `state.md`).
+The coordinator's own transcript is `<session-id>.jsonl` next to that directory; count it from the run's
+start time. In each transcript, take the assistant entries and group them by `message.id`. Keep the entry
+with the largest `usage.output_tokens` in each group, then sum `input_tokens`,
+`cache_creation_input_tokens`, `cache_read_input_tokens` and `output_tokens`. Output counts in transcripts
+can come out low, so report output as a lower bound. If an agent's transcript is missing, say how many
+agents the total leaves out. Never estimate.
 
 Show the report in chat, then mark `state.md` done.
