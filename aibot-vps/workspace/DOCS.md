@@ -49,6 +49,18 @@ curl "https://teadove.space:7999/proxy/telegram-bot/$TELEGRAM_BOT_TOKEN/sendMess
 For Telegram libraries that support a configurable API base URL, point them at the proxy
 instead of `api.telegram.org`.
 
+### Large files to Telegram
+
+From the home hosts, requests to the proxy stall after ~20 KB. To send a file over ~10 KB that
+lies on the worker-server, run this from the container instead of using a Yandex Disk link:
+
+```bash
+/workspace/bin/tg-big-send.sh /path/on/worker-server/file1 /path/file2
+```
+
+It opens a reverse SSH tunnel to the proxy for one `goteleout --file` call and closes it when the
+call ends (hard limit 10 minutes). Paths must not contain whitespace. Telegram limit is 50 MB per file.
+
 ## Worker PC lifecycle
 
 Wake `worker-pc` through the worker-server (`wakeonlan` is expected there; install it via apt
