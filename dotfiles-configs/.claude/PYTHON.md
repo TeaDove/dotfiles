@@ -37,6 +37,15 @@ Do not skip these steps, and don't rely on CI to catch what you missed.
 - Log every external command with `loguru` before running it.
 - Errors: raise plain `Exception` with a clear message, no custom exception classes; catch it once in the command,
   log it and exit with code 1.
+  Log with `logger.exception` so the traceback is kept:
+
+  ```python
+  try:
+      ...
+  except Exception:
+      logger.exception("failed to ...")
+      raise typer.Exit(1)
+  ```
 - Multi-line text: adjacent f-strings inside parentheses with explicit `\n`, not `"\n".join([...])`.
 - `@dataclass` only for the few structured values passed between functions.
 - In `.ipynb` notebooks: keep all imports in a single cell at the very top of the file; put all settings (e.g. chart colors) in the second cell.
