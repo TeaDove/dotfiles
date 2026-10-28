@@ -2,7 +2,7 @@ import sys
 
 from playwright.sync_api import sync_playwright
 
-DASHBOARD_URL = "http://127.0.0.1:3000/d/homeobs/home-observability?kiosk&from=now-24h&to=now"
+DASHBOARD_URL = "http://127.0.0.1:3000/d/homeobs/home-observability?kiosk&from=now-7d&to=now"
 VIEWPORT_WIDTH = 1600
 SCROLL_STEP = 800
 TARGET_CHUNK_HEIGHT = 2000
