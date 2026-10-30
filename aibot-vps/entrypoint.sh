@@ -128,6 +128,10 @@ trap stop_daemon EXIT
 trap 'exit 0' TERM INT
 
 codex app-server daemon enable-remote-control
+control_socket="$HOME/.codex/app-server-control/app-server-control.sock"
+if [ -L "$control_socket" ] && [ ! -e "$control_socket" ]; then
+	unlink "$control_socket"
+fi
 codex app-server daemon start
 
 tail -n 100 -F "$HOME/.codex/app-server-daemon/daemon.stderr.log" &
