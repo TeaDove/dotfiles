@@ -3,6 +3,7 @@ FROM debian:trixie-slim
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
+        bubblewrap \
         ca-certificates \
         curl \
         git \

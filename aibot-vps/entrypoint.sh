@@ -26,7 +26,7 @@ if [ -d "$dotfiles" ]; then
 		esac
 	done
 
-	for src in "$dotfiles"/*.md "$dotfiles"/skills; do
+	for src in "$dotfiles"/*.md; do
 		[ -e "$src" ] || continue
 		dst="$HOME/.codex/$(basename "$src")"
 		if [ -d "$dst" ] && [ ! -L "$dst" ]; then
@@ -34,6 +34,30 @@ if [ -d "$dotfiles" ]; then
 				warn "$dst exists and is not empty, skipping link"
 				continue
 			}
+		fi
+		ln -sfn "$src" "$dst"
+	done
+
+	skills="$HOME/.codex/skills"
+	if [ -L "$skills" ]; then
+		[ "$(readlink "$skills")" = "$dotfiles/skills" ] || fail "unexpected skills symlink: $skills"
+		unlink "$skills"
+	fi
+	mkdir -p "$skills"
+	for link in "$skills"/*; do
+		[ -L "$link" ] || continue
+		case "$(readlink "$link")" in
+		"$dotfiles/skills"/*)
+			[ -e "$link" ] || unlink "$link"
+			;;
+		esac
+	done
+	for src in "$dotfiles"/skills/*; do
+		[ -d "$src" ] || continue
+		dst="$skills/$(basename "$src")"
+		if [ -e "$dst" ] && [ ! -L "$dst" ]; then
+			warn "$dst already exists, skipping link"
+			continue
 		fi
 		ln -sfn "$src" "$dst"
 	done
