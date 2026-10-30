@@ -1,0 +1,4 @@
+prefix_rule(
+    pattern = [["ssh", "/usr/bin/ssh"], ["worker-server", "worker-pc"]],
+    decision = "allow",
+)

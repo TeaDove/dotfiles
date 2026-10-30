@@ -1,22 +1,23 @@
 services:
-  claude:
+  agent:
     build: .
     restart: unless-stopped
     init: true
     volumes:
-      - ./data/claude:/home/claude/.claude
+      - ./data/codex:/home/claude/.codex
       - ./workspace:/workspace
       - ./ssh/config:/home/claude/.ssh/config:ro
       - ./ssh/known_hosts:/home/claude/.ssh/known_hosts
       - ../dotfiles-configs/.claude:/home/claude/.claude-dotfiles:ro
-      - ./claude-settings.json:/home/claude/.claude-settings.json:ro
+      - ./codex-config.toml:/home/claude/.codex-config.toml:ro
+      - ./codex-ssh.rules:/home/claude/.codex-ssh.rules:ro
       - ./secrets:/run/secrets:ro
     cap_drop:
       - ALL
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -x claude >/dev/null"]
+      test: ["CMD-SHELL", "pgrep -x codex >/dev/null"]
       interval: 60s
       timeout: 5s
       retries: 3

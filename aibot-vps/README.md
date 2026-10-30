@@ -21,7 +21,6 @@ ssh-keyscan -p <port> <home-endpoint> > ssh/known_hosts
 ssh-keyscan -p <worker-port> <home-endpoint> >> ssh/known_hosts
 chown -R 1000:1000 data workspace secrets ssh/known_hosts
 
-docker compose run --rm claude claude # Login once
-docker compose run --rm claude claude rc # Enable RC once
+docker compose run --rm agent codex login --device-auth # Login once
 docker compose up -d
 ```

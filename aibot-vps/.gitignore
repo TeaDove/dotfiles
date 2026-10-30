@@ -7,3 +7,4 @@ workspace/*
 secrets/
 ssh/config
 ssh/known_hosts
+!workspace/AGENTS.md

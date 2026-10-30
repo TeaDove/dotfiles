@@ -8,6 +8,8 @@ RUN apt-get update \
         git \
         jq \
         less \
+        nodejs \
+        npm \
         openssh-client \
         procps \
         wget \
@@ -23,9 +25,11 @@ USER claude
 WORKDIR /workspace
 
 ENV PATH="/home/claude/.local/bin:${PATH}"
-ENV CLAUDE_CONFIG_DIR=/home/claude/.claude
+ENV CODEX_HOME=/home/claude/.codex
 
+ARG CODEX_VERSION=0.166.0
 RUN mkdir -m 700 /home/claude/.ssh \
-    && curl -fsSL https://claude.ai/install.sh | bash
+    && npm install --prefix /home/claude/.local --global @openai/codex@${CODEX_VERSION} \
+    && codex remote-control --no-daemon --help
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

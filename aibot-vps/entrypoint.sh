@@ -10,14 +10,14 @@ warn() {
 	echo "entrypoint: warning: $1" >&2
 }
 
-[ -d "$HOME/.claude" ] || fail "$HOME/.claude is missing, mount ./data/claude into it"
-[ -w "$HOME/.claude" ] || fail "$HOME/.claude is not writable by uid $(id -u), fix ownership of ./data/claude"
+[ -d "$HOME/.codex" ] || fail "$HOME/.codex is missing, mount ./data/codex into it"
+[ -w "$HOME/.codex" ] || fail "$HOME/.codex is not writable by uid $(id -u), fix ownership of ./data/codex"
 [ -d /workspace ] || fail "/workspace is missing, mount ./workspace into it"
 [ -w /workspace ] || fail "/workspace is not writable by uid $(id -u), fix ownership of ./workspace"
 
 dotfiles="/home/claude/.claude-dotfiles"
 if [ -d "$dotfiles" ]; then
-	for link in "$HOME/.claude"/*; do
+	for link in "$HOME/.codex"/*; do
 		[ -L "$link" ] || continue
 		case "$(readlink "$link")" in
 		"$dotfiles"/*)
@@ -26,9 +26,9 @@ if [ -d "$dotfiles" ]; then
 		esac
 	done
 
-	for src in "$dotfiles"/*.md "$dotfiles"/skills "$dotfiles"/agents; do
+	for src in "$dotfiles"/*.md "$dotfiles"/skills; do
 		[ -e "$src" ] || continue
-		dst="$HOME/.claude/$(basename "$src")"
+		dst="$HOME/.codex/$(basename "$src")"
 		if [ -d "$dst" ] && [ ! -L "$dst" ]; then
 			rmdir "$dst" 2>/dev/null || {
 				warn "$dst exists and is not empty, skipping link"
@@ -38,9 +38,13 @@ if [ -d "$dotfiles" ]; then
 		ln -sfn "$src" "$dst"
 	done
 else
-	fail "$dotfiles is not mounted, claude configs will be missing"
+	fail "$dotfiles is not mounted, shared instructions and skills will be missing"
 fi
-ln -sfn ~/.claude-settings.json ~/.claude/settings.json
+[ -f "$dotfiles/CLAUDE.md" ] || fail "shared CLAUDE.md is missing"
+ln -sfn "$dotfiles/CLAUDE.md" "$HOME/.codex/AGENTS.md"
+ln -sfn /home/claude/.codex-config.toml "$HOME/.codex/config.toml"
+mkdir -p "$HOME/.codex/rules"
+ln -sfn /home/claude/.codex-ssh.rules "$HOME/.codex/rules/aibot-ssh.rules"
 
 mkdir -p "$HOME/.ssh"
 chmod 700 "$HOME/.ssh"
@@ -63,4 +67,4 @@ if [ "$#" -gt 0 ]; then
 	exec "$@"
 fi
 
-exec claude rc
+exec codex remote-control --no-daemon
