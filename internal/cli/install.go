@@ -8,7 +8,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/cockroachdb/errors"
 	mapset "github.com/deckarep/golang-set/v2"
@@ -19,14 +18,6 @@ import (
 var dotfilesDirs = [...]string{"./dotfiles-configs"}
 
 var mergeConfigs = mapset.NewSet[string]()
-
-var codexMappings = [...][2]string{
-	{".claude/settings.json", ""},
-	{".claude/hooks/*", ""},
-	{".claude/CLAUDE.md", ".codex/AGENTS.md"},
-	{".claude/skills/*/SKILL.md", ".codex/prompts/*.md"},
-	{".claude/*", ".codex/*"},
-}
 
 func CommandInstall(_ context.Context, _ *cli.Command) error { //nolint: gocognit // FIXME
 	var dofilesPath string
@@ -84,14 +75,6 @@ func CommandInstall(_ context.Context, _ *cli.Command) error { //nolint: gocogni
 			return errors.Wrapf(err, "copy %s", rel)
 		}
 
-		codexRel, ok := codexPath(rel)
-		if ok {
-			err = installCodexFile(path, filepath.Join(homeDir, codexRel), info.Mode())
-			if err != nil {
-				return errors.Wrapf(err, "install codex %s", rel)
-			}
-		}
-
 		return nil
 	})
 	if err != nil {
@@ -123,51 +106,6 @@ func installStarshipConfig(dotfilesPath, homeDir string) error {
 	err = overwriteFile(src, filepath.Join(homeDir, ".config", "starship.toml"), 0o644)
 	if err != nil {
 		return errors.Wrapf(err, "copy %s", src)
-	}
-
-	return nil
-}
-
-func codexPath(rel string) (string, bool) {
-	for _, mapping := range codexMappings {
-		pattern, target := mapping[0], mapping[1]
-
-		prefix, suffix, hasStar := strings.Cut(pattern, "*")
-		if !hasStar {
-			if rel != pattern {
-				continue
-			}
-
-			return target, target != ""
-		}
-
-		if len(rel) < len(prefix)+len(suffix) ||
-			!strings.HasPrefix(rel, prefix) ||
-			!strings.HasSuffix(rel, suffix) {
-			continue
-		}
-
-		if target == "" {
-			return "", false
-		}
-
-		captured := rel[len(prefix) : len(rel)-len(suffix)]
-
-		return strings.Replace(target, "*", captured, 1), true
-	}
-
-	return "", false
-}
-
-func installCodexFile(src, dst string, mode fs.FileMode) error {
-	err := os.MkdirAll(filepath.Dir(dst), 0o755)
-	if err != nil {
-		return errors.Wrap(err, "mkdir target dir")
-	}
-
-	err = overwriteFile(src, dst, mode)
-	if err != nil {
-		return errors.Wrap(err, "copy")
 	}
 
 	return nil

@@ -7,11 +7,10 @@ Personal dotfiles + a small Go CLI that installs them.
 - `u.go` + `internal/cli/` — the `u` CLI (built with `github.com/urfave/cli/v3`).
   Subcommands live in `internal/cli/commands/` (logs, netscan, netserve, git, code,
   watch, …) plus top-level utilities (uuid, sha, md5, locate-by-ip). `u install`
-  (`internal/cli/install.go`) installs the configs and mirrors `.claude` configs into
-  `.codex` (see `codexMappings`).
+  (`internal/cli/install.go`) installs the configs.
 - `dotfiles-configs/` — the actual config files (`.zshrc`, `.bashrc`, `.tmux.conf`,
-  `.config/fish`, `.claude`, …). `u install` copies them into `$HOME`; a few listed in
-  `mergeConfigs` (e.g. `.claude/settings.json`) are merged instead of overwritten.
+  `.config/fish`, `.codex`, …). `u install` copies them into `$HOME`; files listed in
+  `mergeConfigs` are merged instead of overwritten.
 - `extra/` — OS bootstrap scripts (`osx-install.sh`, `ubuntu-install.sh`,
   `data-analytics-install.sh`) and helper `bin/`.
 - `devcontainer/` — Docker sandbox (`make cbox-build`).
