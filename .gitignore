@@ -3,6 +3,11 @@
 u-*
 build
 
+!archive/.claude/
+!archive/.claude/**
+!dotfiles-configs/.codex/
+!dotfiles-configs/.codex/**
+
 **/s-*
 **/.s-*
 **/*-s

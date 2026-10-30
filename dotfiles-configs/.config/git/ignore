@@ -1,6 +1,5 @@
 **/.idea
-**/.claude/settings.local.json
-**/.claude/*.lock
+**/.claude/*
 **/.codex/*
 **/TEADOVE*.md
 **/TEADOVE*.md.backup
