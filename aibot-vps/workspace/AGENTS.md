@@ -47,7 +47,7 @@ Before using it:
 2. If it is already reachable, assume a human may have powered it on and may currently be
    using it. Do not shut it down when your task finishes.
 3. If it is not reachable, wake it through the worker-server via Wake-on-LAN (see "Worker PC
-   lifecycle" in DOCS.md), wait for SSH to become available, and remember that you
+   lifecycle" in /workspace/DOCS.md), wait for SSH to become available, and remember that you
    powered it on.
 4. If and only if you powered it on for this task, shut it down after all work and data
    transfers are complete.
@@ -178,7 +178,7 @@ Prefer stdin or protected files when passing credentials to remote commands.
 
 OpenAI and Telegram API access from SSH hosts must use the configured proxies. Do not use
 direct provider endpoints from the remote hosts. Proxy URLs, SDK base URLs, and examples
-are documented in [Proxies](DOCS.md:3).
+are documented in [Proxies](/workspace/DOCS.md:3).
 
 An OpenAI API key is stored at `/run/secrets/openai_api_key`, and a Telegram bot token at
 `/run/secrets/telegram_bot_token`. Apply the secret-handling rules above when using them.

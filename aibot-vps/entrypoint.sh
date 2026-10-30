@@ -15,7 +15,18 @@ warn() {
 [ -d /workspace ] || fail "/workspace is missing, mount ./workspace into it"
 [ -w /workspace ] || fail "/workspace is not writable by uid $(id -u), fix ownership of ./workspace"
 
-dotfiles="/home/claude/.claude-dotfiles"
+while IFS= read -r -d '' link; do
+	target=$(readlink "$link")
+	case "$target" in
+	/home/claude/*)
+		target="$HOME/${target#/home/claude/}"
+		target="${target/\.claude-dotfiles/\.codex-dotfiles}"
+		ln -sfn "$target" "$link"
+		;;
+	esac
+done < <(find "$HOME/.codex" -type l -print0)
+
+dotfiles="/home/aibot/.codex-dotfiles"
 if [ -d "$dotfiles" ]; then
 	for link in "$HOME/.codex"/*; do
 		[ -L "$link" ] || continue
@@ -28,6 +39,7 @@ if [ -d "$dotfiles" ]; then
 
 	for src in "$dotfiles"/*.md; do
 		[ -e "$src" ] || continue
+		[ "$(basename "$src")" != AGENTS.md ] || continue
 		dst="$HOME/.codex/$(basename "$src")"
 		if [ -d "$dst" ] && [ ! -L "$dst" ]; then
 			rmdir "$dst" 2>/dev/null || {
@@ -65,14 +77,25 @@ else
 	fail "$dotfiles is not mounted, shared instructions and skills will be missing"
 fi
 [ -f "$dotfiles/AGENTS.md" ] || fail "shared AGENTS.md is missing"
-ln -sfn /home/claude/.codex-config.toml "$HOME/.codex/config.toml"
+[ -f /workspace/AGENTS.md ] || fail "/workspace/AGENTS.md is missing"
+instructions=$(mktemp "$HOME/.codex/AGENTS.md.XXXXXX")
+cat "$dotfiles/AGENTS.md" > "$instructions"
+printf '\n\n' >> "$instructions"
+cat /workspace/AGENTS.md >> "$instructions"
+printf '\n\nResolve shared language rules relative to %s.\n' "$dotfiles" >> "$instructions"
+printf 'Read /workspace/DOCS.md when infrastructure details are needed.\n' >> "$instructions"
+printf 'Use absolute /workspace paths for persistent notes and helper scripts.\n' >> "$instructions"
+mv -f "$instructions" "$HOME/.codex/AGENTS.md"
+ln -sfn /home/aibot/.codex-config.toml "$HOME/.codex/config.toml"
 mkdir -p "$HOME/.codex/rules"
-ln -sfn /home/claude/.codex-ssh.rules "$HOME/.codex/rules/aibot-ssh.rules"
+ln -sfn /home/aibot/.codex-ssh.rules "$HOME/.codex/rules/aibot-ssh.rules"
 
 mkdir -p "$HOME/.ssh"
 chmod 700 "$HOME/.ssh"
 
-[ -f "$HOME/.ssh/config" ] || fail "$HOME/.ssh/config is missing, named ssh hosts will not resolve"
+[ -f "$HOME/.ssh-config" ] || fail "$HOME/.ssh-config is missing, named ssh hosts will not resolve"
+sed 's|/home/claude/|/home/aibot/|g' "$HOME/.ssh-config" > "$HOME/.ssh/config"
+chmod 600 "$HOME/.ssh/config"
 [ -s "$HOME/.ssh/known_hosts" ] || fail "$HOME/.ssh/known_hosts is missing or empty, populate it with ssh-keyscan"
 
 if [ -d /run/secrets ]; then

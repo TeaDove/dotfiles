@@ -6,13 +6,13 @@ services:
     init: true
     stop_grace_period: 30s
     volumes:
-      - ./data/codex:/home/claude/.codex
+      - ./data/codex:/home/aibot/.codex
       - ./workspace:/workspace
-      - ./ssh/config:/home/claude/.ssh/config:ro
-      - ./ssh/known_hosts:/home/claude/.ssh/known_hosts
-      - ../dotfiles-configs/.codex:/home/claude/.claude-dotfiles:ro
-      - ./codex-config.toml:/home/claude/.codex-config.toml:ro
-      - ./codex-ssh.rules:/home/claude/.codex-ssh.rules:ro
+      - ./ssh/config:/home/aibot/.ssh-config:ro
+      - ./ssh/known_hosts:/home/aibot/.ssh/known_hosts
+      - ../dotfiles-configs/.codex:/home/aibot/.codex-dotfiles:ro
+      - ./codex-config.toml:/home/aibot/.codex-config.toml:ro
+      - ./codex-ssh.rules:/home/aibot/.codex-ssh.rules:ro
       - ./secrets:/run/secrets:ro
     cap_drop:
       - ALL

@@ -1,3 +1,5 @@
+ARG CODEX_VERSION=0.166.0
+
 FROM debian:trixie-slim
 
 RUN apt-get update \
@@ -16,21 +18,21 @@ RUN apt-get update \
         wget \
     && rm -rf /var/lib/apt/lists/*
 
-RUN useradd --create-home --uid 1000 --shell /bin/bash claude \
+RUN useradd --create-home --uid 1000 --shell /bin/bash aibot \
     && mkdir -p /workspace \
-    && chown claude:claude /workspace
+    && chown aibot:aibot /workspace
 
 COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
-USER claude
+USER aibot
 WORKDIR /workspace
 
-ENV PATH="/home/claude/.local/bin:${PATH}"
-ENV CODEX_HOME=/home/claude/.codex
+ENV PATH="/home/aibot/.local/bin:${PATH}"
+ENV CODEX_HOME=/home/aibot/.codex
 
-ARG CODEX_VERSION=0.166.0
-RUN mkdir -m 700 /home/claude/.ssh \
-    && npm install --prefix /home/claude/.local --global @openai/codex@${CODEX_VERSION} \
+ARG CODEX_VERSION
+RUN mkdir -m 700 /home/aibot/.ssh \
+    && npm install --prefix /home/aibot/.local --global @openai/codex@${CODEX_VERSION} \
     && codex remote-control --no-daemon --help
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
