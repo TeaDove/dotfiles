@@ -2,6 +2,9 @@ approval_policy = "on-request"
 sandbox_mode = "workspace-write"
 cli_auth_credentials_store = "file"
 
+[features]
+memories = true
+
 [sandbox_workspace_write]
 network_access = true
 writable_roots = ["/workspace"]
