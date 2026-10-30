@@ -1,14 +1,16 @@
 services:
   agent:
+    hostname: aibot
     build: .
     restart: unless-stopped
     init: true
+    stop_grace_period: 30s
     volumes:
       - ./data/codex:/home/claude/.codex
       - ./workspace:/workspace
       - ./ssh/config:/home/claude/.ssh/config:ro
       - ./ssh/known_hosts:/home/claude/.ssh/known_hosts
-      - ../dotfiles-configs/.claude:/home/claude/.claude-dotfiles:ro
+      - ../dotfiles-configs/.codex:/home/claude/.claude-dotfiles:ro
       - ./codex-config.toml:/home/claude/.codex-config.toml:ro
       - ./codex-ssh.rules:/home/claude/.codex-ssh.rules:ro
       - ./secrets:/run/secrets:ro
@@ -17,7 +19,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -x codex >/dev/null"]
+      test: ["CMD-SHELL", "codex app-server daemon version | jq -e '.status == \"running\"' >/dev/null"]
       interval: 60s
       timeout: 5s
       retries: 3

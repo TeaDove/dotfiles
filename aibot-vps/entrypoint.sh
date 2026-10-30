@@ -64,8 +64,7 @@ if [ -d "$dotfiles" ]; then
 else
 	fail "$dotfiles is not mounted, shared instructions and skills will be missing"
 fi
-[ -f "$dotfiles/CLAUDE.md" ] || fail "shared CLAUDE.md is missing"
-ln -sfn "$dotfiles/CLAUDE.md" "$HOME/.codex/AGENTS.md"
+[ -f "$dotfiles/AGENTS.md" ] || fail "shared AGENTS.md is missing"
 ln -sfn /home/claude/.codex-config.toml "$HOME/.codex/config.toml"
 mkdir -p "$HOME/.codex/rules"
 ln -sfn /home/claude/.codex-ssh.rules "$HOME/.codex/rules/aibot-ssh.rules"
@@ -91,4 +90,30 @@ if [ "$#" -gt 0 ]; then
 	exec "$@"
 fi
 
-exec codex remote-control --no-daemon
+stop_daemon() {
+	trap - EXIT TERM INT
+	if [ -n "${log_pid:-}" ]; then
+		kill "$log_pid" 2>/dev/null || true
+	fi
+	if [ -n "${sleep_pid:-}" ]; then
+		kill "$sleep_pid" 2>/dev/null || true
+	fi
+	timeout 15 codex app-server daemon stop || warn "daemon did not stop cleanly"
+}
+
+trap stop_daemon EXIT
+trap 'exit 0' TERM INT
+
+codex app-server daemon enable-remote-control
+codex app-server daemon start
+
+tail -n 100 -F "$HOME/.codex/app-server-daemon/daemon.stderr.log" &
+log_pid=$!
+
+while timeout 5 codex app-server daemon version | jq -e '.status == "running"' >/dev/null; do
+	sleep 5 &
+	sleep_pid=$!
+	wait "$sleep_pid"
+done
+
+fail "Codex daemon is no longer running"

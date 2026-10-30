@@ -3,7 +3,7 @@
 ```bash
 cd dotfiles/aibot-vps
 
-mkdir -p data/claude workspace secrets
+mkdir -p data/codex workspace secrets
 touch ssh/known_hosts
 ssh-keygen -t ed25519 -N "" -C claude-vps -f secrets/worker_server_ed25519
 ssh-keygen -t ed25519 -N "" -C "claude-vps -> worker-pc" -f secrets/worker_pc_ed25519

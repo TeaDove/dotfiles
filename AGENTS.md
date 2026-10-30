@@ -13,7 +13,6 @@ Personal dotfiles + a small Go CLI that installs them.
   `mergeConfigs` are merged instead of overwritten.
 - `extra/` — OS bootstrap scripts (`osx-install.sh`, `ubuntu-install.sh`,
   `data-analytics-install.sh`) and helper `bin/`.
-- `devcontainer/` — Docker sandbox (`make cbox-build`).
 - `aibot-vps/` — Docker setup for a VPS running Codex Remote Control
   (`codex remote-control --no-daemon`): the container is only a point of presence, real work happens over SSH on
   remote hosts.
