@@ -79,6 +79,17 @@ available to the SSH account.
   containers, or cron jobs. They must not depend on this container being alive.
 - SSH hosts are defined in `~/.ssh/config`; more remote hosts may be added there later.
 
+## Container-local scheduled jobs
+
+Exception to the remote-work rules above: lightweight scripts and scheduled jobs may run inside this
+container when needed for the user's task, including monitoring that must work while remote hosts are down.
+You may create, run, update, and disable these scripts and cron entries without asking for confirmation.
+Keep scripts, configuration, and state under `/workspace`; manage schedules in `/workspace/cron/crontab`.
+Validate changes with `supercronic -test` before replacing the crontab; changes reload automatically.
+Keep secrets out of scripts, schedules, and logs. Test jobs manually and avoid duplicate schedules.
+This permission grants no access to the VPS host, root privileges, or additional network exposure.
+Normal development and heavy work still belong on remote hosts.
+
 # Autonomy
 
 Default to acting instead of asking for confirmation when the action is routine and
