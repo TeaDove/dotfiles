@@ -115,6 +115,9 @@ fi
 
 stop_daemon() {
 	trap - EXIT TERM INT
+	if [ -n "${cron_pid:-}" ]; then
+		kill "$cron_pid" 2>/dev/null || true
+	fi
 	if [ -n "${log_pid:-}" ]; then
 		kill "$log_pid" 2>/dev/null || true
 	fi
@@ -122,6 +125,9 @@ stop_daemon() {
 		kill "$sleep_pid" 2>/dev/null || true
 	fi
 	timeout 15 codex app-server daemon stop || warn "daemon did not stop cleanly"
+	if [ -n "${cron_pid:-}" ]; then
+		wait "$cron_pid" 2>/dev/null || true
+	fi
 }
 
 trap stop_daemon EXIT
@@ -134,13 +140,19 @@ if [ -L "$control_socket" ] && [ ! -e "$control_socket" ]; then
 fi
 codex app-server daemon start
 
+mkdir -p /workspace/cron
+touch /workspace/cron/crontab
+supercronic -test /workspace/cron/crontab
+supercronic -inotify /workspace/cron/crontab &
+cron_pid=$!
+
 tail -n 100 -F "$HOME/.codex/app-server-daemon/daemon.stderr.log" &
 log_pid=$!
 
-while timeout 5 codex app-server daemon version | jq -e '.status == "running"' >/dev/null; do
+while kill -0 "$cron_pid" 2>/dev/null && timeout 5 codex app-server daemon version | jq -e '.status == "running"' >/dev/null; do
 	sleep 5 &
 	sleep_pid=$!
 	wait "$sleep_pid"
 done
 
-fail "Codex daemon is no longer running"
+fail "Codex daemon or scheduler is no longer running"
