@@ -132,3 +132,11 @@ links returned by the API, which `yadisk` handles on its own.
 Other clients: `rclone` supports the application folder only starting with the release after
 v1.75 (`app_folder` backend option), the `ydcmd` CLI is archived, and there is no mature Go SDK,
 so Go services should call the REST API directly.
+
+## Container-local scheduled jobs
+
+Exception to the remote-work rules in AGENTS.md: lightweight scripts and scheduled jobs may run inside this
+container when needed for the user's task, including monitoring that must work while remote hosts are down.
+You may create, run, update, and disable these scripts and cron entries without asking for confirmation.
+Keep scripts, configuration, and state under `/workspace`; manage schedules in `/workspace/cron/crontab`.
+Validate changes with `supercronic -test` before replacing the crontab; changes reload automatically.

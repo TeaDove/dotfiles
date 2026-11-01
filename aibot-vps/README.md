@@ -24,37 +24,3 @@ chown -R 1000:1000 data workspace secrets ssh/known_hosts
 docker compose run --rm agent codex login --device-auth # Login once
 docker compose up -d
 ```
-
-## Scheduled jobs
-
-Supercronic runs alongside the agent as the same unprivileged user. No systemd or root access is needed.
-The persistent crontab is `/workspace/cron/crontab`; changes are automatically reloaded.
-Use standard five-field cron entries without a username. Times default to UTC.
-
-For example, inside the container:
-
-```bash
-mkdir -p /workspace/cron
-cp /workspace/cron/crontab /workspace/cron/crontab.next
-printf '%s\n' '*/10 * * * * bash /workspace/availability-monitor/monitor.sh --once' \
-    >> /workspace/cron/crontab.next
-supercronic -test /workspace/cron/crontab.next && mv /workspace/cron/crontab.next /workspace/cron/crontab
-```
-
-Add each job only once. Scripts, configuration, and job state belong under `/workspace` to survive recreation.
-Keep secrets in `/run/secrets`; do not put their values in scripts, cron entries, or logs.
-Run each new job manually before scheduling it. Replace existing background loops when migrating to cron.
-Job output and scheduler errors go to the container logs, available through `docker compose logs agent`.
-Supercronic prevents overlapping executions of the same job by default.
-
-If the scheduler exits or the daemon health check fails, the entrypoint stops services and exits.
-The Compose restart policy restarts the container, including the scheduler. Docker must start on host boot.
-Jobs do not run while the container is stopped, and missed runs are not replayed.
-Allow sufficient container stop time for the longest job to finish gracefully.
-Explicit command overrides, such as the login commands above, bypass the scheduler.
-
-After changing the image sources, rebuild and recreate the service to activate the scheduler:
-
-```bash
-docker compose up -d --build
-```
