@@ -45,3 +45,7 @@ if ! shopt -oq posix; then
 fi
 
 export PATH=$HOME/.local/bin:/opt/homebrew/bin:$PATH
+
+if ! command -v bat >/dev/null 2>&1 && command -v batcat >/dev/null 2>&1; then
+    alias bat='batcat'
+fi

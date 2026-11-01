@@ -53,6 +53,10 @@ path=(
 export PATH
 export HOMEBREW_NO_AUTO_UPDATE=1
 
+if (( ! $+commands[bat] && $+commands[batcat] )); then
+    alias bat='batcat'
+fi
+
 if (( $+commands[lsd] )); then
     alias l='lsd -lh --blocks=permission,user,size,date,name'
     alias ll='lsd -lha --blocks=permission,user,size,date,name'
