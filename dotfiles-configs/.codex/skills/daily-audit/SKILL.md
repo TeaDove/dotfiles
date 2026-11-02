@@ -15,6 +15,14 @@ Meant to run once a day, unattended, via a scheduled deployment. Also safe to ru
 check below is non-destructive except the worker-pc wake/shutdown cycle, which is itself designed to
 be safe (see Hardware → C).
 
+## Script versions
+
+Before invoking a helper script, enter its source repository and check for a newer version, including
+upstream revisions using the repository's permitted VCS operations. Use the newer repository version
+instead of a stale installed copy: run it from the repository or synchronize the deployed copy first.
+Preserve local changes. If the repository or update is unavailable, record the limitation in the audit
+rather than silently treating the installed copy as current.
+
 ## Goal
 
 Catch drift and outages on the home infrastructure before the user notices them: a host going
@@ -76,13 +84,25 @@ Follow the lifecycle rules in the root `AGENTS.md` (worker-pc section) — do no
 for this job:
 
 1. `ssh -o ConnectTimeout=6 -o BatchMode=yes worker-pc 'echo already-on'`. If it answers, a human may
-   be using it — **do not wake or power it off**; just record "already on, skipped the cycle" and move
-   on to the next check.
+   be using it — **do not wake or power it off**. Record "already on, skipped the cycle", perform
+   the read-only resource and session checks in step 4, then move on to the next check.
 2. If unreachable: send Wake-on-LAN from worker-server (`worker-pc-facts` memory has the MAC), poll
    SSH every 5s for up to 2 minutes.
 3. Once up, `ssh worker-pc "ping -c 5 -i 0.3 <worker-server's current LAN IP>"` — read the IP from
    worker-server's own `ip -4 -br addr` that run, don't hardcode it, it has moved before.
-4. `ssh worker-pc 'sudo systemctl poweroff'`, then confirm with 3 failed connection attempts ~5s
+4. Before shutdown, collect basic resource usage with `df -h -l -x tmpfs -x devtmpfs`, `free -h`,
+   `vmstat 1 2`, `uptime`, and `nproc` over SSH. Summarize free space on local filesystems, available
+   RAM and swap usage, and current CPU activity relative to the CPU count. Use the second `vmstat`
+   sample for current activity; the first summarizes activity since boot. Include the measurements
+   in the existing worker-pc report entry. Check logged-in users and sessions with `who` and
+   `loginctl list-sessions --no-legend`. Also inspect established SSH connections, including sessions
+   without a terminal, using `ss -Htnp state established` and `ps -eo user,pid,ppid,comm` as permitted.
+   Distinguish the audit connection from other SSH sessions and local or graphical logins. Report
+   session counts and unexpected activity without copying account names or client addresses into public
+   artifacts. If visibility is restricted, report unknown rather than claiming no other sessions exist.
+   Do not terminate sessions or their processes. Record unavailable resource measurements as unknown;
+   a probe failure must not prevent shutdown when this audit woke the machine.
+5. `ssh worker-pc 'sudo systemctl poweroff'`, then confirm with 3 failed connection attempts ~5s
    apart. Only power off because this run woke it — never because it merely answered a ping.
 
 ### D. Permissions / security baseline
@@ -207,7 +227,7 @@ several readable chunks** (not one tall strip — confirmed unreadable in Telegr
    /srv/aibot/daily-audit/screenshot.py /tmp/grafana_dashboard < /tmp/grafana_viewer_token`, then
    `rm -f /tmp/grafana_viewer_token` immediately — never leave the token sitting in `/tmp`.
    `screenshot.py` (kept in sync with `dotfiles-configs/.codex/skills/daily-audit/screenshot.py` in
-   this repo — if they've drifted, the deployed copy wins for today's run, but fix the repo copy too)
+   this repo — apply the script-version check above and use the newer repository version if available)
    prints one path per line, e.g. `/tmp/grafana_dashboard-1.png` .. `-N.png`. It scrolls the full page
    first — Grafana lazy-renders panels outside the current viewport, a screenshot taken without this
    step comes back with most panels empty — then reads each row's actual Y position from the DOM
