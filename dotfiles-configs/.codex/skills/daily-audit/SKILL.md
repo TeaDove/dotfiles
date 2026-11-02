@@ -128,6 +128,20 @@ Whenever step 4 runs, also collect the following and summarize findings in the e
   `dmesg --level=err,warn --time-format iso --since "$SINCE"` only as a current-boot fallback if journal
   access becomes unavailable, preserving its errors and ring-buffer coverage limits.
 
+- NVMe health through the two permitted read-only commands below. Parse the returned JSON, preserving
+  diagnostics and smartctl's exit-status bitmask even when nonzero; nonzero status can describe health
+  findings rather than missing output. Check overall SMART status, critical warnings, composite and
+  sensor temperatures, spare capacity and threshold, percentage used, media errors, error-log entries,
+  and unsafe shutdowns. Save counters in the private baseline and compare changes on subsequent runs;
+  the first observation establishes timing rather than attributing cumulative history to this audit.
+  Inspect available error-log records before interpreting a nonzero count: protocol errors such as
+  invalid command fields are not media errors. Keep device identifiers and raw logs out of public artifacts.
+
+```bash
+sudo -n /usr/sbin/smartctl -a -j /dev/nvme0
+sudo -n /usr/sbin/smartctl -a -j /dev/nvme1
+```
+
 ```bash
 nvidia-smi \
   --query-gpu=driver_version,temperature.gpu,utilization.gpu,memory.used,memory.total,power.draw \
@@ -401,6 +415,3 @@ the next session from re-discovering the same structural limits:
 - System-journal access remains restricted on the container and worker-server. On worker-pc, the
   audit account can read system and previous-boot journals through its journal-reader group; only
   retained history is available.
-- Full SMART/NVMe health is unavailable on worker-pc: the utilities are installed, but block devices
-  remain unreadable and no storage-health sudo commands are permitted. Temperature readings do not
-  establish drive health.
