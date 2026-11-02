@@ -117,11 +117,16 @@ Whenever step 4 runs, also collect the following and summarize findings in the e
   coverage; unsupported limit attributes must not invalidate readable temperatures or be treated as zeros.
 - Failed system and user services with `systemctl --failed --no-legend --no-pager` and
   `systemctl --user --failed --no-legend --no-pager`.
-- Kernel warnings/errors with `dmesg --level=err,warn --time-format iso --since "$SINCE"` and user-service
+- System warnings/errors with `journalctl --system -p warning --since "$SINCE" --no-pager`, kernel
+  warnings/errors with `journalctl -k -p warning --since "$SINCE" --no-pager`, and user-service
   warnings/errors with `journalctl --user -p warning --since "$SINCE" --no-pager`. Set `SINCE` to the
   previous baseline's `generated_at`, or `24 hours ago` on the first run. Check for OOM kills, GPU/driver,
-  storage I/O, and filesystem errors. The kernel ring buffer covers only retained messages from the
-  current boot; note reboot or truncation gaps instead of declaring earlier periods clean.
+  storage I/O, filesystem errors, and crashed services. System and previous-boot journal access is
+  available on worker-pc through its journal-reader group. Use `journalctl --list-boots --no-pager` to
+  identify retained boots; for kernel history across boots, inspect each relevant boot with `-b`.
+  Retention gaps are unknown coverage, not clean periods. Use
+  `dmesg --level=err,warn --time-format iso --since "$SINCE"` only as a current-boot fallback if journal
+  access becomes unavailable, preserving its errors and ring-buffer coverage limits.
 
 ```bash
 nvidia-smi \
@@ -393,10 +398,9 @@ the next session from re-discovering the same structural limits:
 
 - No firewall visibility on the container or worker-pc with current permissions (worker-server's
   `ufw status` is checked — see Permissions / security baseline).
-- No read access to the system journal (only this skill's own service-user-scoped journal entries are
-  visible) — deeper incident diagnosis after a finding here still needs a human to grant
-  `systemd-journal` group membership or do it themselves.
-  On worker-pc, the current-boot kernel ring buffer is readable through `dmesg`, and the user journal
-  is readable; neither provides complete system-journal or previous-boot coverage.
-- Full SMART/NVMe health is unavailable on worker-pc: the utilities are absent and block devices are
-  not readable by the audit account. Temperature readings do not establish drive health.
+- System-journal access remains restricted on the container and worker-server. On worker-pc, the
+  audit account can read system and previous-boot journals through its journal-reader group; only
+  retained history is available.
+- Full SMART/NVMe health is unavailable on worker-pc: the utilities are installed, but block devices
+  remain unreadable and no storage-health sudo commands are permitted. Temperature readings do not
+  establish drive health.
