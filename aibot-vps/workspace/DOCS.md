@@ -140,3 +140,25 @@ container when needed for the user's task, including monitoring that must work w
 You may create, run, update, and disable these scripts and cron entries without asking for confirmation.
 Keep scripts, configuration, and state under `/workspace`; manage schedules in `/workspace/cron/crontab`.
 Validate changes with `supercronic -test` before replacing the crontab; changes reload automatically.
+
+### Scheduled prompts in existing Codex chats
+
+Use `/workspace/bin/codex-schedule.sh` to send prompts immediately, once at a selected time, or on cron.
+The source is `aibot-vps/workspace/bin/codex-schedule.sh` in the dotfiles repository.
+Run `--help` for the full interface. Set `THREAD_ID` to the target chat ID and put the prompt in a file.
+For a one-time job, set `WHEN_MSK` to `YYYY-MM-DD HH:MM`; times default to Europe/Moscow.
+Cron expressions use UTC in this container; `0 13 * * *` runs daily at 16:00 Moscow time.
+
+```bash
+/workspace/bin/codex-schedule.sh --help
+/workspace/bin/codex-schedule.sh send "$THREAD_ID" /workspace/prompt.txt
+/workspace/bin/codex-schedule.sh once audit-once "$WHEN_MSK" "$THREAD_ID" /workspace/prompt.txt
+/workspace/bin/codex-schedule.sh cron daily-audit '0 13 * * *' "$THREAD_ID" /workspace/prompt.txt
+/workspace/bin/codex-schedule.sh list
+/workspace/bin/codex-schedule.sh remove daily-audit
+```
+
+The existing chat keeps its model and permissions. Prompts are copied when jobs are registered;
+state and logs live under `/workspace/codex-schedules`. Removing a job preserves its files and does not
+cancel an already queued message. A successful queue command does not guarantee execution: if resume
+fails, inspect the job's `run.log` and the chat before retrying to avoid duplicate messages.
