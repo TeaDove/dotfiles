@@ -105,6 +105,32 @@ for this job:
 5. `ssh worker-pc 'sudo systemctl poweroff'`, then confirm with 3 failed connection attempts ~5s
    apart. Only power off because this run woke it — never because it merely answered a ping.
 
+#### Additional read-only telemetry
+
+Whenever step 4 runs, also collect the following and summarize findings in the existing worker-pc entry:
+
+- GPU driver availability, temperature, utilization, VRAM usage, power draw, active compute processes,
+  and clock-limiting reasons using the queries below. A successful process query with only a header
+  means no compute processes were reported; unsupported fields are unknown, not zero.
+- Free inodes using `df -hi -l -x tmpfs -x devtmpfs`; filesystems without inode accounting are not errors.
+- Available CPU and storage temperatures using `sensors`. Preserve sensor read errors and report partial
+  coverage; unsupported limit attributes must not invalidate readable temperatures or be treated as zeros.
+- Failed system and user services with `systemctl --failed --no-legend --no-pager` and
+  `systemctl --user --failed --no-legend --no-pager`.
+- Kernel warnings/errors with `dmesg --level=err,warn --time-format iso --since "$SINCE"` and user-service
+  warnings/errors with `journalctl --user -p warning --since "$SINCE" --no-pager`. Set `SINCE` to the
+  previous baseline's `generated_at`, or `24 hours ago` on the first run. Check for OOM kills, GPU/driver,
+  storage I/O, and filesystem errors. The kernel ring buffer covers only retained messages from the
+  current boot; note reboot or truncation gaps instead of declaring earlier periods clean.
+
+```bash
+nvidia-smi \
+  --query-gpu=driver_version,temperature.gpu,utilization.gpu,memory.used,memory.total,power.draw \
+  --format=csv
+nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv
+nvidia-smi --query-gpu=clocks_event_reasons.active --format=csv
+```
+
 ### D. Permissions / security baseline
 
 On each of: this container, worker-server, worker-pc (worker-pc only if step C woke it — don't wake it
@@ -370,3 +396,7 @@ the next session from re-discovering the same structural limits:
 - No read access to the system journal (only this skill's own service-user-scoped journal entries are
   visible) — deeper incident diagnosis after a finding here still needs a human to grant
   `systemd-journal` group membership or do it themselves.
+  On worker-pc, the current-boot kernel ring buffer is readable through `dmesg`, and the user journal
+  is readable; neither provides complete system-journal or previous-boot coverage.
+- Full SMART/NVMe health is unavailable on worker-pc: the utilities are absent and block devices are
+  not readable by the audit account. Temperature readings do not establish drive health.
