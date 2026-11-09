@@ -58,8 +58,10 @@ lies on the worker-server, run this from the container instead of using a Yandex
 /workspace/bin/tg-big-send.sh /path/on/worker-server/file1 /path/file2
 ```
 
-It opens a reverse SSH tunnel to the proxy for one `goteleout --file` call and closes it when the
-call ends (hard limit 10 minutes). Paths must not contain whitespace. Telegram limit is 50 MB per file.
+It opens a temporary reverse SOCKS tunnel over SSH and sets `HTTPS_PROXY` for `goteleout --file`.
+Traffic reaches the Nginx proxy through this container, bypassing the direct-upload timeout.
+Verified with a 64 KiB upload. The tunnel closes when the call ends (hard limit 10 minutes).
+Paths must not contain whitespace. Telegram limit is 50 MB per file.
 
 ## Worker PC lifecycle
 
