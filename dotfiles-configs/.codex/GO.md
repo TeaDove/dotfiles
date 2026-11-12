@@ -38,7 +38,7 @@ Do not skip these steps, and don't rely on CI to catch what you missed.
 
 - Packages, files: lowercase + layer suffix (`userrepo`, `eventservice`), not (`user-service`, `event-service`)
 - Prefer long variable names, e.g. `queue := NewQueue()`, not `q := NewQueue()`, with exceptions
-  like `ctx`, `i` (in loops), etc.
+  like `ctx`, `i` (in loops), method receivers such as `func (s Service)`, etc.
 - Errors should always be wrapped, with minimal, low-cardinality context,
   e.g. `errors.Wrap(err, "open file")`, not `errors.Wrapf(err, "failed to open %s", path)`
 - Name error variables `err`, unless that would cause shadowing or hide a wrapped/outer error you
