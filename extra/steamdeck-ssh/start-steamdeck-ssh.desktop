@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Temporary SSH for Codex (4h)
+Comment=Start temporary Steam Deck SSH and show offline QR credentials
+Icon=utilities-terminal
+Terminal=false
+Exec=/usr/bin/konsole --hold -e /usr/bin/bash -lc "curl --fail --silent --show-error --location https://raw.githubusercontent.com/teadove/dotfiles/master/extra/steamdeck-ssh/steamdeck-temp-ssh.sh --output /home/deck/Downloads/steamdeck-temp-ssh.sh && /usr/bin/bash /home/deck/Downloads/steamdeck-temp-ssh.sh"
+Categories=Network;Utility;
