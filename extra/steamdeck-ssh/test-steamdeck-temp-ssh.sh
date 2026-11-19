@@ -23,7 +23,13 @@ ssh-keygen() {
 
 sshd() {
   test -f "$test_dir/keygen_called" || return 1
-  "$sshd_executable" -f "$test_dir/sshd_config" "$@" || return "$?"
+  if [[ "$1" == -T && "${canonical_output:-0}" == 1 ]]; then
+    local settings
+    settings="$("$sshd_executable" -f "$test_dir/sshd_config" "$@")" || return "$?"
+    printf '%s\n' "${settings//passwordauthentication /PasswordAuthentication }"
+  else
+    "$sshd_executable" -f "$test_dir/sshd_config" "$@" || return "$?"
+  fi
   if [[ "$1" == -T && "${extended_failure:-0}" == 1 ]]; then return 42; fi
 }
 export -f ssh-keygen sshd
@@ -156,9 +162,9 @@ for original_service in active inactive; do
   prepare_setup no "$original_service"
   run_setup 0
   settings="$(sshd -T -C user=deck)"
-  grep -qx 'passwordauthentication yes' <<< "$settings"
+  grep -qix 'passwordauthentication yes' <<< "$settings"
   settings="$(sshd -T -C user=unrelated)"
-  grep -qx 'passwordauthentication no' <<< "$settings"
+  grep -qix 'passwordauthentication no' <<< "$settings"
   grep -qx 'Persistent=true' "$test_dir/units/steamdeck-temp-ssh-cleanup.timer"
   bash "$test_dir/state/cleanup.sh"
   test -f "$test_dir/state/sshd_override.conf"
@@ -219,3 +225,18 @@ test -f "$test_dir/state/cleanup.sh"
 bash "$test_dir/state/cleanup.sh" --force
 assert_restored
 printf 'PASS: failed cleanup retains state for retry\n'
+
+export canonical_output=1
+for original_authentication in yes no; do
+  prepare_setup "$original_authentication" active
+  run_setup 0
+  if [[ "$original_authentication" == yes ]]; then
+    test ! -f "$test_dir/state/sshd_override.conf"
+    cmp "$test_dir/sshd_config" "$test_dir/original_config"
+  else
+    test -f "$test_dir/state/sshd_override.conf"
+  fi
+  bash "$test_dir/state/cleanup.sh" --force
+  assert_restored
+  printf 'PASS: canonical option casing with initial password authentication %s\n' "$original_authentication"
+done

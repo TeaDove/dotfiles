@@ -208,7 +208,7 @@ TIMER
 systemctl daemon-reload
 # Arm the durable revocation *before* changing the account password.
 systemctl enable --now "$unit.timer"
-if ! grep -qx 'passwordauthentication yes' <<< "$sshd_settings"; then
+if ! grep -qix 'passwordauthentication yes' <<< "$sshd_settings"; then
   cat > "$state/sshd_override.conf" <<'SSH_CONFIG'
 Match User deck
     PasswordAuthentication yes
@@ -220,7 +220,7 @@ SSH_CONFIG
     echo 'Could not read the temporary sshd configuration.' >&2
     false
   fi
-  if ! grep -qx 'passwordauthentication yes' <<< "$sshd_settings"; then
+  if ! grep -qix 'passwordauthentication yes' <<< "$sshd_settings"; then
     echo 'Could not enable temporary password authentication for deck.' >&2
     false
   fi
