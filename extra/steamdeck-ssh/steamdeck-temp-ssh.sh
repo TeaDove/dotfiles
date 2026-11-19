@@ -105,9 +105,17 @@ if [[ ! "$rundir" == /run/user/*/deck-ssh.* && ! "$rundir" == /tmp/deck-ssh.* ]]
   exit 1
 fi
 
+# Fresh SteamOS installations can lack /etc/ssh/ssh_host_* keys.
+# sshd -t fails with "no hostkeys available" until they are generated.
+# -A creates only missing keys and does not overwrite existing host identities.
+if ! ssh-keygen -A; then
+  echo 'Could not generate SSH host keys.' >&2
+  exit 1
+fi
+
 # Use the existing SteamOS SSH settings. Fail safely if password login is disabled.
 if ! sshd -t; then
-  echo 'sshd configuration is invalid.' >&2
+  echo 'sshd configuration is invalid (see the sshd error above).' >&2
   exit 1
 fi
 if ! sshd -T -C user=deck,host=steamdeck,addr=127.0.0.1 | grep -qx 'passwordauthentication yes'; then
