@@ -14,6 +14,23 @@ rules live in separate files linked at the bottom and apply only to that languag
   changes are easier to review and less likely to introduce bugs. Don't refactor or
   reformat unrelated code unless asked.
 
+## Storage and cleanup
+
+- Before installing packages, downloading data or models, or creating artifacts, inspect the host's disks,
+  mount points, free space, and write permissions. Additional storage may be available; choose a suitable
+  authorized location instead of assuming the system disk is the only option. Account for filesystem
+  capabilities and whether the storage will remain available for the task.
+- At task completion, identify artifacts that are clearly no longer needed and propose a cleanup plan
+  with their paths and sizes. Ask for user approval before deleting any non-cache artifacts, including
+  temporary files, intermediate results, and artifacts you created yourself.
+- Only caches may be deleted without user approval, such as Go module caches, pip caches, and downloaded
+  model caches. First confirm that the contents can be downloaded or regenerated and are not needed by
+  active work. User data, generated results, and trained model checkpoints are not disposable caches.
+  If uncertain, ask before deleting.
+- After every cache cleanup, report what was removed, its location, and the measured disk space reclaimed.
+  Measure before and after cleanup; distinguish deleted file sizes from the change in filesystem free
+  space, and state when concurrent activity prevents an exact measurement.
+
 ## Rules, linters, CI/CD
 
 - Never break CI/CD checks, linter rules, or the conventions in this file. You may
