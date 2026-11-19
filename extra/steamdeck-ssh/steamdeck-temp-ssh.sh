@@ -118,7 +118,11 @@ if ! sshd -t; then
   echo 'sshd configuration is invalid (see the sshd error above).' >&2
   exit 1
 fi
-if ! sshd -T -C user=deck,host=steamdeck,addr=127.0.0.1 | grep -qx 'passwordauthentication yes'; then
+if ! sshd_settings="$(sshd -T -C user=deck,host=steamdeck,addr=127.0.0.1)"; then
+  echo 'Could not read the effective sshd configuration.' >&2
+  exit 1
+fi
+if ! grep -qx 'passwordauthentication yes' <<< "$sshd_settings"; then
   echo 'PasswordAuthentication is disabled in sshd_config. No changes were made.' >&2
   exit 1
 fi
