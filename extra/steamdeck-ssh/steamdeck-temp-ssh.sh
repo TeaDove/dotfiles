@@ -283,8 +283,7 @@ message = (f'Steam Deck SSH until {end}\n'
            f'Password: {password}\n'
            'Port: 22\n'
            'Jump: worker-server\n'
-           f'Connect: ssh -J worker-server deck@{ip}\n'
-           'Task: Fix Battle.net/Proton; do not delete games.\n')
+           f'Connect: ssh -J worker-server deck@{ip}\n')
 qr = QRCode(error_correction=ERROR_CORRECT_M, border=4, box_size=9)
 qr.add_data(message)
 qr.make(fit=True)
