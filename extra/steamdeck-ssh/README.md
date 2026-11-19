@@ -21,7 +21,7 @@ Access lasts 4 hours. A persistent systemd calendar timer restores the
 previous deck password hash (unless the account password was independently
 changed) and returns sshd to its original service state. On the original
 SteamOS setup, the service was stopped, and it will stop again. Password
-login is not changed in sshd config: if disabled, this installer fails.
+login is temporarily enabled only for deck if needed; cleanup removes that override.
 
 To revoke early while access is active:
 

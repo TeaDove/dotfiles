@@ -113,7 +113,6 @@ if ! ssh-keygen -A; then
   exit 1
 fi
 
-# Use the existing SteamOS SSH settings. Fail safely if password login is disabled.
 if ! sshd -t; then
   echo 'sshd configuration is invalid (see the sshd error above).' >&2
   exit 1
@@ -122,11 +121,6 @@ if ! sshd_settings="$(sshd -T -C user=deck,host=steamdeck,addr=127.0.0.1)"; then
   echo 'Could not read the effective sshd configuration.' >&2
   exit 1
 fi
-if ! grep -qx 'passwordauthentication yes' <<< "$sshd_settings"; then
-  echo 'PasswordAuthentication is disabled in sshd_config. No changes were made.' >&2
-  exit 1
-fi
-
 install -d -m 0700 "$state"
 getent shadow deck | cut -d: -f2 > "$state/old_hash"
 [[ -s "$state/old_hash" ]] || { echo 'Cannot read original deck password hash' >&2; rm -rf "$state"; exit 1; }
@@ -156,6 +150,13 @@ if [[ ! -f "$state/temp_hash" || "$current_hash" == "$(cat "$state/temp_hash")" 
 else
   echo 'deck password has changed since setup; preserving the newer password.' >&2
 fi
+if [[ -f "$state/sshd_override.conf" ]]; then
+  sed -i "\\|^Include $state/sshd_override.conf$|d" /etc/ssh/sshd_config
+  sshd -t
+  if [[ "$was_active" == yes ]] && systemctl is-active --quiet sshd.service; then
+    systemctl reload sshd.service
+  fi
+fi
 if [[ "$was_active" == no ]]; then
   systemctl stop sshd.service || true
 fi
@@ -173,12 +174,24 @@ rm -rf -- "$state"
 CLEANUP
 chmod 700 "$state/cleanup.sh"
 
+rollback_setup() {
+  local status="$?"
+  trap - ERR
+  if ! bash "$state/cleanup.sh" --force; then
+    echo 'Rollback failed; run this script with --revoke to retry cleanup.' >&2
+  fi
+  exit "$status"
+}
+trap rollback_setup ERR
+
 cat > "/etc/systemd/system/$unit.service" <<SERVICE
 [Unit]
 Description=Restore deck password and remove temporary Steam Deck SSH access
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/bash $state/cleanup.sh
+Restart=on-failure
+RestartSec=1min
 SERVICE
 cat > "/etc/systemd/system/$unit.timer" <<TIMER
 [Unit]
@@ -195,6 +208,23 @@ TIMER
 systemctl daemon-reload
 # Arm the durable revocation *before* changing the account password.
 systemctl enable --now "$unit.timer"
+if ! grep -qx 'passwordauthentication yes' <<< "$sshd_settings"; then
+  cat > "$state/sshd_override.conf" <<'SSH_CONFIG'
+Match User deck
+    PasswordAuthentication yes
+Match all
+SSH_CONFIG
+  sed -i "1iInclude $state/sshd_override.conf" /etc/ssh/sshd_config
+  sshd -t
+  if ! sshd_settings="$(sshd -T -C user=deck,host=steamdeck,addr=127.0.0.1)"; then
+    echo 'Could not read the temporary sshd configuration.' >&2
+    false
+  fi
+  if ! grep -qx 'passwordauthentication yes' <<< "$sshd_settings"; then
+    echo 'Could not enable temporary password authentication for deck.' >&2
+    false
+  fi
+fi
 if ! printf 'deck:%s\n' "$temporary_password" | chpasswd; then
   bash "$state/cleanup.sh" --force || true
   echo 'Unable to set temporary password' >&2
@@ -205,6 +235,9 @@ if ! systemctl enable --now sshd.service; then
   bash "$state/cleanup.sh" --force || true
   echo 'Unable to start sshd' >&2
   exit 1
+fi
+if [[ -f "$state/sshd_override.conf" && "$(cat "$state/was_active")" == yes ]]; then
+  systemctl reload sshd.service
 fi
 if ! systemctl is-active --quiet "$unit.timer"; then
   bash "$state/cleanup.sh" --force || true
