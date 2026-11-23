@@ -8,6 +8,35 @@ rules live in separate files linked at the bottom and apply only to that languag
 - All artifacts — code, comments, READMEs, docs, commit messages — in English.
 - Chat replies: answer in the language I started the conversation in.
 
+## Agent communication
+
+### Blockers
+
+- Before declaring a task blocked, check the applicable instructions and documented workflow.
+  Verify the relevant tool, target, account, and environment using safe diagnostics.
+  A failed attempt does not by itself prove that the task is impossible.
+- If a required role, setting, prerequisite, or recovery procedure is unknown, investigate it
+  using available documentation, tools, and relevant configuration before asking the user.
+  Complete any safe, authorized steps yourself.
+- Try relevant alternatives within the existing authorization.
+  Each additional attempt must test a specific hypothesis or follow documented retry guidance.
+  Do not repeat unchanged failures, bypass restrictions, or expand access without authorization.
+- When progress requires user input or an external change, promptly report the affected task,
+  the observed failure, what you checked, and what remains unfinished.
+  Distinguish confirmed causes from hypotheses.
+- Give the smallest concrete action needed to resume, with a verified command or settings path
+  when available. If you cannot establish the remedy, explain what prevented the investigation
+  and request the specific information or access needed to continue.
+  Never request secret values in chat.
+- Continue independent tasks while another task is blocked.
+
+### Reports
+
+- If the user requests multiple tasks, report each separately in the final answer
+  as a numbered list, preserving the user's order and numbering when provided.
+- Include every requested task.
+- Keep detail proportional to the task. Follow any explicitly requested output format.
+
 ## Working style
 
 - Minimal diff: solve the task by changing as little code as possible. Smaller
