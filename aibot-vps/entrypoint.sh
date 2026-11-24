@@ -86,7 +86,18 @@ printf '\n\nResolve shared language rules relative to %s.\n' "$dotfiles" >> "$in
 printf 'Read /workspace/DOCS.md when infrastructure details are needed.\n' >> "$instructions"
 printf 'Use absolute /workspace paths for persistent notes and helper scripts.\n' >> "$instructions"
 mv -f "$instructions" "$HOME/.codex/AGENTS.md"
-ln -sfn /home/aibot/.codex-config.toml "$HOME/.codex/config.toml"
+config="$HOME/.codex/config.toml"
+if [ -L "$config" ]; then
+	[ -f "$config" ] || fail "$config must point to a readable configuration file"
+	config_copy=$(mktemp "$HOME/.codex/config.toml.XXXXXX")
+	cat "$config" > "$config_copy"
+	mv -fT "$config_copy" "$config"
+elif [ ! -e "$config" ]; then
+	install -m 600 /home/aibot/.codex-config.toml "$config"
+fi
+[ -f "$config" ] || fail "$config is not a regular file"
+[ -w "$config" ] || fail "$config is not writable by uid $(id -u), fix ownership of ./data/codex/config.toml"
+chmod 600 "$config"
 mkdir -p "$HOME/.codex/rules"
 ln -sfn /home/aibot/.codex-ssh.rules "$HOME/.codex/rules/aibot-ssh.rules"
 
