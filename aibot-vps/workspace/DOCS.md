@@ -63,6 +63,19 @@ Traffic reaches the Nginx proxy through this container, bypassing the direct-upl
 Verified with a 64 KiB upload. The tunnel closes when the call ends (hard limit 10 minutes).
 Paths must not contain whitespace. Telegram limit is 50 MB per file.
 
+## Worker-server root commands
+
+Use Telesudo to request privileged commands on the worker-server. Submit the command from the
+worker-server SSH session. The server owner approves the request in Telegram, and Telesudo then
+runs the approved command as root.
+
+```bash
+telesudo client submit --reason 'Verify root execution' 'id -u'
+telesudo client get REQUEST_UUID
+```
+
+Replace `REQUEST_UUID` with the `id` returned by `submit`. The result includes the exit code and output.
+
 ## Worker PC lifecycle
 
 Wake `worker-pc` through the worker-server (`wakeonlan` is expected there; install it via apt
